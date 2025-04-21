@@ -1,0 +1,15 @@
+{
+  "originHash" : "5f900e61630938333fe56eb907b4b7991572bf4a1512f001e5fde7a54a2448d8",
+  "pins" : [
+    {
+      "identity" : "tiered-grid-layout",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/akitorahayashi/tiered-grid-layout",
+      "state" : {
+        "branch" : "main",
+        "revision" : "f5c6864129b306e94c118d55135ca19cfc3a6c79"
+      }
+    }
+  ],
+  "version" : 3
+}
