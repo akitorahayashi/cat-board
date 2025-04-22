@@ -12,7 +12,7 @@ struct ContentView: View {
                     AsyncImage(url: URL(string: item.imageURL)) { phase in
                         switch phase {
                         case .empty:
-                            ProgressView() // ローディングインジケーターを表示
+                            ProgressView()
                         case .success(let image):
                             image
                                 .resizable()
