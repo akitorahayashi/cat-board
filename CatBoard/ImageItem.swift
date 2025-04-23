@@ -7,10 +7,4 @@ struct ImageItem: Identifiable, Decodable {
     enum CodingKeys: String, CodingKey {
         case imageURL = "url" // JSONの"url"キーをimageURLプロパティにマッピング
     }
-
-    // 自分でインスタンスを作る場合のイニシャライザ
-    init(id: UUID = UUID(), imageURL: String) {
-        self.id = id
-        self.imageURL = imageURL
-    }
 }

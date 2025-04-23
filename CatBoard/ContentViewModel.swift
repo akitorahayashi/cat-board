@@ -4,7 +4,7 @@ import SwiftUI
 class ContentViewModel: ObservableObject {
     @Published var items: [ImageItem] = []
     @Published var isLoading = false
-    @Published var errorMessage: String? = nil
+    @Published var errorMessage: String?
 
     func fetchImages() async {
         isLoading = true
@@ -22,7 +22,7 @@ class ContentViewModel: ObservableObject {
         do {
             let (data, response) = try await URLSession.shared.data(from: url)
 
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+            if let httpResponse = response as? HTTPURLResponse, !(200 ... 299).contains(httpResponse.statusCode) {
                 errorMessage = "API Error: Status code \(httpResponse.statusCode)"
                 isLoading = false
                 return // エラーを検知した後に終了

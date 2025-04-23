@@ -1,7 +1,6 @@
 import SwiftUI
 import TieredGridLayout
 
-
 struct ContentView: View {
     @StateObject private var viewModel = ContentViewModel()
 
@@ -11,21 +10,21 @@ struct ContentView: View {
                 ForEach(viewModel.items) { item in
                     AsyncImage(url: URL(string: item.imageURL)) { phase in
                         switch phase {
-                        case .empty:
-                            ProgressView()
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .border(Color.white, width: 2)
-                        case .failure:
-                            Image(systemName: "photo")
-                                .resizable()
-                                .scaledToFit()
-                                .foregroundColor(.gray)
-                                .border(Color.white, width: 2)
-                        @unknown default:
-                            EmptyView()
+                            case .empty:
+                                ProgressView()
+                            case let .success(image):
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .border(Color.white, width: 2)
+                            case .failure:
+                                Image(systemName: "photo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundColor(.gray)
+                                    .border(Color.white, width: 2)
+                            @unknown default:
+                                EmptyView()
                         }
                     }
                 }
