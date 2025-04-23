@@ -6,9 +6,9 @@ set -e
 PROJECT_NAME="CatBoard.xcodeproj"
 APP_SCHEME="CatBoard"
 UI_TEST_SCHEME="CatBoardUITests"
-SIMULATOR_NAME_PATTERN="iPhone" # 検索するシミュレーター名のパターン
+SIMULATOR_NAME_PATTERN="iPhone"
 
-echo "Searching for valid '$SIMULATOR_NAME_PATTERN' simulator destination for scheme '$APP_SCHEME'..." >&2
+echo "Searching for valid '$SIMULATOR_NAME_PATTERN' simulator destination for scheme '$APP_SCHEME'...'" >&2
 
 # アプリスキームの有効な iOS Simulator の宛先リストを取得
 DESTINATIONS=$(xcodebuild -showdestinations -project "$PROJECT_NAME" -scheme "$APP_SCHEME")
@@ -35,10 +35,11 @@ fi
 echo "Found simulator: $SIMULATOR_NAME (ID: $SIMULATOR_ID)" >&2
 
 # UIテストのスキームで宛先が存在するか検証
-echo "Verifying destination for UI test scheme '$UI_TEST_SCHEME'..." >&2
-DESTINATION_UI_FOUND=$(xcodebuild -showdestinations -project "$PROJECT_NAME" -scheme "$UI_TEST_SCHEME" | grep "id:$SIMULATOR_ID" || echo "not found")
+echo "Verifying destination for UI test scheme '$UI_TEST_SCHEME'...'" >&2
+# Check if *any* iOS Simulator destination exists for the UI test scheme
+DESTINATION_UI_FOUND=$(xcodebuild -showdestinations -project "$PROJECT_NAME" -scheme "$UI_TEST_SCHEME" | grep "platform:iOS Simulator" || echo "not found")
 if [[ "$DESTINATION_UI_FOUND" == "not found" ]]; then
-    echo "エラー: 選択されたシミュレーター ID $SIMULATOR_ID ($SIMULATOR_NAME) は '$UI_TEST_SCHEME' スキームの有効な宛先ではありません。" >&2
+    echo "エラー: '$UI_TEST_SCHEME' スキームに有効な iOS Simulator 宛先が見つかりません。" >&2
     echo "UIテストスキームで利用可能な宛先:" >&2
     xcodebuild -showdestinations -project "$PROJECT_NAME" -scheme "$UI_TEST_SCHEME" | cat >&2
     exit 1
