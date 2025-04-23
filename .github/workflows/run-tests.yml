@@ -43,7 +43,7 @@ jobs:
         xcodebuild build-for-testing \
           -project "CatBoard.xcodeproj" \
           -scheme "CatBoard" \
-          -destination "platform=watchOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
+          -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
           -derivedDataPath ./ci-outputs/test-results/derived-data \
           -configuration Debug \
           -skipMacroValidation \
@@ -60,7 +60,7 @@ jobs:
         xcodebuild test-without-building \
           -project "CatBoard.xcodeproj" \
           -scheme "CatBoardTests" \
-          -destination "platform=watchOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
+          -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
           -derivedDataPath ./ci-outputs/test-results/DerivedData \
           -enableCodeCoverage NO \
           -resultBundlePath ./ci-outputs/test-results/unit/TestResults.xcresult \
@@ -92,7 +92,7 @@ jobs:
         xcodebuild test-without-building \
           -project "CatBoard.xcodeproj" \
           -scheme "CatBoardUITests" \
-          -destination "platform=watchOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
+          -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
           -derivedDataPath ./ci-outputs/test-results/DerivedData \
           -enableCodeCoverage NO \
           -resultBundlePath ./ci-outputs/test-results/ui/TestResults.xcresult \

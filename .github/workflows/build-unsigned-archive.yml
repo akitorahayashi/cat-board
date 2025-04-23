@@ -48,7 +48,7 @@ jobs:
             -project "CatBoard.xcodeproj" \
             -scheme "CatBoard" \
             -configuration Release \
-            -destination "generic/platform=watchOS" \
+            -destination "generic/platform=iOS" \
             -archivePath "./ci-outputs/production/archives/CatBoard.xcarchive" \
             -derivedDataPath "./ci-outputs/production/archives/DerivedData" \
             -skipMacroValidation \

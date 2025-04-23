@@ -6,20 +6,20 @@ set -e
 PROJECT_NAME="CatBoard.xcodeproj"
 APP_SCHEME="CatBoard"
 UI_TEST_SCHEME="CatBoardUITests"
-SIMULATOR_NAME_PATTERN="Apple Watch" # 検索するシミュレーター名のパターン
+SIMULATOR_NAME_PATTERN="iPhone" # 検索するシミュレーター名のパターン
 
 echo "Searching for valid '$SIMULATOR_NAME_PATTERN' simulator destination for scheme '$APP_SCHEME'..." >&2
 
-# アプリスキームの有効な watchOS Simulator の宛先リストを取得
+# アプリスキームの有効な iOS Simulator の宛先リストを取得
 DESTINATIONS=$(xcodebuild -showdestinations -project "$PROJECT_NAME" -scheme "$APP_SCHEME")
 
-# '$SIMULATOR_NAME_PATTERN' を含む watchOS Simulator の宛先を検索
-SIMULATOR_INFO=$(echo "$DESTINATIONS" | grep "platform:watchOS Simulator" | grep "name:$SIMULATOR_NAME_PATTERN" | head -1)
+# '$SIMULATOR_NAME_PATTERN' を含む iOS Simulator の宛先を検索
+SIMULATOR_INFO=$(echo "$DESTINATIONS" | grep "platform:iOS Simulator" | grep "name:$SIMULATOR_NAME_PATTERN" | head -1)
 
 if [ -z "$SIMULATOR_INFO" ]; then
-  echo "エラー: '$APP_SCHEME' スキームで '$SIMULATOR_NAME_PATTERN' を含む有効な watchOS Simulator 宛先が見つかりません。" >&2
+  echo "エラー: '$APP_SCHEME' スキームで '$SIMULATOR_NAME_PATTERN' を含む有効な iOS Simulator 宛先が見つかりません。" >&2
   echo "利用可能な宛先:" >&2
-  echo "$DESTINATIONS" | grep "platform:watchOS Simulator" | cat >&2
+  echo "$DESTINATIONS" | grep "platform:iOS Simulator" | cat >&2
   exit 1
 fi
 
