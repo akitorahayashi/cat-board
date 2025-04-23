@@ -15,7 +15,7 @@ excluded:
   - .git
   - .build
   - DerivedData
-  - SilentCue.xcodeproj
+  - CatBoard.xcodeproj
   - .github
   - Carthage
   - build
