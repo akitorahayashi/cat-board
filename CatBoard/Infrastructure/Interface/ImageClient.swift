@@ -2,12 +2,14 @@ import ComposableArchitecture
 import Foundation
 
 struct ImageClient {
-    var fetchImages: @Sendable (_ limit: Int, _ page: Int) async throws -> [CatImageModel]
+    var fetchImages: @Sendable (Int, Int) async throws -> [CatImageModel]
 }
 
 extension ImageClient: DependencyKey {
     static let liveValue = Self(
-        fetchImages: CatAPIClient().fetchImages
+        fetchImages: { limit, page in
+            try await CatAPIClient().fetchImages(limit: limit, page: page)
+        }
     )
 
     static let previewValue: ImageClient = Self(

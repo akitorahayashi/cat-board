@@ -20,34 +20,37 @@ struct CatImageGallery: View {
                     Text("サーバーエラーが発生しました。")
                         .padding()
                 } else {
-                    TieredGridLayout(items: store.items) { image in
-                        Button {
-                            store.send(.imageTapped(image.id))
-                        } label: {
-                            AsyncImage(url: image.url) { phase in
-                                if let img = phase.image {
-                                    img.resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } else if phase.error != nil {
-                                    Color.red
-                                } else {
-                                    Color.gray.opacity(0.3)
-                                }
-                            }
-                            .border(Color.white, width: 2)
-                            .clipped()
-                        }
-                    }
-                    .padding(.horizontal, 2)
+                    Text("一時的にTieredGridLayoutはコメントアウト")
+                    /*
+                     TieredGridLayout(items: store.items) { image in
+                         Button {
+                             store.send(.imageTapped(image.id))
+                         } label: {
+                             AsyncImage(url: image.url) { phase in
+                                 if let img = phase.image {
+                                     img.resizable()
+                                         .aspectRatio(contentMode: .fill)
+                                 } else if phase.error != nil {
+                                     Color.red
+                                 } else {
+                                     Color.gray.opacity(0.3)
+                                 }
+                             }
+                             .border(Color.white, width: 2)
+                             .clipped()
+                         }
+                     }
+                     .padding(.horizontal, 2)
 
-                    if store.canLoadMore, !store.isLoadingMore {
-                        Button("Load More") {
-                            store.send(.fetchImages)
-                        }
-                        .padding()
-                    } else if store.isLoadingMore {
-                        ProgressView().padding()
-                    }
+                     if store.canLoadMore, !store.isLoadingMore {
+                         Button("Load More") {
+                             store.send(.fetchImages)
+                         }
+                         .padding()
+                     } else if store.isLoadingMore {
+                         ProgressView().padding()
+                     }
+                     */
                 }
             }
             .navigationTitle("Cat Gallery")
