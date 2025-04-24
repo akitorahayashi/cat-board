@@ -29,24 +29,24 @@ while [[ $# -gt 0 ]]; do
     --all-tests)
       run_unit_tests=true
       run_ui_tests=true
-      run_archive=false # このフラグが指定された場合はテストのみ実行
+      run_archive=false
       run_all=false
       specific_action_requested=true
-      shift # 引数を処理済み
+      shift
       ;;
     --unit-test)
       run_unit_tests=true
-      run_archive=false # このフラグが指定された場合はテストのみ実行
+      run_archive=false
       run_all=false
       specific_action_requested=true
-      shift # 引数を処理済み
+      shift
       ;;
     --ui-test)
       run_ui_tests=true
-      run_archive=false # このフラグが指定された場合はテストのみ実行
+      run_archive=false
       run_all=false
       specific_action_requested=true
-      shift # 引数を処理済み
+      shift
       ;;
     --archive-only)
       run_unit_tests=false
@@ -54,23 +54,23 @@ while [[ $# -gt 0 ]]; do
       run_archive=true
       run_all=false
       specific_action_requested=true
-      shift # past argument
+      shift
       ;;
     --test-without-building)
       skip_build_for_testing=true
-      run_archive=false # ビルドなしではアーカイブ不可
+      run_archive=false
       run_all=false
-      # 他のフラグから specific_action_requested の状態を維持
-      shift # 引数を処理済み
+      specific_action_requested=true
+      shift
       ;;
-    *)    # 不明なオプション
+    *)
       echo "Unknown option: $1"
       exit 1
       ;;
   esac
 done
 
-# If no specific action was requested, run everything
+# 特定のアクションが要求されなかった場合は、すべてを実行
 if [ "$specific_action_requested" = false ]; then
   run_unit_tests=true
   run_ui_tests=true
@@ -96,7 +96,7 @@ fail() {
 
 # === Main Script ===
 
-# Clean previous outputs and create directories (only if not skipping build)
+# 前回の出力をクリーンアップし、ディレクトリを作成 (ビルドをスキップしない場合のみ)
 if [ "$skip_build_for_testing" = false ] || [ "$run_archive" = true ]; then
   step "Cleaning previous outputs and creating directories"
   echo "Removing old $OUTPUT_DIR directory if it exists..."
@@ -159,7 +159,7 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       -configuration Debug \
       -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
-    | xcpretty -c || fail "Build for testing failed."
+    | xcbeautify
     success "Build for testing completed."
   else
       echo "Skipping build for testing as requested (--test-without-building)."
@@ -179,7 +179,7 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
       -enableCodeCoverage NO \
       -resultBundlePath "$TEST_RESULTS_DIR/unit/TestResults.xcresult" \
-    | xcpretty -c || echo "Unit test execution finished with non-zero exit code (ignoring for local check)."
+    | xcbeautify --report junit --report-path "$TEST_RESULTS_DIR/unit/junit.xml"
 
     # Unitテスト結果バンドルの存在を確認
     echo "Verifying unit test results bundle..."
@@ -199,7 +199,7 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
       -enableCodeCoverage NO \
       -resultBundlePath "$TEST_RESULTS_DIR/ui/TestResults.xcresult" \
-    | xcpretty -c || echo "UI test execution finished with non-zero exit code (ignoring for local check)."
+    | xcbeautify --report junit --report-path "$TEST_RESULTS_DIR/ui/junit.xml"
 
     # UIテスト結果バンドルの存在を確認
     echo "Verifying UI test results bundle..."
@@ -229,7 +229,7 @@ if [ "$run_archive" = true ]; then
     -skipMacroValidation \
     CODE_SIGNING_ALLOWED=NO \
     archive \
-  | xcpretty -c || fail "Archive build failed."
+  | xcbeautify
   success "Archive build completed."
 
   # アーカイブ内容を検証

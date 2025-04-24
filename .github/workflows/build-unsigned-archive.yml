@@ -26,9 +26,6 @@ jobs:
           key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-spm-
-          
-      - name: Install xcpretty
-        run: gem install xcpretty
 
       - name: Build Release Version (Unsigned)
         run: |
@@ -54,14 +51,14 @@ jobs:
             -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO \
             archive \
-          | xcpretty -c
+          | xcbeautify
           
       - name: Verify Archive Contents
         run: |
           set -euo pipefail
           echo "Checking archive contents..."
           # Check if the specific .app directory exists within the archive's Products/Applications path
-          ARCHIVE_APP_PATH="./ci-outputs/production/archives/CatBoard.xcarchive/Products/Applications/CatBoardApp.app"
+          ARCHIVE_APP_PATH="./ci-outputs/production/archives/CatBoard.xcarchive/Products/Applications/CatBoard.app"
           if [ ! -d "$ARCHIVE_APP_PATH" ]; then
             echo "Error: 'CatBoard.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
             # Optionally list contents again on error
