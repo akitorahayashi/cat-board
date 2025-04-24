@@ -19,7 +19,7 @@ run_unit_tests=false
 run_ui_tests=false
 run_archive=false
 skip_build_for_testing=false
-run_all=true # Default to running all steps if no specific args are given
+run_all=true # 引数が指定されていない場合は、デフォルトですべてのステップを実行
 
 # === Argument Parsing ===
 specific_action_requested=false
@@ -29,24 +29,24 @@ while [[ $# -gt 0 ]]; do
     --all-tests)
       run_unit_tests=true
       run_ui_tests=true
-      run_archive=false # Only run tests if this flag is specified
+      run_archive=false # このフラグが指定された場合はテストのみ実行
       run_all=false
       specific_action_requested=true
-      shift # past argument
+      shift # 引数を処理済み
       ;;
     --unit-test)
       run_unit_tests=true
-      run_archive=false # Only run tests if this flag is specified
+      run_archive=false # このフラグが指定された場合はテストのみ実行
       run_all=false
       specific_action_requested=true
-      shift # past argument
+      shift # 引数を処理済み
       ;;
     --ui-test)
       run_ui_tests=true
-      run_archive=false # Only run tests if this flag is specified
+      run_archive=false # このフラグが指定された場合はテストのみ実行
       run_all=false
       specific_action_requested=true
-      shift # past argument
+      shift # 引数を処理済み
       ;;
     --archive-only)
       run_unit_tests=false
@@ -58,12 +58,12 @@ while [[ $# -gt 0 ]]; do
       ;;
     --test-without-building)
       skip_build_for_testing=true
-      run_archive=false # Cannot archive without building
+      run_archive=false # ビルドなしではアーカイブ不可
       run_all=false
-      # Keep specific_action_requested status from other flags
-      shift # past argument
+      # 他のフラグから specific_action_requested の状態を維持
+      shift # 引数を処理済み
       ;;
-    *)    # unknown option
+    *)    # 不明なオプション
       echo "Unknown option: $1"
       exit 1
       ;;
@@ -90,28 +90,11 @@ success() {
 }
 
 fail() {
-  echo "❌ Error: $1"
+  echo "❌ Error: $1" >&2 # エラーを標準エラー出力へリダイレクト
   exit 1
 }
 
-check_command() {
-  if ! command -v $1 &> /dev/null; then
-    echo "⚠️ Warning: '$1' command not found. Attempting to install..."
-    if [ "$1" == "xcpretty" ]; then
-      gem install xcpretty || fail "Failed to install xcpretty. Please install it manually (gem install xcpretty)."
-      success "xcpretty installed successfully."
-    else
-      fail "Required command '$1' is not installed. Please install it."
-    fi
-  fi
-}
-
 # === Main Script ===
-
-# Check prerequisites
-step "Checking prerequisites"
-check_command xcpretty
-success "Prerequisites met."
 
 # Clean previous outputs and create directories (only if not skipping build)
 if [ "$skip_build_for_testing" = false ] || [ "$run_archive" = true ]; then
@@ -124,7 +107,7 @@ if [ "$skip_build_for_testing" = false ] || [ "$run_archive" = true ]; then
   success "Directories created under $OUTPUT_DIR."
 else
   step "Skipping cleanup and directory creation (reusing existing build outputs)"
-  # Ensure required directories for tests exist if running tests without building
+  # ビルドせずにテストを実行する場合、テストに必要なディレクトリが存在することを確認
   if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       if [ ! -d "$TEST_DERIVED_DATA_DIR" ]; then
           fail "Cannot run tests without building: DerivedData directory not found at $TEST_DERIVED_DATA_DIR. Run a full build first."
@@ -138,22 +121,40 @@ fi
 if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
   step "Running Tests"
 
-  # Find simulator
+  # シミュレータを検索
   echo "Finding simulator..."
-  SIMULATOR_ID=$(./.github/scripts/find-simulator.sh)
+  FIND_SIMULATOR_SCRIPT="./.github/scripts/find-simulator.sh"
+
+  # スクリプトが実行可能であることを確認
+  if [ ! -x "$FIND_SIMULATOR_SCRIPT" ]; then
+    echo "Making $FIND_SIMULATOR_SCRIPT executable..."
+    chmod +x "$FIND_SIMULATOR_SCRIPT"
+    if [ $? -ne 0 ]; then
+        fail "Failed to make $FIND_SIMULATOR_SCRIPT executable."
+    fi
+  fi
+
+  # スクリプトを実行し、IDと終了コードをキャプチャ
+  SIMULATOR_ID=$("$FIND_SIMULATOR_SCRIPT")
+  SCRIPT_EXIT_CODE=$?
+
+  if [ $SCRIPT_EXIT_CODE -ne 0 ]; then
+      fail "$FIND_SIMULATOR_SCRIPT failed with exit code $SCRIPT_EXIT_CODE."
+  fi
+
   if [ -z "$SIMULATOR_ID" ]; then
-    fail "Could not find a suitable simulator."
+    fail "Could not find a suitable simulator ($FIND_SIMULATOR_SCRIPT returned empty ID)."
   fi
   echo "Using Simulator ID: $SIMULATOR_ID"
   success "Simulator selected."
 
-  # Build for Testing (unless skipped)
+  # テスト用にビルド (スキップされていない場合)
   if [ "$skip_build_for_testing" = false ]; then
     echo "Building for testing..."
     set -o pipefail && xcodebuild build-for-testing \
       -project "$PROJECT_FILE" \
       -scheme "$WATCH_APP_SCHEME" \
-      -destination "platform=watchOS Simulator,id=$SIMULATOR_ID" \
+      -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
       -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
       -configuration Debug \
       -skipMacroValidation \
@@ -168,19 +169,19 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       success "Using existing build artifacts."
   fi
 
-  # Run Unit Tests
+  # Unitテストを実行
   if [ "$run_unit_tests" = true ]; then
-    echo "Running unit tests..."
+    echo "Running Unit Tests..."
     set -o pipefail && xcodebuild test-without-building \
       -project "$PROJECT_FILE" \
       -scheme "$UNIT_TEST_SCHEME" \
-      -destination "platform=watchOS Simulator,id=$SIMULATOR_ID" \
+      -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
       -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
       -enableCodeCoverage NO \
       -resultBundlePath "$TEST_RESULTS_DIR/unit/TestResults.xcresult" \
     | xcpretty -c || echo "Unit test execution finished with non-zero exit code (ignoring for local check)."
 
-    # Check Unit Test Results Bundle Existence
+    # Unitテスト結果バンドルの存在を確認
     echo "Verifying unit test results bundle..."
     if [ ! -d "$TEST_RESULTS_DIR/unit/TestResults.xcresult" ]; then
       fail "Unit test result bundle not found at $TEST_RESULTS_DIR/unit/TestResults.xcresult"
@@ -188,19 +189,19 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
     success "Unit test result bundle found at $TEST_RESULTS_DIR/unit/TestResults.xcresult"
   fi
 
-  # Run UI Tests
+  # UIテストを実行
   if [ "$run_ui_tests" = true ]; then
-    echo "Running UI tests..."
+    echo "Running UI Tests..."
     set -o pipefail && xcodebuild test-without-building \
       -project "$PROJECT_FILE" \
       -scheme "$UI_TEST_SCHEME" \
-      -destination "platform=watchOS Simulator,id=$SIMULATOR_ID" \
+      -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
       -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
       -enableCodeCoverage NO \
       -resultBundlePath "$TEST_RESULTS_DIR/ui/TestResults.xcresult" \
     | xcpretty -c || echo "UI test execution finished with non-zero exit code (ignoring for local check)."
 
-    # Check UI Test Results Bundle Existence
+    # UIテスト結果バンドルの存在を確認
     echo "Verifying UI test results bundle..."
     if [ ! -d "$TEST_RESULTS_DIR/ui/TestResults.xcresult" ]; then
       fail "UI test result bundle not found at $TEST_RESULTS_DIR/ui/TestResults.xcresult"
@@ -216,13 +217,13 @@ if [ "$run_archive" = true ]; then
   ARCHIVE_PATH="$ARCHIVE_DIR/CatBoard.xcarchive"
   ARCHIVE_APP_PATH="$ARCHIVE_PATH/Products/Applications/$WATCH_APP_SCHEME.app"
 
-  # Archive Build
+  # アーカイブビルド
   echo "Building archive..."
   set -o pipefail && xcodebuild \
     -project "$PROJECT_FILE" \
     -scheme "$WATCH_APP_SCHEME" \
     -configuration Release \
-    -destination "generic/platform=watchOS" \
+    -destination "generic/platform=iOS Simulator" \
     -archivePath "$ARCHIVE_PATH" \
     -derivedDataPath "$PRODUCTION_DERIVED_DATA_DIR" \
     -skipMacroValidation \
@@ -231,7 +232,7 @@ if [ "$run_archive" = true ]; then
   | xcpretty -c || fail "Archive build failed."
   success "Archive build completed."
 
-  # Verify Archive Contents
+  # アーカイブ内容を検証
   echo "Verifying archive contents..."
   if [ ! -d "$ARCHIVE_APP_PATH" ]; then
     echo "Error: '$WATCH_APP_SCHEME.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
@@ -242,4 +243,4 @@ if [ "$run_archive" = true ]; then
   success "Archive content verified."
 fi
 
-step "Local CI Check Completed Successfully!" 
+step "Local CI Check Completed Successfully!"
