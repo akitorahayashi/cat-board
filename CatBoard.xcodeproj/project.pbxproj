@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		982CB4E62DB67664003C9D29 /* TieredGridLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 982CB4E52DB67664003C9D29 /* TieredGridLayout */; };
+		98C209CE2DBAAAF8001932F0 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 98C209CD2DBAAAF8001932F0 /* ComposableArchitecture */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				98C209CE2DBAAAF8001932F0 /* ComposableArchitecture in Frameworks */,
 				982CB4E62DB67664003C9D29 /* TieredGridLayout in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -118,6 +120,7 @@
 			name = CatBoard;
 			packageProductDependencies = (
 				982CB4E52DB67664003C9D29 /* TieredGridLayout */,
+				98C209CD2DBAAAF8001932F0 /* ComposableArchitecture */,
 			);
 			productName = CatBoard;
 			productReference = 982CB4A62DB6756D003C9D29 /* CatBoard.app */;
@@ -203,6 +206,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				982CB4E42DB67664003C9D29 /* XCRemoteSwiftPackageReference "tiered-grid-layout" */,
+				98C209CC2DBAAAF8001932F0 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 982CB4A72DB6756D003C9D29 /* Products */;
@@ -423,7 +427,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.akitorahayashi.CatBoard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -454,7 +458,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.akitorahayashi.CatBoard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -581,6 +585,14 @@
 				kind = branch;
 			};
 		};
+		98C209CC2DBAAAF8001932F0 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.19.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -588,6 +600,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 982CB4E42DB67664003C9D29 /* XCRemoteSwiftPackageReference "tiered-grid-layout" */;
 			productName = TieredGridLayout;
+		};
+		98C209CD2DBAAAF8001932F0 /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 98C209CC2DBAAAF8001932F0 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct CatBoardApp: App {
@@ -16,9 +17,13 @@ struct CatBoardApp: App {
         }
     }()
 
+    @State var store = Store(initialState: CoordinatorReducer.State()) {
+        CoordinatorReducer()
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CatImageGallery(store: self.store.scope(state: \.gallery, action: \.gallery))
         }
         .modelContainer(sharedModelContainer)
     }

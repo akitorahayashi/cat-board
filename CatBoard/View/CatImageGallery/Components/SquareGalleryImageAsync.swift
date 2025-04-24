@@ -1,7 +1,6 @@
 import SwiftUI
-import TieredGridLayout
 
-struct SquareAsyncImage: View {
+struct SquareGalleryImageAsync: View {
     let url: URL?
     @State private var shimmer = false
 
@@ -13,17 +12,17 @@ struct SquareAsyncImage: View {
                 transaction: Transaction(animation: .easeInOut(duration: 0.3))
             ) { phase in
                 switch phase {
-                case .success(let image):
-                    image.resizable()
-                         .scaledToFill()
-                         .opacity(1.0)
-                         .scaleEffect(1.0)
+                    case let .success(image):
+                        image.resizable()
+                            .scaledToFill()
+                            .opacity(1.0)
+                            .scaleEffect(1.0)
 
-                case .failure(_):
-                    placeholder(symbol: "photo")
+                    case .failure:
+                        placeholder(symbol: "photo")
 
-                default:
-                    placeholder(symbol: nil)
+                    default:
+                        placeholder(symbol: nil)
                 }
             }
             .frame(width: geometryWidth, height: geometryWidth)
@@ -38,7 +37,7 @@ struct SquareAsyncImage: View {
     private func placeholder(symbol: String?) -> some View {
         ZStack {
             Color(.secondarySystemBackground)
-            if let symbol = symbol {
+            if let symbol {
                 Image(systemName: symbol)
                     .resizable()
                     .scaledToFit()
@@ -62,36 +61,4 @@ struct SquareAsyncImage: View {
             }
         }
     }
-}
-
-struct ContentView: View {
-    @StateObject private var viewModel = ContentViewModel()
-    
-    var body: some View {
-        ScrollView {
-            TieredGridLayout {
-                ForEach(viewModel.items) { item in
-                    SquareAsyncImage(url: URL(string: item.imageURL))
-                        .border(Color.white, width: 2)
-                }
-            }
-            .onAppear {
-                Task {
-                    await viewModel.fetchImages()
-                }
-            }
-            .overlay {
-                if viewModel.isLoading {
-                    ProgressView("Loading...")
-                } else if let errorMessage = viewModel.errorMessage {
-                    Text("Error: \(errorMessage)")
-                        .foregroundColor(.red)
-                }
-            }
-        }
-    }
-}
-
-#Preview {
-    ContentView()
 }
