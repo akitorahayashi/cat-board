@@ -29,7 +29,7 @@ if [ -z "$SIMULATOR_UDID" ]; then
     echo "Error: No available iOS simulator found." >&2
     echo "--- simctl output excerpt (iOS Simulators) --- " >&2
     echo "$SIMCTL_OUTPUT" | jq '.devices | to_entries[] | select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS"))' || echo "(jq extraction failed)" >&2
-    echo "-------------------------------------" >&2
+    echo "----------------------------------------------" >&2
     exit 1
 fi
 
