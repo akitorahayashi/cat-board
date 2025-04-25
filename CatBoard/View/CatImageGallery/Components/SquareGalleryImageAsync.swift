@@ -56,9 +56,26 @@ struct SquareGalleryImageAsync: View {
                             endPoint: .init(x: 2, y: 0.5)
                         )
                     )
-                    .offset(x: shimmer ? 300 : -300)
+                    .offset(x: shimmer ? 100 : -100)
                     .animation(Animation.linear(duration: 1.5).repeatForever(autoreverses: false), value: shimmer)
             }
         }
     }
 }
+
+//#Preview("Success") {
+//    SquareGalleryImageAsync(url: URL(string: "https://cdn2.thecatapi.com/images/0XYvRd7oD.jpg"))
+//        .frame(width: 150, height: 150)
+//}
+
+#Preview("Placeholder (Loading/Nil URL)") {
+    SquareGalleryImageAsync(url: nil)
+        .frame(width: 150, height: 150)
+}
+
+//#Preview("Placeholder (Failure)") {
+//    // Use a deliberately non-resolving URL to potentially trigger the failure case,
+//    // though network conditions might still show loading first.
+//    SquareGalleryImageAsync(url: URL(string: "file:///nonexistent.jpg"))
+//        .frame(width: 150, height: 150)
+//}

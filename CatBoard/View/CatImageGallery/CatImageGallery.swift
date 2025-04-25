@@ -10,7 +10,7 @@ struct CatImageGallery: View {
             ScrollView {
                 scrollViewContent
             }
-            .navigationTitle("Cat Gallery")
+            .navigationTitle("Cat Board")
             .task {
                 await store.send(.task).finish()
             }
@@ -47,10 +47,11 @@ struct CatImageGallery: View {
                     store.send(.imageTapped(image.id))
                 } label: {
                     SquareGalleryImageAsync(url: URL(string: image.imageURL))
-                        .border(Color.white, width: 2)
+                        .border(Color(.secondarySystemBackground).opacity(0.6), width: 2)
                         .clipped()
                     
                 }
+                .buttonStyle(.plain)
                 .padding(.horizontal, 2)
             }
             
