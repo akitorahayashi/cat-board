@@ -1,18 +1,21 @@
 import XCTest
 
 final class CatBoardUITestsLaunchTests: XCTestCase {
-    override static var runsForEachTargetApplicationUIConfiguration: Bool {
-        true
-    }
+    var app: XCUIApplication!
 
-    override func setUpWithError() throws {
+    override func setUp() {
         continueAfterFailure = false
+        app = XCUIApplication()
+    }
+    
+    override func tearDown() {
+        app.terminate()
     }
 
     @MainActor
     func testLaunchPerformance() throws {
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+        measure(metrics: [XCTApplicationLaunchMetric(waitUntilResponsive: true)]) {
+            app.launch()
         }
     }
 }
