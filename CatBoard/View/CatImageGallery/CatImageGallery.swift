@@ -4,54 +4,11 @@ import TieredGridLayout
 
 struct CatImageGallery: View {
     @State var store: StoreOf<GalleryReducer>
-
+    
     var body: some View {
         NavigationView {
             ScrollView {
-                if store.isLoading {
-                    ProgressView("Loading...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding()
-                } else if let errorMessage = store.errorMessage {
-                    Text("Error: \(errorMessage)")
-                        .foregroundColor(.red)
-                        .padding()
-                } else if store.items.isEmpty {
-                    Text("サーバーエラーが発生しました。")
-                        .padding()
-                } else {
-                    Text("一時的にTieredGridLayoutはコメントアウト")
-                    /*
-                     TieredGridLayout(items: store.items) { image in
-                         Button {
-                             store.send(.imageTapped(image.id))
-                         } label: {
-                             AsyncImage(url: image.url) { phase in
-                                 if let img = phase.image {
-                                     img.resizable()
-                                         .aspectRatio(contentMode: .fill)
-                                 } else if phase.error != nil {
-                                     Color.red
-                                 } else {
-                                     Color.gray.opacity(0.3)
-                                 }
-                             }
-                             .border(Color.white, width: 2)
-                             .clipped()
-                         }
-                     }
-                     .padding(.horizontal, 2)
-
-                     if store.canLoadMore, !store.isLoadingMore {
-                         Button("Load More") {
-                             store.send(.fetchImages)
-                         }
-                         .padding()
-                     } else if store.isLoadingMore {
-                         ProgressView().padding()
-                     }
-                     */
-                }
+                scrollViewContent
             }
             .navigationTitle("Cat Gallery")
             .task {
@@ -60,6 +17,55 @@ struct CatImageGallery: View {
             .refreshable {
                 await store.send(.pullToRefresh).finish()
             }
+        }
+    }
+    
+    @ViewBuilder
+    private var scrollViewContent: some View {
+        if store.isLoading {
+            ProgressView("Loading...")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+        } else if let errorMessage = store.errorMessage {
+            Text("Error: \(errorMessage)")
+                .foregroundColor(.red)
+                .padding()
+        } else if store.items.isEmpty {
+            Text("サーバーエラーが発生しました。")
+                .padding()
+        } else {
+            galleryGrid
+            loadMoreSection
+        }
+    }
+    
+    @ViewBuilder
+    private var galleryGrid: some View {
+        TieredGridLayout {
+            ForEach(store.items) { image in
+                Button {
+                    store.send(.imageTapped(image.id))
+                } label: {
+                    SquareGalleryImageAsync(url: URL(string: image.imageURL))
+                        .border(Color.white, width: 2)
+                        .clipped()
+                    
+                }
+                .padding(.horizontal, 2)
+            }
+            
+        }
+    }
+    
+    @ViewBuilder
+    private var loadMoreSection: some View {
+        if store.canLoadMore, !store.isLoadingMore {
+            Button("Load More") {
+                store.send(.fetchImages)
+            }
+            .padding()
+        } else if store.isLoadingMore {
+            ProgressView().padding()
         }
     }
 }

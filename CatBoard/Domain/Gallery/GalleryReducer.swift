@@ -43,6 +43,11 @@ struct GalleryReducer {
                     print("取得エラー: \(error)")
                     return .none
 
+                case let .imageTapped(id):
+                    // Handle the image tapped action, e.g., navigate to detail view
+                    print("Image tapped with ID: \(id)")
+                    return .none
+
                 case .clearError:
                     // エラーメッセージをクリア
                     state.errorMessage = nil

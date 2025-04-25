@@ -7,6 +7,6 @@ enum GalleryAction {
     case pullToRefresh
     case fetchImages
     case fetchImagesResponse(Result<[CatImageModel], Error>)
-    // case imageTapped(CatImageModel.ID)
+    case imageTapped(CatImageModel.ID)
     case clearError
 }
