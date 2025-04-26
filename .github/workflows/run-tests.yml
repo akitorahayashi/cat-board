@@ -21,7 +21,7 @@ jobs:
         xcode-version: '16.2'
 
     - name: Create Test Output Directories
-      run: mkdir -p ci-outputs/test-results/unit ci-outputs/test-results/ui ci-outputs/test-results/derived-data
+      run: mkdir -p ci-outputs/test-results/unit ci-outputs/test-results/ui ci-outputs/test-results/DerivedData
         
     - name: Make find-simulator script executable
       run: chmod +x .github/scripts/find-simulator.sh
@@ -41,7 +41,7 @@ jobs:
           -project "CatBoard.xcodeproj" \
           -scheme "CatBoard" \
           -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
-          -derivedDataPath ./ci-outputs/test-results/derived-data \
+          -derivedDataPath ./ci-outputs/test-results/DerivedData \
           -configuration Debug \
           -skipMacroValidation \
           CODE_SIGNING_ALLOWED=NO \

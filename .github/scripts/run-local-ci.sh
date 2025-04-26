@@ -117,7 +117,6 @@ else
   fi
 fi
 
-# --- Run Tests ---
 if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
   step "Running Tests"
 
