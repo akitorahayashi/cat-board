@@ -25,7 +25,8 @@ CoordinatorReducer がルートとなり、各ドメインの Reducer を統合�
 インフラ層では TCA の依存性注入システム (@Dependency) を採用しています。
 
 - 各サービスは Infrastructure/Interface/ に定義されたプロトコルに基づいて実装され、ドメイン層は具体的な実装詳細から分離されます
-- 各サービスは、本番用の実装、プレビュー用、テスト用にそれぞれ提供されます
+- 各サービスは、本番用の実装 (`liveValue`)、プレビュー用 (`previewValue`)、テスト用 (`testValue`) にそれぞれ提供されます
+- さらに、デバッグ用に固定データを返すモック実装 (`mockValue`) も提供され、`CatBoard/Infrastructure/Mock/` に配置されています
 
 ## 効果 (Effects) システム
 
@@ -85,6 +86,8 @@ CatBoard/
 │   │   ├── DefaultImageProcessor.swift
 │   │   ├── DiskImageCache.swift
 │   │   └── MLContentFilter.swift
+│   ├── Mock/
+│   │   └── MockImageClient.swift
 │   └── Effect/
 │       ├── EffectProtocol.swift
 │       ├── EffectPipeline.swift
