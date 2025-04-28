@@ -8,14 +8,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Mintのセットアップ
+  setup:
+    name: Setup Mint
+    uses: ./.github/workflows/setup-mint.yml
+    permissions:
+      contents: read
+
   # コード品質チェック
   code-quality:
     name: Code Quality Check
+    needs: setup
     uses: ./.github/workflows/code-quality.yml
     
   # ビルドとテスト
   build-and-test:
     name: Run Tests
+    needs: setup
     uses: ./.github/workflows/run-tests.yml
     
   # テスト結果レポート生成
@@ -45,7 +54,7 @@ jobs:
     secrets: inherit
     
   # アーカイブビルド検証
-  verify-archive-build:
+  build:
     name: Verify Archive Build
     needs: [build-and-test, code-quality]
     if: |
@@ -57,7 +66,7 @@ jobs:
   notify-completion:
     name: Notify Completion
     runs-on: ubuntu-latest
-    needs: [code-quality, build-and-test, test-report, code-review, verify-archive-build]
+    needs: [code-quality, build-and-test, test-report, code-review, build]
     if: always()
     permissions:
       issues: write
@@ -94,6 +103,6 @@ jobs:
               - ビルドとテスト: ${{ needs.build-and-test.result == 'success' && '✅' || '❌' }}
               - テスト結果レポート: ${{ needs.test-report.result == 'success' && '✅' || (needs.test-report.result == 'skipped' && '⏭️' || '❌') }}
               - コードレビュー: ${{ needs.code-review.result == 'success' && '✅' || (needs.code-review.result == 'skipped' && '⏭️' || '❌') }}
-              - アーカイブビルド検証: ${{ needs.verify-archive-build.result == 'success' && '✅' || '❌' }}
+              - アーカイブビルド検証: ${{ needs.build.result == 'success' && '✅' || '❌' }}
               `
             }); 

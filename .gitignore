@@ -1,5 +1,6 @@
 ## ユーザー設定
 xcuserdata/
+*.xcodeproj/
 
 ## ビルド関連
 DerivedData/
@@ -29,6 +30,7 @@ DerivedData/
 *.p12
 *.cer
 *.mobileprovision
+/.cursor/
 
 # CI/CD output directory
 ci-outputs/ 

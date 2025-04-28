@@ -2,7 +2,7 @@
 
 ## アーキテクチャ
 
-このアプリは The Composable Architecture (TCA) を基盤とし、関心を明確に分離したアーキテクチャを採用しています。
+このアプリは The Composable Architecture (TCA) を基盤としたアーキテクチャを採用しています。
 
 具体的には、UIを担当するプレゼンテーション層、ビジネスロジックと状態を管理するドメイン層、そして外部依存を抽象化するインフラ層に分けられます。この構成は、TCAの状態管理と依存性注入の強みを活かし、保守性の高いコードベースを実現します。
 
@@ -25,7 +25,8 @@ CoordinatorReducer がルートとなり、各ドメインの Reducer を統合�
 インフラ層では TCA の依存性注入システム (@Dependency) を採用しています。
 
 - 各サービスは Infrastructure/Interface/ に定義されたプロトコルに基づいて実装され、ドメイン層は具体的な実装詳細から分離されます
-- 各サービスは、本番用の実装、プレビュー用、テスト用にそれぞれ提供されます
+- 各サービスは、本番用の実装 (`liveValue`)、プレビュー用 (`previewValue`)、テスト用 (`testValue`) にそれぞれ提供されます
+- さらに、デバッグ用に固定データを返すモック実装 (`mockValue`) も提供され、`CatBoard/Infrastructure/Mock/` に配置されています
 
 ## 効果 (Effects) システム
 
@@ -44,68 +45,41 @@ CoordinatorReducer がルートとなり、各ドメインの Reducer を統合�
 
 ## ディレクトリ構成
 
+このプロジェクトは、機能と責務に基づいてモジュール分割された構成を目指しています。`project.yml` に基づいて XcodeGen でプロジェクトが生成されます。
+
+主なディレクトリとその役割は以下の通りです。
+
 ```
 CatBoard/
-├── CatBoardApp.swift
-├── Domain/
-│   ├── Coordinator/
-│   │   ├── CoordinatorState.swift
-│   │   ├── CoordinatorAction.swift
-│   │   └── CoordinatorReducer.swift
-│   ├── Gallery/
-│   │   ├── GalleryState.swift
-│   │   ├── GalleryAction.swift
-│   │   └── GalleryReducer.swift
-│   ├── ImageDetail/
-│   │   ├── ImageDetailState.swift
-│   │   ├── ImageDetailAction.swift
-│   │   └── ImageDetailReducer.swift
-│   └── Effects/
-│       ├── EffectsState.swift
-│       ├── EffectsAction.swift
-│       └── EffectsReducer.swift
-├── View/
-│   ├── CatImageGallery/
-│   │   ├── CatImageGallery.swift
-│   │   └── Components/
-│   │       ├── ImageGrid.swift
-│   │       ├── ImageThumbnail.swift
-│   │       └── LoadingView.swift
-│   └── Common/
-│       ├── AsyncImageView.swift
-│       └── ErrorView.swift
+├── .github/
+│   └── workflows/
+├── CBShared/
 ├── Infrastructure/
-│   ├── Interface/
-│   │   ├── ImageClient.swift
-│   │   ├── ImageProcessor.swift
-│   │   ├── ImageCache.swift
-│   │   └── ContentFilter.swift
-│   ├── Service/
-│   │   ├── CatAPIClient.swift
-│   │   ├── DefaultImageProcessor.swift
-│   │   ├── DiskImageCache.swift
-│   │   └── MLContentFilter.swift
-│   └── Effect/
-│       ├── EffectProtocol.swift
-│       ├── EffectPipeline.swift
-│       ├── ColorAdjustmentEffect.swift
-│       ├── FilterEffect.swift
-│       └── ContentFilteringEffect.swift
-├── Model/
-│   ├── CatImage.swift
-│   ├── ImageEffect.swift
-│   └── EffectSettings.swift
-├── Util/
-│   ├── ViewModifiers/
-│   │   └── ShimmerEffect.swift
-│   ├── Extensions/
-│   │   ├── View+Extensions.swift
-│   │   ├── Image+Extensions.swift
-│   │   └── Color+Extensions.swift
-│   └── Constants.swift
-├── Preview Content/
-│   └── PreviewData.swift
-└── Assets.xcassets/
+│   ├── CBLiveService/
+│   ├── CBMock/
+│   ├── CBPreview/
+│   └── CBProtocol/
+├── CatBoard/            
+│   ├── Assets.xcassets/
+│   ├── Dependency/
+│   ├── Domain/
+│   ├── View/
+│   ├── Supporting Files/
+│   └── CatBoardApp.swift
+├── CatBoardTests/       
+│   ├── Domain/
+│   └── Service/
+├── CatBoardUITests/     
+│   ├── Constant/
+│   ├── Extension/
+│   └── Tests/
+├── .gitignore
+├── .swiftformat
+├── .swiftlint.yml
+├── Mintfile
+├── project.yml
+├── ARCHITECTURE.md
+└── README.md
 ```
 
 
@@ -133,7 +107,7 @@ CatBoard/
 ## 開発環境
 
 プロジェクトのビルドと開発に必要なツールとそのバージョンは `Mintfile` で管理されています。
-以下のコマンドで必要なツール (`SwiftFormat`, `SwiftLint`) をインストールできます。
+以下のコマンドで必要なツール (`SwiftFormat`, `SwiftLint`, `XcodeGen`) をインストールできます。
 
 ```bash
 # Mintをインストール（未導入の場合）
@@ -141,10 +115,16 @@ brew install mint
 
 # Mintfileに記載されたツールをインストール/アップデート
 mint bootstrap
+
+# Xcodeプロジェクトファイルの生成
+mint run xcodegen generate
 ```
+
+プロジェクトを開く前に、必ず `mint run xcodegen generate` を実行して `CatBoard.xcodeproj` を生成してください。
 
 TCAなどの依存パッケージはSwift Package Managerによって自動的に管理されるため、Xcodeがプロジェクトを開く際に必要なパッケージを自動的にダウンロードします。
 
 これにより、プロジェクトで使用している以下のツールが自動的にインストール、またはバージョン管理されます：
 - SwiftLint (`0.59.1`)
 - SwiftFormat (`0.55.5`)
+- XcodeGen (`2.43.0`)

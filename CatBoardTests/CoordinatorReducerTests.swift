@@ -11,4 +11,4 @@ final class CoordinatorReducerTests: XCTestCase {
         }
         XCTAssertNotNil(store.state.gallery)
     }
-} 
+}

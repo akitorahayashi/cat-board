@@ -63,19 +63,19 @@ struct SquareGalleryImageAsync: View {
     }
 }
 
-//#Preview("Success") {
+// #Preview("Success") {
 //    SquareGalleryImageAsync(url: URL(string: "https://cdn2.thecatapi.com/images/0XYvRd7oD.jpg"))
 //        .frame(width: 150, height: 150)
-//}
+// }
 
 #Preview("Placeholder (Loading/Nil URL)") {
     SquareGalleryImageAsync(url: nil)
         .frame(width: 150, height: 150)
 }
 
-//#Preview("Placeholder (Failure)") {
+// #Preview("Placeholder (Failure)") {
 //    // Use a deliberately non-resolving URL to potentially trigger the failure case,
 //    // though network conditions might still show loading first.
 //    SquareGalleryImageAsync(url: URL(string: "file:///nonexistent.jpg"))
 //        .frame(width: 150, height: 150)
-//}
+// }

@@ -4,7 +4,7 @@ import TieredGridLayout
 
 struct CatImageGallery: View {
     @State var store: StoreOf<GalleryReducer>
-    
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -19,7 +19,7 @@ struct CatImageGallery: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var scrollViewContent: some View {
         if store.isLoading {
@@ -38,7 +38,7 @@ struct CatImageGallery: View {
             loadMoreSection
         }
     }
-    
+
     @ViewBuilder
     private var galleryGrid: some View {
         TieredGridLayout {
@@ -49,15 +49,13 @@ struct CatImageGallery: View {
                     SquareGalleryImageAsync(url: URL(string: image.imageURL))
                         .border(Color(.secondarySystemBackground).opacity(0.6), width: 2)
                         .clipped()
-                    
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 2)
             }
-            
         }
     }
-    
+
     @ViewBuilder
     private var loadMoreSection: some View {
         if store.canLoadMore, !store.isLoadingMore {
