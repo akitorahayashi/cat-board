@@ -7,7 +7,7 @@ final class CatBoardUITestsLaunchTests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
     }
-    
+
     override func tearDown() {
         app.terminate()
     }
