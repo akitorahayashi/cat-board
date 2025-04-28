@@ -98,9 +98,7 @@ jobs:
             let commentBody = `${commentMarker}\\n\\n## Test & Artifact Summary\\n\\n`; // Updated title
             const fs = require('fs');
             const path = require('path');
-            const core = require('@actions/core');
 
-            // --- Test Results Summary ---
             const unitTestDir = './ci-outputs/test-results/unit';
             const uiTestDir = './ci-outputs/test-results/ui';
             let junitFound = false;
