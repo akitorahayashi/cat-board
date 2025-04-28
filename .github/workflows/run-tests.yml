@@ -135,13 +135,14 @@ jobs:
           fi
           echo "✅ Unit test result bundle found at $RESULT_BUNDLE_PATH"
 
-      - name: Upload Unit Test Results
+      # Add back the temporary upload step
+      - name: Upload Temporary Unit Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-results-${{ github.run_id }}
-          path: ci-outputs/test-results/unit
-          retention-days: 7
+          name: unit-test-results-${{ github.run_id }} # Temporary name
+          path: ci-outputs/test-results/unit # Upload only unit results
+          retention-days: 1 # Short retention as it's temporary
 
   ui-test:
     needs: build-for-testing
@@ -205,13 +206,14 @@ jobs:
           fi
           echo "✅ UI test result bundle found at $RESULT_BUNDLE_PATH"
 
-      - name: Upload UI Test Results
+      # Add back the temporary upload step
+      - name: Upload Temporary UI Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ui-test-results-${{ github.run_id }}
-          path: ci-outputs/test-results/ui
-          retention-days: 7
+          name: ui-test-results-${{ github.run_id }} # Temporary name
+          path: ci-outputs/test-results/ui # Upload only ui results
+          retention-days: 1 # Short retention as it's temporary
 
   report-status:
     needs: [unit-test, ui-test]
@@ -231,4 +233,4 @@ jobs:
           else
             echo "One or both test jobs failed or were skipped."
             echo "result=failure" >> $GITHUB_OUTPUT
-          fi 
+          fi
