@@ -1,5 +1,6 @@
 ## ユーザー設定
 xcuserdata/
+*.xcodeproj/
 
 ## ビルド関連
 DerivedData/
