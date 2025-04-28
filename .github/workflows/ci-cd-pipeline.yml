@@ -8,14 +8,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Mintのセットアップ
+  setup:
+    name: Setup Mint
+    uses: ./.github/workflows/setup-mint.yml
+    permissions:
+      contents: read
+
   # コード品質チェック
   code-quality:
     name: Code Quality Check
+    needs: setup
     uses: ./.github/workflows/code-quality.yml
     
   # ビルドとテスト
   build-and-test:
     name: Run Tests
+    needs: setup
     uses: ./.github/workflows/run-tests.yml
     
   # テスト結果レポート生成

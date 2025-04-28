@@ -117,6 +117,28 @@ else
   fi
 fi
 
+# === XcodeGen ===
+# プロジェクト生成 (アーカイブ時 or ビルドを伴うテスト実行時)
+if [[ "$skip_build_for_testing" = false && ( "$run_archive" = true || "$run_unit_tests" = true || "$run_ui_tests" = true ) ]]; then
+  step "Generating Xcode project using XcodeGen"
+  # mint の存在確認
+  if ! command -v mint &> /dev/null; then
+      fail "Mint がインストールされていません。先に mint をインストールしてください。(brew install mint)"
+  fi
+  # xcodegen の存在確認 (なければ bootstrap)
+  if ! mint list | grep -q 'XcodeGen'; then
+      echo "mint で XcodeGen が見つかりません。'mint bootstrap' を実行します..."
+      mint bootstrap || fail "mint パッケージの bootstrap に失敗しました。"
+  fi
+  echo "Running xcodegen..."
+  mint run xcodegen || fail "XcodeGen によるプロジェクト生成に失敗しました。"
+  # プロジェクトファイルの存在確認
+  if [ ! -d "$PROJECT_FILE" ]; then
+    fail "XcodeGen 実行後、プロジェクトファイル '$PROJECT_FILE' が見つかりません。"
+  fi
+  success "Xcode project generated successfully."
+fi
+
 if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
   step "Running Tests"
 
@@ -178,6 +200,7 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
       -enableCodeCoverage NO \
       -resultBundlePath "$TEST_RESULTS_DIR/unit/TestResults.xcresult" \
+      CODE_SIGNING_ALLOWED=NO \
     | xcbeautify --report junit --report-path "$TEST_RESULTS_DIR/unit/junit.xml"
 
     # Unitテスト結果バンドルの存在を確認
@@ -198,6 +221,7 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
       -enableCodeCoverage NO \
       -resultBundlePath "$TEST_RESULTS_DIR/ui/TestResults.xcresult" \
+      CODE_SIGNING_ALLOWED=NO \
     | xcbeautify --report junit --report-path "$TEST_RESULTS_DIR/ui/junit.xml"
 
     # UIテスト結果バンドルの存在を確認
