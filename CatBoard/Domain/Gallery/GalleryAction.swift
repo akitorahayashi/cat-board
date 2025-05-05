@@ -8,7 +8,7 @@ enum GalleryAction {
     case imageRepository(ImageRepositoryAction)
 
     // ギャラリー固有のアクション
-    case task
+    case loadInitialImages
     case imageTapped(UUID)
     case clearError
 }
