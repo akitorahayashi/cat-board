@@ -12,9 +12,12 @@ SwiftUI View で構成され、ユーザーインターフェースの表示と�
 
 ### ドメイン層 (Domain/)
 
-TCA の主要コンポーネント (State, Action, Reducer) で構成されます。各機能（Coordinator, Gallery, ImageDetail, Effects）が独立したドメインとして定義され、それぞれの状態管理とビジネスロジックを担当します。副作用（APIリクエスト、画像処理など）の実行は、注入された依存サービスに委譲します。
+TCA の主要コンポーネント (State, Action, Reducer) で構成されます。
+各機能（例: `Coordinator`, `Gallery`, `ImageRepository`）が独立したドメインとして定義され、それぞれの状態管理とビジネスロジックを担当します。
 
-CoordinatorReducer がルートとなり、各ドメインの Reducer を統合し、アプリ全体の状態遷移や機能間の連携を管理します。
+- **`CoordinatorReducer`**: ルートとして各ドメインの Reducer を統合し、アプリ全体の状態遷移や機能間の連携を管理します。
+- **`GalleryReducer`**: ギャラリー画面固有の表示ロジック（例：画像タップ処理）や、`ImageRepositoryReducer` へのデータ要求などを担当します。
+- **`ImageRepositoryReducer`**: 画像データの取得（API通信）、キャッシュ管理（将来実装予定）、および関連する状態（画像リスト、読み込み状態など）の管理を担当します。副作用の実行は、注入された依存サービス（`ImageClient` など）に委譲します。
 
 ### インフラ層 (Infrastructure/)
 
@@ -50,26 +53,29 @@ CoordinatorReducer がルートとなり、各ドメインの Reducer を統合�
 主なディレクトリとその役割は以下の通りです。
 
 ```
-CatBoard/
+cat-board
 ├── .github/
 │   └── workflows/
-├── CBShared/
-├── Infrastructure/
-│   ├── CBLiveService/
-│   ├── CBMock/
-│   ├── CBPreview/
-│   └── CBProtocol/
-├── CatBoard/            
+├── CatBoard/
 │   ├── Assets.xcassets/
-│   ├── Dependency/
 │   ├── Domain/
+│   │   ├── Coordinator/
+│   │   ├── Gallery/
+│   │   └── ImageRepository/
+│   ├── Infrastructure/
+│   │   ├── Interface/
+│   │   └── Service/
+│   ├── Model/
 │   ├── View/
-│   ├── Supporting Files/
+│   │   ├── CatImageGallery/
+│   │   └── Common/
+│   ├── Preview Content/
+│   ├── Info.plist
 │   └── CatBoardApp.swift
-├── CatBoardTests/       
+├── CatBoardTests/
 │   ├── Domain/
 │   └── Service/
-├── CatBoardUITests/     
+├── CatBoardUITests/
 │   ├── Constant/
 │   ├── Extension/
 │   └── Tests/
@@ -78,7 +84,6 @@ CatBoard/
 ├── .swiftlint.yml
 ├── Mintfile
 ├── project.yml
-├── ARCHITECTURE.md
 └── README.md
 ```
 

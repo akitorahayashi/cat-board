@@ -42,6 +42,9 @@ packages:
   TieredGridLayout:
     url: https://github.com/terrio32/tiered-grid-layout
     from: "1.0.2"
+  IdentifiedCollections:
+    url: https://github.com/pointfreeco/swift-identified-collections
+    from: "1.0.0"
   # Add other necessary packages for CatBoard here
 
 targets:
@@ -65,6 +68,8 @@ targets:
         product: TieredGridLayout
       - package: CatScreeningKit
         product: CatScreeningKit
+      - package: IdentifiedCollections
+        product: IdentifiedCollections
     settings:
       base:
         DEVELOPMENT_LANGUAGE: ja
@@ -122,6 +127,8 @@ targets:
         product: SwiftNavigation
       - package: Clocks
         product: Clocks
+      - package: IdentifiedCollections
+        product: IdentifiedCollections
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardTests

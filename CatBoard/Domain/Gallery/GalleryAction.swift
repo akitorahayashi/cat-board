@@ -1,12 +1,14 @@
 import ComposableArchitecture
 import Foundation
+import SwiftUI
 
 @CasePathable
 enum GalleryAction {
+    // 子ドメインのアクション
+    case imageRepository(ImageRepositoryAction)
+
+    // ギャラリー固有のアクション
     case task
-    case pullToRefresh
-    case fetchImages
-    case fetchImagesResponse(Result<[CatImageModel], Error>)
-    case imageTapped(CatImageModel.ID)
+    case imageTapped(UUID)
     case clearError
 }
