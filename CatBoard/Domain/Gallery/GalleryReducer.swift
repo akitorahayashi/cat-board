@@ -21,11 +21,11 @@ struct GalleryReducer {
 
         Reduce { state, action in
             switch action {
-            case .task:
+            case .loadInitialImages:
                 // ImageRepositoryの.taskへ転送
-                return .send(.imageRepository(.task))
+                return .send(.imageRepository(.loadInitialImages))
 
-            case .imageRepository(.pullToRefresh):
+            case .imageRepository(.pullRefresh):
                  // リフレッシュ時に選択状態をリセット
                  state.selectedImageId = nil
                  return .none
