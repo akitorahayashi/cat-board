@@ -4,12 +4,27 @@ import TieredGridLayout
 
 struct CatImageGallery: View {
     @State var store: StoreOf<GalleryReducer>
-
+    
     var body: some View {
         WithPerceptionTracking {
             NavigationView {
                 ScrollView {
-                    scrollViewContent
+                    if store.imageRepository.isLoading {
+                        ProgressView("Loading...")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding()
+                    } else if let errorMessage = store.imageRepository.errorMessage {
+                        Text("Error: \(errorMessage)")
+                            .foregroundColor(.red)
+                            .padding()
+                    } else if store.imageRepository.items.isEmpty {
+                        Text("サーバーエラーが発生しました。")
+                            .padding()
+                    } else {
+                        galleryGrid
+                        loadMoreSection
+                    }
+                    
                 }
                 .navigationTitle("Cat Board")
                 .task {
@@ -20,27 +35,9 @@ struct CatImageGallery: View {
                 }
             }
         }
+        
     }
-
-    @ViewBuilder
-    private var scrollViewContent: some View {
-        if store.imageRepository.isLoading {
-            ProgressView("Loading...")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding()
-        } else if let errorMessage = store.imageRepository.errorMessage {
-            Text("Error: \(errorMessage)")
-                .foregroundColor(.red)
-                .padding()
-        } else if store.imageRepository.items.isEmpty {
-            Text("サーバーエラーが発生しました。")
-                .padding()
-        } else {
-            galleryGrid
-            loadMoreSection
-        }
-    }
-
+    
     @ViewBuilder
     private var galleryGrid: some View {
         TieredGridLayout {
@@ -56,8 +53,9 @@ struct CatImageGallery: View {
                 .padding(.horizontal, 2)
             }
         }
+        
     }
-
+    
     @ViewBuilder
     private var loadMoreSection: some View {
         if store.imageRepository.canLoadMore, !store.imageRepository.isLoadingMore {
@@ -68,13 +66,6 @@ struct CatImageGallery: View {
         } else if store.imageRepository.isLoadingMore {
             ProgressView().padding()
         }
+        
     }
-}
-
-#Preview {
-    CatImageGallery(
-        store: Store(initialState: GalleryReducer.State()) {
-            GalleryReducer()
-        }
-    )
 }
