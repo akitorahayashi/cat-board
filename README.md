@@ -53,7 +53,7 @@ TCA の主要コンポーネント (State, Action, Reducer) で構成されま�
 主なディレクトリとその役割は以下の通りです。
 
 ```
-CatBoard/
+cat-board
 ├── .github/
 │   └── workflows/
 ├── CatBoard/
