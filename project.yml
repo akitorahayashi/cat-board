@@ -21,6 +21,9 @@ settings:
 #     teamID: YOUR_TEAM_ID
 
 packages:
+  CatScreeningKit:
+    url: https://github.com/terrio32/cat-screening-kit
+    from: "1.0.0"
   ComposableArchitecture:
     url: https://github.com/pointfreeco/swift-composable-architecture
     from: "1.19.1"
@@ -37,8 +40,8 @@ packages:
     url: https://github.com/pointfreeco/swift-clocks
     from: "1.0.0"
   TieredGridLayout:
-    url: https://github.com/akitorahayashi/tiered-grid-layout
-    branch: main
+    url: https://github.com/terrio32/tiered-grid-layout
+    from: "1.0.2"
   # Add other necessary packages for CatBoard here
 
 targets:
@@ -58,9 +61,10 @@ targets:
         product: SwiftNavigation
       - package: Clocks
         product: Clocks
-        condition: { config: Debug }
       - package: TieredGridLayout
         product: TieredGridLayout
+      - package: CatScreeningKit
+        product: CatScreeningKit
     settings:
       base:
         DEVELOPMENT_LANGUAGE: ja
@@ -85,6 +89,20 @@ targets:
             UIWindowSceneSessionRoleApplication:
               - UISceneConfigurationName: Default Configuration
                 UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIStatusBarStyle: UIStatusBarStyleDefault
+        UIStatusBarHidden: false
+        UIViewControllerBasedStatusBarAppearance: true
+        UIRequiresFullScreen: false
         # Add other necessary plist keys
 
   CatBoardTests:

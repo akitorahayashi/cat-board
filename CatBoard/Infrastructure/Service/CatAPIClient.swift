@@ -1,9 +1,6 @@
 import ComposableArchitecture
 import Foundation
 
-// CatImageModel は他の場所（おそらく Model/）で定義されていると仮定
-// struct CatImageModel: Codable, Identifiable { ... }
-
 struct CatAPIClient {
     func fetchImages(limit: Int, page: Int) async throws -> [CatImageModel] {
         let apiUrl = "https://api.thecatapi.com/v1/images/search?limit=\(limit)&page=\(page)"
