@@ -5,6 +5,9 @@ import UIKit
 
 @Reducer
 struct ImageRepositoryReducer {
+    // Define a constant for the fetch limit
+    static let fetchLimit = 10
+
     @Dependency(\.imageClient) var imageClient
 
     @ObservableState
@@ -37,7 +40,7 @@ struct ImageRepositoryReducer {
             state.isLoadingMore = false
 
             return .run { (send: Send<Action>) in
-                await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(10, 0) }))
+                await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(Self.fetchLimit, 0) }))
             }
 
         case .loadMoreImages:
@@ -46,7 +49,7 @@ struct ImageRepositoryReducer {
             let pageToFetch = state.currentPage
 
             return .run { [pageToFetch] send in
-                await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(10, pageToFetch) }))
+                await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(Self.fetchLimit, pageToFetch) }))
             }
 
         case let .internalProcessFetchedImages(result):
@@ -139,7 +142,7 @@ struct ImageRepositoryReducer {
             state.isLoadingMore = false
 
             return .run { send in
-                 await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(10, 0) }))
+                 await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(Self.fetchLimit, 0) }))
             }
         }
     }
