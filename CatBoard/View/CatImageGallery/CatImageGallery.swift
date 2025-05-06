@@ -15,17 +15,21 @@ struct CatImageGallery: View {
                             .background(Color(.systemBackground).edgesIgnoringSafeArea(.all))
                     } else {
                         ScrollView {
-                            if let errorMessage = store.imageRepository.errorMessage {
-                                Text("Error: \(errorMessage)")
-                                    .foregroundColor(.red)
-                                    .padding()
-                            } else if store.imageRepository.items.isEmpty && !store.imageRepository.isLoading {
-                                Text("サーバーエラーが発生しました。")
-                                    .padding()
-                            } else {
-                                galleryGrid
-                                loadMoreSection
+                            VStack {
+                                if let errorMessage = store.imageRepository.errorMessage {
+                                    Text("Error: \(errorMessage)")
+                                        .foregroundColor(.red)
+                                        .padding()
+                                } else if store.imageRepository.items.isEmpty && !store.imageRepository.isLoading {
+                                    Text("サーバーエラーが発生しました。")
+                                        .padding()
+                                } else {
+                                    galleryGrid
+                                    loadMoreSection
+                                }
                             }
+                            .animation(.default, value: store.imageRepository.isLoadingMore)
+                            .animation(.default, value: store.imageRepository.canLoadMore)
                         }
                         .refreshable {
                             await store.send(.imageRepository(.pullRefresh)).finish()
@@ -53,17 +57,26 @@ struct CatImageGallery: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 2)
+                .transition(.opacity)
             }
         }
+        .animation(.default, value: store.imageRepository.items)
     }
 
     @ViewBuilder
     private var loadMoreSection: some View {
-        if store.imageRepository.canLoadMore, !store.imageRepository.isLoadingMore {
-            Button("Load More") {
-                store.send(.imageRepository(.loadMoreImages))
+        if store.imageRepository.initialLoadCompleted {
+            if store.imageRepository.isLoadingMore {
+                ProgressView()
+                    .padding()
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            } else if store.imageRepository.canLoadMore {
+                Button("Load More") {
+                    store.send(.imageRepository(.loadMoreImages))
+                }
+                .padding()
+                .transition(.opacity)
             }
-            .padding()
         }
     }
 }

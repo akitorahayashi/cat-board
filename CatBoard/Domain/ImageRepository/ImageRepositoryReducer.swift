@@ -13,6 +13,8 @@ struct ImageRepositoryReducer {
         var items: IdentifiedArrayOf<CatImageModel> = []
         var isLoading = false
         var isLoadingMore = false
+        var isRefreshing = false
+        var initialLoadCompleted = false
         var canLoadMore = true
         var errorMessage: String?
         var currentPage = 0
@@ -43,57 +45,60 @@ struct ImageRepositoryReducer {
                 state.errorMessage = nil
                 state.isLoading = true
                 state.isLoadingMore = false
-
+                state.isRefreshing = false
+                state.initialLoadCompleted = false
                 return fetchImagesEffect(page: state.currentPage, requestedLimit: Self.fetchLimit)
 
             case .loadMoreImages:
-                guard state.canLoadMore, !state.isLoadingMore, !state.isLoading else { return .none }
+                guard state.canLoadMore, !state.isLoadingMore, !state.isLoading, state.initialLoadCompleted else { return .none }
                 state.isLoadingMore = true
-                let pageToFetch = state.currentPage
-
-                return fetchImagesEffect(page: pageToFetch, requestedLimit: Self.fetchLimit)
+                state.isLoading = true
+                state.isRefreshing = false
+                return fetchImagesEffect(page: state.currentPage, requestedLimit: Self.fetchLimit)
 
             case .pullRefresh:
-                guard !state.isLoading else { return .cancel(id: CancelID.fetchImages) }
-                state.items = []
                 state.currentPage = 0
                 state.canLoadMore = true
                 state.errorMessage = nil
                 state.isLoading = true
                 state.isLoadingMore = false
-
+                state.isRefreshing = true
+                state.initialLoadCompleted = false
                 return fetchImagesEffect(page: state.currentPage, requestedLimit: Self.fetchLimit)
 
             case let ._receivedImageBatch(batch):
-                if batch.isEmpty && (state.isLoading || state.isLoadingMore) {
-                    // ストリームから空のバッチが来た場合、それはもうデータがない可能性を示唆する。
-                    // ただし、LiveImageClient は空のバッチを yield しない想定。
-                    // ストリームが finish するまで canLoadMore の判断は保留する。
-                } else {
-                    let newItems = batch.map { model -> CatImageModel in
-                        var mutableModel = model
-                        mutableModel.isLoading = false
-                        return mutableModel
-                    }
-                    state.items.append(contentsOf: newItems)
+                if state.isRefreshing {
+                    state.items = []
+                    state.isRefreshing = false
+                }
+                
+                let newItems = batch.map { model -> CatImageModel in
+                    var mutableModel = model
+                    mutableModel.isLoading = false
+                    return mutableModel
+                }
+                state.items.append(contentsOf: newItems)
+                if !batch.isEmpty {
                     state.currentPage += 1
                 }
                 return .none
 
             case ._fetchStreamCompleted:
+                if !state.isLoadingMore && !state.isRefreshing && state.isLoading {
+                    state.initialLoadCompleted = true
+                }
                 state.isLoading = false
                 state.isLoadingMore = false
-                if state.items.count < (state.currentPage * Self.fetchLimit) && state.items.count > 0 {
-                    // state.canLoadMore = false
-                }
-                print("[ImageRepositoryReducer] Fetch stream completed.")
+                state.isRefreshing = false
+                print("[ImageRepositoryReducer] Fetch stream COMPLETED (isLoading=false)")
                 return .none
 
             case let ._fetchStreamFailed(error):
                 state.isLoading = false
                 state.isLoadingMore = false
+                state.isRefreshing = false
                 state.errorMessage = error.localizedDescription
-                print("[ImageRepositoryReducer] Fetch stream failed: \(error.localizedDescription)")
+                print("[ImageRepositoryReducer] Fetch stream FAILED (isLoading=false): \(error.localizedDescription)")
                 return .none
         }
     }
@@ -102,7 +107,9 @@ struct ImageRepositoryReducer {
         .run { send in
             let stream = await imageClient.fetchImages(requestedLimit, page)
             do {
+                var isEmptyStream = true
                 for try await batch in stream {
+                    isEmptyStream = false
                     await send(._receivedImageBatch(batch))
                 }
                 await send(._fetchStreamCompleted)
