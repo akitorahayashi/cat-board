@@ -76,9 +76,32 @@ public struct LiveImageClient: ImageClientProtocol {
     }
 
     private func performFetch(limit: Int, page: Int) async throws -> [CatImageModel] {
-        print(
-            "[LiveImageClient performFetch] Placeholder: Actual API call to fetch image metadata for limit: \(limit), page: \(page) is needed here."
-        )
-        return []
+        guard let url = URL(string: "https://api.thecatapi.com/v1/images/search?limit=\(limit)&page=\(page)&order=Rand") else {
+            throw URLError(.badURL)
+        }
+
+        let request = URLRequest(url: url)
+        // APIキーが必要な場合は、ここでリクエストヘッダーに追加します。
+        // 例: request.addValue("YOUR_API_KEY", forHTTPHeaderField: "x-api-key")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            // HTTPステータスコードが200以外の場合のエラー処理
+            // 必要に応じて、より詳細なエラー情報を含むカスタムエラーをスローします。
+            print("[LiveImageClient performFetch] HTTP Error: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+            throw URLError(.badServerResponse)
+        }
+
+        do {
+            let decoder = JSONDecoder()
+            let catImages = try decoder.decode([CatImageModel].self, from: data)
+            return catImages
+        } catch {
+            print("[LiveImageClient performFetch] JSON decode error: \(error)")
+            // JSONデコード失敗時のエラー処理
+            // 必要に応じて、より詳細なエラー情報を含むカスタムエラーをスローします。
+            throw error
+        }
     }
 }
