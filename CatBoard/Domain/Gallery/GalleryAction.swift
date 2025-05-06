@@ -5,10 +5,10 @@ import SwiftUI
 @CasePathable
 enum GalleryAction {
     // 子ドメインのアクション
-    case imageRepository(ImageRepositoryAction)
+    case imageRepository(ImageRepositoryReducer.Action)
 
     // ギャラリー固有のアクション
-    case task
+    case loadInitialImages
     case imageTapped(UUID)
     case clearError
 }
