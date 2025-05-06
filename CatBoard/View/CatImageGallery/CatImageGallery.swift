@@ -4,7 +4,7 @@ import TieredGridLayout
 
 struct CatImageGallery: View {
     @State var store: StoreOf<GalleryReducer>
-    
+
     var body: some View {
         WithPerceptionTracking {
             NavigationView {
@@ -24,7 +24,6 @@ struct CatImageGallery: View {
                         galleryGrid
                         loadMoreSection
                     }
-                    
                 }
                 .navigationTitle("Cat Board")
                 .task {
@@ -35,9 +34,8 @@ struct CatImageGallery: View {
                 }
             }
         }
-        
     }
-    
+
     @ViewBuilder
     private var galleryGrid: some View {
         TieredGridLayout {
@@ -53,9 +51,8 @@ struct CatImageGallery: View {
                 .padding(.horizontal, 2)
             }
         }
-        
     }
-    
+
     @ViewBuilder
     private var loadMoreSection: some View {
         if store.imageRepository.canLoadMore, !store.imageRepository.isLoadingMore {
@@ -66,6 +63,5 @@ struct CatImageGallery: View {
         } else if store.imageRepository.isLoadingMore {
             ProgressView().padding()
         }
-        
     }
 }

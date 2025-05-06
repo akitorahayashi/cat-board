@@ -7,7 +7,7 @@ struct CatBoardApp: App {
     @State var store = Store(initialState: CoordinatorReducer.State()) {
         CoordinatorReducer()
     }
-    
+
     var body: some Scene {
         WindowGroup {
             WithPerceptionTracking {

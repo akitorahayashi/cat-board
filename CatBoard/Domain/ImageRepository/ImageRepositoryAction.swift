@@ -11,4 +11,4 @@ enum ImageRepositoryAction {
 
     // スクリーニング済み画像での状態更新
     case updateStateWithScreenedImages(originalCount: Int, screenedImages: [CatImageModel])
-} 
+}

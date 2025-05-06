@@ -11,13 +11,13 @@ enum ScreeningLabel: String, Equatable {
     /// - Parameter stringValue: モデルから返されるラベル文字列
     init(stringValue: String) {
         switch stringValue.lowercased() {
-        case "scary":
-            self = .scary
-        case "not scary":
-            self = .notScary
-        default:
-            print("WARN: Unknown screening label received: \(stringValue)")
-            self = .unknown
+            case "scary":
+                self = .scary
+            case "not scary":
+                self = .notScary
+            default:
+                print("WARN: Unknown screening label received: \(stringValue)")
+                self = .unknown
         }
     }
-} 
+}
