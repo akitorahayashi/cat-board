@@ -8,29 +8,33 @@ struct CatImageGallery: View {
     var body: some View {
         WithPerceptionTracking {
             NavigationView {
-                ScrollView {
-                    if store.imageRepository.isLoading {
+                Group {
+                    if store.imageRepository.isLoading && store.imageRepository.items.isEmpty {
                         ProgressView("Loading...")
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .padding()
-                    } else if let errorMessage = store.imageRepository.errorMessage {
-                        Text("Error: \(errorMessage)")
-                            .foregroundColor(.red)
-                            .padding()
-                    } else if store.imageRepository.items.isEmpty {
-                        Text("サーバーエラーが発生しました。")
-                            .padding()
+                            .background(Color(.systemBackground).edgesIgnoringSafeArea(.all))
                     } else {
-                        galleryGrid
-                        loadMoreSection
+                        ScrollView {
+                            if let errorMessage = store.imageRepository.errorMessage {
+                                Text("Error: \(errorMessage)")
+                                    .foregroundColor(.red)
+                                    .padding()
+                            } else if store.imageRepository.items.isEmpty && !store.imageRepository.isLoading {
+                                Text("サーバーエラーが発生しました。")
+                                    .padding()
+                            } else {
+                                galleryGrid
+                                loadMoreSection
+                            }
+                        }
+                        .refreshable {
+                            await store.send(.imageRepository(.pullRefresh)).finish()
+                        }
                     }
                 }
                 .navigationTitle("Cat Board")
                 .task {
                     await store.send(.loadInitialImages).finish()
-                }
-                .refreshable {
-                    await store.send(.imageRepository(.pullRefresh)).finish()
                 }
             }
         }
@@ -60,8 +64,6 @@ struct CatImageGallery: View {
                 store.send(.imageRepository(.loadMoreImages))
             }
             .padding()
-        } else if store.imageRepository.isLoadingMore {
-            ProgressView().padding()
         }
     }
 }

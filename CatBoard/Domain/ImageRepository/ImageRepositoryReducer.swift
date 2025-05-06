@@ -88,8 +88,6 @@ struct ImageRepositoryReducer {
                         return .none
                 }
 
-        // _handleProcessedImages アクションと関連ケースは削除された
-
             case .pullRefresh:
                 guard !state.isLoading else { return .none }
                 state.items = []
@@ -100,7 +98,6 @@ struct ImageRepositoryReducer {
                 state.isLoadingMore = false
 
                 return .run { send async in
-                    // imageClient.fetchImages がスクリーニングとフィルタリングを行う
                     await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(
                         Self.fetchLimit,
                         0
