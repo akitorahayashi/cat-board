@@ -22,10 +22,16 @@ struct ImageRepositoryReducer {
         case loadInitialImages
         case loadMoreImages
         case pullRefresh
-        // imageClient.fetchImages がスクリーニング済みの安全な (はずの) CatImageModel の配列を返す
-        case internalProcessFetchedImages(TaskResult<[CatImageModel]>)
-        // _handleProcessedImages アクションは不要になるため削除
+        // ストリームから画像のバッチを受信
+        case _receivedImageBatch([CatImageModel])
+        // ストリーム処理が完了 (成功/失敗問わず)
+        case _fetchStreamCompleted
+        // ストリーム処理でエラーが発生
+        case _fetchStreamFailed(Error)
     }
+
+    // ストリーム処理を一意に識別するためのID (キャンセル可能にするため)
+    private enum CancelID { case fetchImages }
 
     func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
@@ -38,58 +44,17 @@ struct ImageRepositoryReducer {
                 state.isLoading = true
                 state.isLoadingMore = false
 
-                return .run { (send: Send<Action>) in
-                    // imageClient.fetchImages がスクリーニングとフィルタリングを行う
-                    await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(
-                        Self.fetchLimit,
-                        0
-                    ) }))
-                }
+                return fetchImagesEffect(page: state.currentPage, requestedLimit: Self.fetchLimit)
 
             case .loadMoreImages:
                 guard state.canLoadMore, !state.isLoadingMore, !state.isLoading else { return .none }
                 state.isLoadingMore = true
                 let pageToFetch = state.currentPage
 
-                return .run { [pageToFetch] send async in
-                    // imageClient.fetchImages がスクリーニングとフィルタリングを行う
-                    await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(
-                        Self.fetchLimit,
-                        pageToFetch
-                    ) }))
-                }
-
-            case let .internalProcessFetchedImages(result):
-                state.isLoading = false
-                state.isLoadingMore = false
-
-                switch result {
-                    case let .success(fetchedImageModels): // ImageClientから返されるのは処理済みのモデルのはず
-                        state.currentPage += 1
-                        state.canLoadMore = !fetchedImageModels.isEmpty
-                        state.errorMessage = nil
-
-                        guard !fetchedImageModels.isEmpty else {
-                            // 新しい画像がなかった場合
-                            return .none
-                        }
-
-                        // ImageClientから返されたモデルをリストに追加
-                        // isLoadingフラグはImageClient側で適切に設定されているか、ここでfalseに設定
-                        state.items.append(contentsOf: fetchedImageModels.map { model in
-                            var mutableModel = model
-                            mutableModel.isLoading = false // ここで明示的にfalseにする
-                            return mutableModel
-                        })
-                        return .none
-
-                    case let .failure(error):
-                        state.errorMessage = error.localizedDescription
-                        return .none
-                }
+                return fetchImagesEffect(page: pageToFetch, requestedLimit: Self.fetchLimit)
 
             case .pullRefresh:
-                guard !state.isLoading else { return .none }
+                guard !state.isLoading else { return .cancel(id: CancelID.fetchImages) }
                 state.items = []
                 state.currentPage = 0
                 state.canLoadMore = true
@@ -97,12 +62,54 @@ struct ImageRepositoryReducer {
                 state.isLoading = true
                 state.isLoadingMore = false
 
-                return .run { send async in
-                    await send(.internalProcessFetchedImages(TaskResult { try await imageClient.fetchImages(
-                        Self.fetchLimit,
-                        0
-                    ) }))
+                return fetchImagesEffect(page: state.currentPage, requestedLimit: Self.fetchLimit)
+
+            case let ._receivedImageBatch(batch):
+                if batch.isEmpty && (state.isLoading || state.isLoadingMore) {
+                    // ストリームから空のバッチが来た場合、それはもうデータがない可能性を示唆する。
+                    // ただし、LiveImageClient は空のバッチを yield しない想定。
+                    // ストリームが finish するまで canLoadMore の判断は保留する。
+                } else {
+                    let newItems = batch.map { model -> CatImageModel in
+                        var mutableModel = model
+                        mutableModel.isLoading = false
+                        return mutableModel
+                    }
+                    state.items.append(contentsOf: newItems)
+                    state.currentPage += 1
                 }
+                return .none
+
+            case ._fetchStreamCompleted:
+                state.isLoading = false
+                state.isLoadingMore = false
+                if state.items.count < (state.currentPage * Self.fetchLimit) && state.items.count > 0 {
+                    // state.canLoadMore = false
+                }
+                print("[ImageRepositoryReducer] Fetch stream completed.")
+                return .none
+
+            case let ._fetchStreamFailed(error):
+                state.isLoading = false
+                state.isLoadingMore = false
+                state.errorMessage = error.localizedDescription
+                print("[ImageRepositoryReducer] Fetch stream failed: \(error.localizedDescription)")
+                return .none
         }
+    }
+
+    private func fetchImagesEffect(page: Int, requestedLimit: Int) -> Effect<Action> {
+        .run { send in
+            let stream = await imageClient.fetchImages(requestedLimit, page)
+            do {
+                for try await batch in stream {
+                    await send(._receivedImageBatch(batch))
+                }
+                await send(._fetchStreamCompleted)
+            } catch {
+                await send(._fetchStreamFailed(error))
+            }
+        }
+        .cancellable(id: CancelID.fetchImages, cancelInFlight: true)
     }
 }
