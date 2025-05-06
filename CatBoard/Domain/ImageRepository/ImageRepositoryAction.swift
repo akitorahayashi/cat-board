@@ -1,3 +1,4 @@
+import CBShared
 import ComposableArchitecture
 
 enum ImageRepositoryAction {

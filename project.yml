@@ -4,6 +4,7 @@ name: CatBoard
 options:
   deploymentTarget:
     iOS: 16.0
+  createIntermediateGroups: true
 
 configs:
   Debug: debug
@@ -54,6 +55,8 @@ targets:
     sources:
       - path: CatBoard
     dependencies:
+      - target: Infrastructure
+      - target: CBShared
       - package: ComposableArchitecture
         product: ComposableArchitecture
       - package: Dependencies
@@ -104,6 +107,38 @@ targets:
         UIRequiresFullScreen: false
         # Add other necessary plist keys
 
+  Infrastructure:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Infrastructure
+    dependencies:
+      - target: CBShared
+      - package: ComposableArchitecture
+        product: ComposableArchitecture
+      - package: CatScreeningKit
+        product: CatScreeningKit
+    settings:
+      base:
+        DEVELOPMENT_LANGUAGE: ja
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.Infrastructure
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: "NO"
+
+  CBShared:
+    type: framework
+    platform: iOS
+    sources:
+      - path: CBShared
+    settings:
+      base:
+        DEVELOPMENT_LANGUAGE: ja
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CBShared
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: "NO"
+
   CatBoardTests:
     type: bundle.unit-test
     platform: iOS
@@ -111,6 +146,8 @@ targets:
       - path: CatBoardTests
     dependencies:
       - target: CatBoard
+      - target: Infrastructure
+      - target: CBShared
       - package: ComposableArchitecture
         product: ComposableArchitecture
       - package: Dependencies
