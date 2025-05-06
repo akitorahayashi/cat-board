@@ -54,22 +54,23 @@ public struct LiveImageClient: ImageClientProtocol {
             }
 
             let imagesToScreen = successfulDownloads.map(\.image)
-            let modelsForImagesToScreen = successfulDownloads.map(\.model)
 
-            let safeImageIndices = try await screener.screen(images: imagesToScreen, enableLogging: true)
+            let screenedSafeImages: [UIImage] = try await screener.screen(images: imagesToScreen, enableLogging: true)
 
-            if !imagesToScreen.isEmpty {
-                if !safeImageIndices.isEmpty {
-                    print(
-                        "[LiveImageClient] WARNING: スクリーニング結果の正確な紐付けが未実装です。安全と判定されたUIImageの数: \(safeImageIndices.count)。対応するCatImageModelの特定が必要です。"
-                    )
-                    print("[LiveImageClient] 暫定対応: 安全な画像が検出されたため、ダウンロードに成功した全てのモデルを返します。安全でない画像が含まれる可能性があります。")
-                    return modelsForImagesToScreen
+            if !successfulDownloads.isEmpty {
+                if !screenedSafeImages.isEmpty {
+                    let safeModels = successfulDownloads.filter { downloadItem in
+                        screenedSafeImages.contains(downloadItem.image)
+                    }.map { $0.model }
+
+                    print("[LiveImageClient] スクリーニングの結果、\(safeModels.count)件の安全な画像を返します。")
+                    return safeModels
                 } else {
                     print("[LiveImageClient] スクリーニングの結果、安全な画像はありませんでした。")
                     return []
                 }
             } else {
+                print("[LiveImageClient] スクリーニング対象の画像がありませんでした。")
                 return []
             }
         }
