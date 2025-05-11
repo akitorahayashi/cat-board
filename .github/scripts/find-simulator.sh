@@ -20,7 +20,7 @@ if ! command -v jq &> /dev/null; then
 fi
 
 # jqクエリ: 利用可能な最新の iOS シミュレータの UDID を取得
-JQ_QUERY='.devices | to_entries | map(select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS"))) | sort_by(.key) | reverse | .[].value[] | select(.isAvailable == true) | .udid'
+JQ_QUERY='.devices | to_entries | map(select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS"))) | sort_by(.key) | reverse | .[0].value[] | select(.isAvailable == true and (.name | contains("iPhone"))) | .udid'
 
 # 利用可能な最初の UDID を取得
 SIMULATOR_UDID=$(echo "$SIMCTL_OUTPUT" | jq -r "$JQ_QUERY" | head -n 1)

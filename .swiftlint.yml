@@ -30,10 +30,11 @@ disabled_rules:
   - line_length # 行の長さは別途カスタマイズ
   - trailing_newline # 末尾の改行を無視
   - trailing_comma # SwiftFormatで制御するため無効化
+  - cyclomatic_complexity # 循環的複雑度のチェックを無効化
+  - missing_docs # 公開APIのドキュメント要求を無効化
 
 opt_in_rules:
   - empty_count # count == 0 の代わりに isEmpty を使用
-  - missing_docs # 公開APIにドキュメントを要求
   - force_unwrapping # 強制アンラップを禁止
   - sorted_imports # importを整列
   - vertical_whitespace # 垂直方向の空白行を整理

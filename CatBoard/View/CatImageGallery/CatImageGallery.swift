@@ -9,7 +9,7 @@ struct CatImageGallery: View {
         WithPerceptionTracking {
             NavigationView {
                 Group {
-                    if store.imageRepository.isLoading && store.imageRepository.items.isEmpty {
+                    if store.imageRepository.isLoading, store.imageRepository.items.isEmpty {
                         ProgressView("Loading...")
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color(.systemBackground).edgesIgnoringSafeArea(.all))
@@ -20,7 +20,7 @@ struct CatImageGallery: View {
                                     Text("Error: \(errorMessage)")
                                         .foregroundColor(.red)
                                         .padding()
-                                } else if store.imageRepository.items.isEmpty && !store.imageRepository.isLoading {
+                                } else if store.imageRepository.items.isEmpty, !store.imageRepository.isLoading {
                                     Text("サーバーエラーが発生しました。")
                                         .padding()
                                 } else {

@@ -13,14 +13,14 @@ public struct MockImageClient: ImageClientProtocol {
                         let mockData = [
                             CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
                             CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
-                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120")
+                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
                         ]
                         let dataToYield = Array(mockData.prefix(min(mockData.count, requestedLimit)))
                         if !dataToYield.isEmpty {
                             continuation.yield(dataToYield)
                         }
                     }
-                    
+
                     continuation.finish()
                 }
             }

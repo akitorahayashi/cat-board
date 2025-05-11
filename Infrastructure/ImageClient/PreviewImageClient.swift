@@ -6,11 +6,11 @@ public struct PreviewImageClient: ImageClientProtocol {
         { requestedLimit, _ in // initialPage はプレビューでは無視
             AsyncThrowingStream { continuation in
                 Task {
-                    let dummyImageURL = "https://via.placeholder.com/150" 
+                    let dummyImageURL = "https://via.placeholder.com/150"
 
                     let dummyModelsBatch1 = [
                         CatImageModel(imageURL: dummyImageURL),
-                        CatImageModel(imageURL: dummyImageURL)
+                        CatImageModel(imageURL: dummyImageURL),
                     ]
                     continuation.yield(dummyModelsBatch1)
 
@@ -18,13 +18,13 @@ public struct PreviewImageClient: ImageClientProtocol {
                         try? await Task.sleep(for: .milliseconds(300))
 
                         let dummyModelsBatch2 = [
-                            CatImageModel(imageURL: dummyImageURL)
+                            CatImageModel(imageURL: dummyImageURL),
                         ]
-                        if requestedLimit > 2 { 
-                           continuation.yield(dummyModelsBatch2)
+                        if requestedLimit > 2 {
+                            continuation.yield(dummyModelsBatch2)
                         }
                     }
-                    
+
                     continuation.finish()
                 }
             }
