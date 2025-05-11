@@ -48,37 +48,24 @@ TCA の主要コンポーネント (State, Action, Reducer) で構成されま�
 
 ## ディレクトリ構成
 
-このプロジェクトは、機能と責務に基づいてモジュール分割された構成を目指しています。`project.yml` に基づいて XcodeGen でプロジェクトが生成されます。
-
-主なディレクトリとその役割は以下の通りです。
-
 ```
 cat-board
 ├── .github/
 │   └── workflows/
+├── CBShared/
 ├── CatBoard/
+│   ├── Preview Content/
 │   ├── Assets.xcassets/
+│   ├── Infrastructure/
 │   ├── Domain/
 │   │   ├── Coordinator/
-│   │   ├── Gallery/
-│   │   └── ImageRepository/
-│   ├── Infrastructure/
-│   │   ├── Interface/
-│   │   └── Service/
-│   ├── Model/
+│   │   └── Gallery/
 │   ├── View/
-│   │   ├── CatImageGallery/
-│   │   └── Common/
-│   ├── Preview Content/
+│   │   └── CatImageGallery/
 │   ├── Info.plist
 │   └── CatBoardApp.swift
 ├── CatBoardTests/
-│   ├── Domain/
-│   └── Service/
 ├── CatBoardUITests/
-│   ├── Constant/
-│   ├── Extension/
-│   └── Tests/
 ├── .gitignore
 ├── .swiftformat
 ├── .swiftlint.yml
