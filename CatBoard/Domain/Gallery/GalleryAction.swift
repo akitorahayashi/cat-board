@@ -1,14 +1,19 @@
+import CBShared
 import ComposableArchitecture
 import Foundation
 import SwiftUI
 
 @CasePathable
 enum GalleryAction {
-    // 子ドメインのアクション
-    case imageRepository(ImageRepositoryAction)
-
-    // ギャラリー固有のアクション
-    case task
+    // --- View からのユーザー操作 ---
+    case onAppear
+    case pullRefresh
     case imageTapped(UUID)
-    case clearError
+
+    // --- データ取得ライフサイクル (内部トリガー/コールバック) ---
+    case fetchInitialImages
+    case fetchDataForRefresh
+    case receivedImageBatch([CatImageModel])
+    case fetchStreamCompleted
+    case fetchStreamFailed(Error)
 }

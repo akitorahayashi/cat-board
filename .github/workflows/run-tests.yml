@@ -34,7 +34,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '16.2' # Consider using a variable or matrix if needed
+        xcode-version: '16.2'
 
     - name: Generate Xcode Project
       run: mint run xcodegen generate

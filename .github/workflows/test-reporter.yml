@@ -95,7 +95,7 @@ jobs:
             const { owner, repo } = context.repo;
             const runId = context.runId; // Get current run ID for artifact link
             const commentMarker = '<!-- test-and-coverage-report -->';
-            let commentBody = `${commentMarker}\\n\\n## Test & Artifact Summary\\n\\n`; // Updated title
+            let commentBody = `${commentMarker}\n\n## Test & Artifact Summary\n\n`; // Updated title
             const fs = require('fs');
             const path = require('path');
 
@@ -111,10 +111,10 @@ jobs:
             }
 
             if (junitFound) {
-               commentBody += `✅ **Test Results**: Available in the 'Checks' tab.\\n`;
+               commentBody += `✅ **Test Results**: Available in the 'Checks' tab.\n`;
             } else {
                // Add message even if JUnit not found, as XCResults might exist
-               commentBody += `ℹ️ **Test Results**: No JUnit reports found or processed.\\n`;
+               commentBody += `ℹ️ **Test Results**: No JUnit reports found or processed.\n`;
             }
 
             // --- XCResults Download Link ---
@@ -127,14 +127,14 @@ jobs:
 
             if ((unitXcresultExists || uiXcresultExists) && xcresultsUploadSuccess) {
                // Link to the run's artifact page as direct URL is hard to get reliably
-               commentBody += `📦 **XCResults Bundle**: [Download from Run Artifacts](https://github.com/${owner}/${repo}/actions/runs/${runId}) (Look for 'xcresults-bundle')\\n`;
+               commentBody += `📦 **XCResults Bundle**: [Download from Run Artifacts](https://github.com/${owner}/${repo}/actions/runs/${runId}) (Look for 'xcresults-bundle')\n`;
             } else if (unitXcresultExists || uiXcresultExists) {
               // Files exist but upload step outcome wasn't success
-              commentBody += `⚠️ **XCResults Bundle**: Found locally, but failed create/upload artifact for direct link. Check the workflow run artifacts page manually.\\n`;
+              commentBody += `⚠️ **XCResults Bundle**: Found locally, but failed create/upload artifact for direct link. Check the workflow run artifacts page manually.\n`;
               core.warning('XCResults found locally but upload-xcresults-for-link step outcome was not success.');
             } else {
               // XCResults directories don't exist locally
-              commentBody += `ℹ️ **XCResults Bundle**: Not found (likely tests did not produce them or artifacts expired/failed to download).\\n`;
+              commentBody += `ℹ️ **XCResults Bundle**: Not found (likely tests did not produce them or artifacts expired/failed to download).\n`;
             }
 
             // --- Find/Update/Create Comment ---

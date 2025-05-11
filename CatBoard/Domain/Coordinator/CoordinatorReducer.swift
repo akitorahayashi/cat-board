@@ -3,7 +3,6 @@ import SwiftUI
 
 @Reducer
 struct CoordinatorReducer {
-
     @ObservableState
     struct State: Equatable {
         // 他のルートレベルの状態（例：パスナビゲーションなど）

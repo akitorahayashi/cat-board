@@ -6,75 +6,55 @@ struct CatImageGallery: View {
     @State var store: StoreOf<GalleryReducer>
 
     var body: some View {
-        NavigationView {
-            ScrollView {
-                scrollViewContent
-            }
-            .navigationTitle("Cat Board")
-            .task {
-                await store.send(.task).finish()
-            }
-            .refreshable {
-                await store.send(.imageRepository(.pullToRefresh)).finish()
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var scrollViewContent: some View {
-        if store.imageRepository.isLoading {
-            ProgressView("Loading...")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding()
-        } else if let errorMessage = store.imageRepository.errorMessage {
-            Text("Error: \(errorMessage)")
-                .foregroundColor(.red)
-                .padding()
-        } else if store.imageRepository.items.isEmpty {
-            Text("サーバーエラーが発生しました。")
-                .padding()
-        } else {
-            galleryGrid
-            loadMoreSection
-        }
-    }
-
-    @ViewBuilder
-    private var galleryGrid: some View {
         WithPerceptionTracking {
-            TieredGridLayout {
-                ForEach(store.imageRepository.items) { image in
-                    Button {
-                        store.send(.imageTapped(image.id))
-                    } label: {
-                        SquareGalleryImageAsync(url: URL(string: image.imageURL))
-                            .border(Color(.secondarySystemBackground).opacity(0.6), width: 2)
-                            .clipped()
+            NavigationView {
+                Group {
+                    if store.isLoading, store.items.isEmpty {
+                        ProgressView("Loading...")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color(.systemBackground).edgesIgnoringSafeArea(.all))
+                    } else {
+                        ScrollView {
+                            VStack {
+                                if let errorMessage = store.errorMessage {
+                                    Text("Error: \(errorMessage)")
+                                        .foregroundColor(.red)
+                                        .padding()
+                                } else if store.items.isEmpty, !store.isLoading {
+                                    Text("サーバーエラーが発生しました。")
+                                        .padding()
+                                } else {
+                                    galleryGrid
+                                }
+                            }
+                        }
+                        .refreshable {
+                            await store.send(.pullRefresh).finish()
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 2)
+                }
+                .navigationTitle("Cat Board")
+                .task {
+                    await store.send(.onAppear).finish()
                 }
             }
         }
     }
 
     @ViewBuilder
-    private var loadMoreSection: some View {
-        if store.imageRepository.canLoadMore, !store.imageRepository.isLoadingMore {
-            Button("Load More") {
-                store.send(.imageRepository(.fetchImages))
+    private var galleryGrid: some View {
+        TieredGridLayout {
+            ForEach(store.items) { image in
+                Button {
+                    store.send(.imageTapped(image.id))
+                } label: {
+                    SquareGalleryImageAsync(url: URL(string: image.imageURL))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 2)
+                .transition(.opacity)
             }
-            .padding()
-        } else if store.imageRepository.isLoadingMore {
-            ProgressView().padding()
         }
+        .animation(.default, value: store.items)
     }
-}
-
-#Preview {
-    CatImageGallery(
-        store: Store(initialState: GalleryReducer.State()) {
-            GalleryReducer()
-        }
-    )
 }

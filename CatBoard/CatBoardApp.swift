@@ -10,7 +10,9 @@ struct CatBoardApp: App {
 
     var body: some Scene {
         WindowGroup {
-            CatImageGallery(store: store.scope(state: \.gallery, action: \.gallery))
+            WithPerceptionTracking {
+                CatImageGallery(store: store.scope(state: \.gallery, action: \.gallery))
+            }
         }
     }
 }
