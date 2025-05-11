@@ -46,6 +46,9 @@ packages:
   IdentifiedCollections:
     url: https://github.com/pointfreeco/swift-identified-collections
     from: "1.0.0"
+  Kingfisher:
+    url: https://github.com/onevcat/Kingfisher.git
+    from: "8.3.2"
   # Add other necessary packages for CatBoard here
 
 targets:
@@ -73,6 +76,7 @@ targets:
         product: ScaryCatScreeningKit
       - package: IdentifiedCollections
         product: IdentifiedCollections
+      - package: Kingfisher
     settings:
       base:
         DEVELOPMENT_LANGUAGE: ja
