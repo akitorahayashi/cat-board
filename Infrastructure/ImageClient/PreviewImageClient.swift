@@ -2,6 +2,12 @@ import CBShared
 import ComposableArchitecture // AsyncThrowingStream のために (標準ライブラリなので不要かも)
 
 public struct PreviewImageClient: ImageClientProtocol {
+    public let enableScreening: Bool
+
+    public init(enableScreening: Bool = true) {
+        self.enableScreening = enableScreening
+    }
+
     public var fetchImages: @Sendable (Int, Int) async -> AsyncThrowingStream<[CatImageModel], Error> {
         { requestedLimit, _ in // initialPage はプレビューでは無視
             AsyncThrowingStream { continuation in
@@ -30,6 +36,4 @@ public struct PreviewImageClient: ImageClientProtocol {
             }
         }
     }
-
-    public init() {}
 }

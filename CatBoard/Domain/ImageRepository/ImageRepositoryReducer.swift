@@ -3,7 +3,7 @@ import ComposableArchitecture
 
 @Reducer
 struct ImageRepositoryReducer {
-    // Define a constant for the fetch limit
+    // 1回のリクエストで取得する画像の数
     static let fetchLimit = 10
 
     @Dependency(\.imageClient) var imageClient
@@ -97,7 +97,6 @@ struct ImageRepositoryReducer {
         }
     }
 
-    // Helper function to reset state for loading images
     private func resetStateForLoad(_ state: inout State) {
         state.items = []
         state.currentPage = 0
