@@ -37,6 +37,7 @@ struct CatImageGallery: View {
                     await store.send(.onAppear).finish()
                 }
             }
+            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
     
