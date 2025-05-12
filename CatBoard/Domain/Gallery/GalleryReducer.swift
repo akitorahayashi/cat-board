@@ -27,7 +27,10 @@ struct GalleryReducer {
 
             case .fetchAdditionalImages:
                 return .run { send in
-                    let stream = await imageClient.fetchImages(Self.fetchLimit, 0)
+                    let stream = await imageClient.fetchImages(
+                        desiredSafeImageCountPerFetch: Self.fetchLimit,
+                        timesOfFetch: 3
+                    )
                     do {
                         var newItems: [CatImageModel] = []
                         for try await batch in stream {
