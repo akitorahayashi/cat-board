@@ -38,7 +38,7 @@ struct CatImageGallery: View {
     @ViewBuilder
     private var galleryGrid: some View {
         TieredGridLayout {
-            ForEach(store.items) { image in
+            ForEach(store.catImages) { image in
                 SquareGalleryImageAsync(url: URL(string: image.imageURL))
                     .padding(2)
                     .transition(.opacity)
@@ -46,6 +46,6 @@ struct CatImageGallery: View {
             }
         }
         .padding(2)
-        .animation(.default, value: store.items)
+        .animation(.default, value: store.catImages)
     }
 }

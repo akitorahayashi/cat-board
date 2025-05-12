@@ -8,9 +8,8 @@ enum GalleryAction {
     // --- View 操作 ---
     case onAppear
 
-    // --- データ取得ライフサイクル (内部トリガー/コールバック) ---
-    case fetchInitialImages
-    case receivedImageBatch([CatImageModel])
-    case fetchStreamCompleted
-    case fetchStreamFailed(Error)
+    // --- データ取得に関して内部で発行するAction ---
+    case fetchAdditionalImages
+    case didFetchImages([CatImageModel])
+    case didFailToFetchImages(String)
 }
