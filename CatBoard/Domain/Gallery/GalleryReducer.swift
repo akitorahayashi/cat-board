@@ -13,6 +13,7 @@ struct GalleryReducer {
     struct State: Equatable {
         var catImages: IdentifiedArrayOf<CatImageModel> = []
         var errorMessage: String?
+        var isLoading: Bool = false
     }
 
     typealias Action = GalleryAction
@@ -26,6 +27,7 @@ struct GalleryReducer {
                 return .send(GalleryAction.fetchAdditionalImages)
 
             case .fetchAdditionalImages:
+                state.isLoading = true
                 return .run { send in
                     let stream = await imageClient.fetchImages(
                         desiredSafeImageCountPerFetch: Self.fetchLimit,
@@ -48,10 +50,12 @@ struct GalleryReducer {
                 .cancellable(id: CancelID.fetchImages, cancelInFlight: true)
 
             case .didFetchImages(let newItems):
+                state.isLoading = false
                 state.catImages.append(contentsOf: newItems)
                 return .none
 
             case .didFailToFetchImages(let message):
+                state.isLoading = false
                 state.errorMessage = message
                 return .none
             }
