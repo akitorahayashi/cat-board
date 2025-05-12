@@ -12,11 +12,8 @@ struct GalleryReducer {
     @ObservableState
     struct State: Equatable {
         var items: IdentifiedArrayOf<CatImageModel> = []
-        var isLoading = false
-        var isRefreshing = false
         var initialLoadCompleted = false
         var errorMessage: String?
-        var selectedImageId: UUID?
     }
 
     typealias Action = GalleryAction
@@ -27,38 +24,17 @@ struct GalleryReducer {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                if !state.initialLoadCompleted && !state.isLoading {
+                if !state.initialLoadCompleted {
                     return .send(.fetchInitialImages)
                 }
                 return .none
 
-            case .pullRefresh:
-                if !state.isRefreshing {
-                     return .send(.fetchDataForRefresh)
-                }
-                return .none
-
-            case let .imageTapped(id):
-                state.selectedImageId = id
-                return .none
 
             case .fetchInitialImages:
-                guard !state.isLoading else { return .none }
                 resetStateForLoad(&state)
-                state.isLoading = true
-                return fetchImagesEffect(requestedLimit: Self.fetchLimit)
-
-            case .fetchDataForRefresh:
-                guard !state.isRefreshing else { return .none } // isRefreshing でガードする方が適切かも
-                resetStateForLoad(&state)
-                state.isRefreshing = true
-                state.isLoading = true
                 return fetchImagesEffect(requestedLimit: Self.fetchLimit)
 
             case let .receivedImageBatch(batch):
-                if state.isRefreshing { // リフレッシュ時に既存アイテムをクリアする処理はresetStateForLoadに集約
-                    // state.items = [] // resetStateForLoadで行うので不要
-                }
                 let newItems = batch.map { model -> CatImageModel in
                     var mutableModel = model
                     mutableModel.isLoading = false
@@ -68,17 +44,11 @@ struct GalleryReducer {
                 return .none
 
             case .fetchStreamCompleted:
-                if state.isLoading && !state.isRefreshing {
-                    state.initialLoadCompleted = true
-                }
-                state.isLoading = false
-                state.isRefreshing = false
-                print("[GalleryReducer] Fetch stream COMPLETED (isLoading=false, isRefreshing=false)")
+                state.initialLoadCompleted = true
+                print("[GalleryReducer] Fetch stream COMPLETED")
                 return .none
 
             case let .fetchStreamFailed(error):
-                state.isLoading = false
-                state.isRefreshing = false
                 state.errorMessage = error.localizedDescription
                 print("[GalleryReducer] Fetch stream FAILED: \(error.localizedDescription)")
                 return .none

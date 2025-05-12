@@ -9,31 +9,25 @@ struct CatImageGallery: View {
         WithPerceptionTracking {
             NavigationView {
                 Group {
-                    if store.isLoading, store.items.isEmpty {
-                        ProgressView("Loading...")
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(Color(.systemBackground).edgesIgnoringSafeArea(.all))
-                    } else {
-                        ScrollView {
-                            VStack {
-                                if let errorMessage = store.errorMessage {
-                                    Text("Error: \(errorMessage)")
-                                        .foregroundColor(.red)
-                                        .padding()
-                                } else if store.items.isEmpty, !store.isLoading {
-                                    Text("サーバーエラーが発生しました。")
-                                        .padding()
-                                } else {
-                                    galleryGrid
-                                }
+                    ScrollView {
+                        VStack {
+                            if let errorMessage = store.errorMessage {
+                                Text("エラーが発生しました： \(errorMessage)")
+                                    .rotationEffect(.degrees(180))
+                                    .padding()
+                            } else {
+                                galleryGrid
                             }
                         }
-                        .refreshable {
-                            await store.send(.pullRefresh).finish()
-                        }
+                    }
+                    .rotationEffect(.degrees(180))
+                }
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Text("Cat Board")
+                            .font(.headline)
                     }
                 }
-                .navigationTitle("Cat Board")
                 .task {
                     await store.send(.onAppear).finish()
                 }
@@ -45,16 +39,13 @@ struct CatImageGallery: View {
     private var galleryGrid: some View {
         TieredGridLayout {
             ForEach(store.items) { image in
-                Button {
-                    store.send(.imageTapped(image.id))
-                } label: {
-                    SquareGalleryImageAsync(url: URL(string: image.imageURL))
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 2)
-                .transition(.opacity)
+                SquareGalleryImageAsync(url: URL(string: image.imageURL))
+                    .padding(2)
+                    .transition(.opacity)
+                    .rotationEffect(.degrees(180))
             }
         }
+        .padding(2)
         .animation(.default, value: store.items)
     }
 }
