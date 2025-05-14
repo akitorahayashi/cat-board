@@ -1,5 +1,4 @@
 import CBShared
-import ComposableArchitecture // AsyncThrowingStream のために (標準ライブラリなので不要かも)
 
 public struct PreviewImageClient: ImageClientProtocol {
     public let enableScreening: Bool
@@ -8,7 +7,10 @@ public struct PreviewImageClient: ImageClientProtocol {
         self.enableScreening = enableScreening
     }
 
-    public func fetchImages(desiredSafeImageCountPerFetch: Int, timesOfFetch: Int) async -> AsyncThrowingStream<[CatImageModel], Error> {
+    public func fetchImages(
+        desiredSafeImageCountPerFetch: Int,
+        timesOfFetch _: Int
+    ) async -> AsyncThrowingStream<[CatImageModel], Error> {
         AsyncThrowingStream { continuation in
             Task {
                 let dummyImageURL = "https://via.placeholder.com/150"

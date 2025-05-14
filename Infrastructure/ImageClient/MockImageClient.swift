@@ -1,5 +1,4 @@
 import CBShared
-import ComposableArchitecture
 import Foundation
 
 public struct MockImageClient: ImageClientProtocol {
@@ -9,7 +8,10 @@ public struct MockImageClient: ImageClientProtocol {
         self.enableScreening = enableScreening
     }
 
-    public func fetchImages(desiredSafeImageCountPerFetch: Int, timesOfFetch: Int) async -> AsyncThrowingStream<[CatImageModel], Error> {
+    public func fetchImages(
+        desiredSafeImageCountPerFetch: Int,
+        timesOfFetch _: Int
+    ) async -> AsyncThrowingStream<[CatImageModel], Error> {
         AsyncThrowingStream { continuation in
             Task {
                 let dummyImageURL = "https://via.placeholder.com/120"
