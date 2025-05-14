@@ -55,7 +55,7 @@ jobs:
     
   # アーカイブビルド検証
   build-archive:
-    name: Verify Archive Build
+    name: Build Unsigned Archive
     needs: setup-mint
     if: needs.setup-mint.result == 'success'
     uses: ./.github/workflows/build-unsigned-archive.yml
