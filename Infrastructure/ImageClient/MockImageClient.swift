@@ -1,5 +1,4 @@
 import CBShared
-import ComposableArchitecture
 import Foundation
 
 public struct MockImageClient: ImageClientProtocol {
@@ -9,30 +8,32 @@ public struct MockImageClient: ImageClientProtocol {
         self.enableScreening = enableScreening
     }
 
-    public var fetchImages: @Sendable (Int, Int) async -> AsyncThrowingStream<[CatImageModel], Error> {
-        { requestedLimit, _ in
-            AsyncThrowingStream { continuation in
-                Task {
-                    try? await Task.sleep(for: .milliseconds(300))
+    public func fetchImages(
+        desiredSafeImageCountPerFetch: Int,
+        timesOfFetch _: Int
+    ) async -> AsyncThrowingStream<[CatImageModel], Error> {
+        AsyncThrowingStream { continuation in
+            Task {
+                let dummyImageURL = "https://via.placeholder.com/120"
+                try? await Task.sleep(for: .milliseconds(300))
 
-                    if requestedLimit > 0 {
-                        let mockData = [
-                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
-                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
-                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
-                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
-                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
-                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
-                            CatImageModel(id: UUID(), imageURL: "https://via.placeholder.com/120"),
-                        ]
-                        let dataToYield = Array(mockData.prefix(min(mockData.count, requestedLimit)))
-                        if !dataToYield.isEmpty {
-                            continuation.yield(dataToYield)
-                        }
+                if desiredSafeImageCountPerFetch > 0 {
+                    let mockData = [
+                        CatImageModel(id: UUID(), imageURL: dummyImageURL),
+                        CatImageModel(id: UUID(), imageURL: dummyImageURL),
+                        CatImageModel(id: UUID(), imageURL: dummyImageURL),
+                        CatImageModel(id: UUID(), imageURL: dummyImageURL),
+                        CatImageModel(id: UUID(), imageURL: dummyImageURL),
+                        CatImageModel(id: UUID(), imageURL: dummyImageURL),
+                        CatImageModel(id: UUID(), imageURL: dummyImageURL),
+                    ]
+                    let dataToYield = Array(mockData.prefix(min(mockData.count, desiredSafeImageCountPerFetch)))
+                    if !dataToYield.isEmpty {
+                        continuation.yield(dataToYield)
                     }
-
-                    continuation.finish()
                 }
+
+                continuation.finish()
             }
         }
     }

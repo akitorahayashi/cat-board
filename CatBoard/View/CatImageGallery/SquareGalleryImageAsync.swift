@@ -1,5 +1,5 @@
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct SquareGalleryImageAsync: View {
     let url: URL?

@@ -1,5 +1,4 @@
 import CBShared
-import ComposableArchitecture // AsyncThrowingStream のために (標準ライブラリなので不要かも)
 
 public struct PreviewImageClient: ImageClientProtocol {
     public let enableScreening: Bool
@@ -8,31 +7,30 @@ public struct PreviewImageClient: ImageClientProtocol {
         self.enableScreening = enableScreening
     }
 
-    public var fetchImages: @Sendable (Int, Int) async -> AsyncThrowingStream<[CatImageModel], Error> {
-        { requestedLimit, _ in // initialPage はプレビューでは無視
-            AsyncThrowingStream { continuation in
-                Task {
-                    let dummyImageURL = "https://via.placeholder.com/150"
+    public func fetchImages(
+        desiredSafeImageCountPerFetch: Int,
+        timesOfFetch _: Int
+    ) async -> AsyncThrowingStream<[CatImageModel], Error> {
+        AsyncThrowingStream { continuation in
+            Task {
+                let dummyImageURL = "https://via.placeholder.com/150"
 
-                    let dummyModelsBatch1 = [
-                        CatImageModel(imageURL: dummyImageURL),
+                let dummyModelsBatch1 = [
+                    CatImageModel(imageURL: dummyImageURL),
+                    CatImageModel(imageURL: dummyImageURL),
+                ]
+                continuation.yield(dummyModelsBatch1)
+
+                if desiredSafeImageCountPerFetch > 2 {
+                    try? await Task.sleep(for: .milliseconds(300))
+
+                    let dummyModelsBatch2 = [
                         CatImageModel(imageURL: dummyImageURL),
                     ]
-                    continuation.yield(dummyModelsBatch1)
-
-                    if requestedLimit > 2 {
-                        try? await Task.sleep(for: .milliseconds(300))
-
-                        let dummyModelsBatch2 = [
-                            CatImageModel(imageURL: dummyImageURL),
-                        ]
-                        if requestedLimit > 2 {
-                            continuation.yield(dummyModelsBatch2)
-                        }
-                    }
-
-                    continuation.finish()
+                    continuation.yield(dummyModelsBatch2)
                 }
+
+                continuation.finish()
             }
         }
     }
