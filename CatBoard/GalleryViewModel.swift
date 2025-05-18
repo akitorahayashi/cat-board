@@ -17,6 +17,10 @@ class GalleryViewModel: ObservableObject {
     
     init(imageClient: ImageClientProtocol) {
         self.imageClient = imageClient
+        
+        // KingfisherManagerのキャッシュの保存期間を設定
+        KingfisherManager.shared.cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500MB
+        KingfisherManager.shared.cache.diskStorage.config.expiration = .days(3)
     }
     
     @MainActor func onAppear() {
@@ -51,6 +55,9 @@ class GalleryViewModel: ObservableObject {
             if self.catImages.count > Self.maxImageCount {
                 self.catImages = []
                 KingfisherManager.shared.cache.clearMemoryCache()
+                Task.detached {
+                    await KingfisherManager.shared.cache.clearDiskCache()
+                }
             }
             
             self.isLoading = false
