@@ -74,19 +74,31 @@ struct CatImageGallery: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 8)
             .padding(.bottom, 16)
-            .background(.ultraThinMaterial)
+            .background(Material.ultraThin)
     }
 
     @ViewBuilder
-    private var galleryGrid: some View {
-        TieredGridLayout {
-            ForEach(viewModel.catImages) { image in
-                SquareGalleryImageAsync(url: URL(string: image.imageURL))
-                    .padding(2)
-                    .transition(.scale(scale: 0.8).combined(with: .opacity))
-                    .rotationEffect(.degrees(180))
+    var galleryGrid: some View {
+        LazyVStack(spacing: 0) {
+            ForEach(viewModel.catImages.chunked(into: 10), id: \.self) { chunk in
+                TieredGridLayout {
+                    ForEach(chunk, id: \.id) { image in
+                        SquareGalleryImageAsync(url: URL(string: image.imageURL))
+                            .padding(2)
+                            .transition(.scale(scale: 0.8).combined(with: .opacity))
+                            .rotationEffect(.degrees(180))
+                    }
+                }
+                .padding(2)
             }
         }
-        .padding(2)
+    }
+}
+
+private extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map {
+            Array(self[$0..<Swift.min($0 + size, count)])
+        }
     }
 }

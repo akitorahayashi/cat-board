@@ -1,3 +1,4 @@
+import Kingfisher
 import CBShared
 import Combine
 import Infrastructure
@@ -12,6 +13,7 @@ class GalleryViewModel: ObservableObject {
     private var imageClient: ImageClientProtocol
     private var cancellables = Set<AnyCancellable>()
     private static let imagesPerFetch = 10
+    private static let maxImageCount = 300
     
     init(imageClient: ImageClientProtocol) {
         self.imageClient = imageClient
@@ -45,6 +47,11 @@ class GalleryViewModel: ObservableObject {
                 }
             }
             self.catImages.append(contentsOf: newItems)
+            
+            if self.catImages.count > Self.maxImageCount {
+                self.catImages = []
+                KingfisherManager.shared.cache.clearMemoryCache()
+            }
             
             self.isLoading = false
         } catch {
