@@ -97,7 +97,7 @@ final class GalleryViewModelTests: XCTestCase {
             .store(in: &cancellables)
 
         // 実行
-        viewModel.fetchAdditionalImages()
+        await viewModel.fetchAdditionalImages()
 
         // 検証 (Initial assertions)
         XCTAssertTrue(viewModel.isLoading, "画像取得開始時はisLoadingがtrue")
@@ -124,7 +124,9 @@ final class GalleryViewModelTests: XCTestCase {
         viewModel.isLoading = true
 
         // 実行
-        viewModel.fetchAdditionalImages()
+        Task {
+            await viewModel.fetchAdditionalImages()
+        }
 
         // 検証
         XCTAssertTrue(viewModel.catImages.isEmpty, "フェッチが発生しないためcatImagesは空のまま")

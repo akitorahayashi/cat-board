@@ -22,7 +22,7 @@ struct CatImageGallery: View {
         .navigationViewStyle(StackNavigationViewStyle())
     }
 
-    private var headerHeight: CGFloat { 8 + 16 + UIFont.preferredFont(forTextStyle: .headline).lineHeight }
+    private var headerHeight: CGFloat { 16 + UIFont.preferredFont(forTextStyle: .headline).lineHeight }
 
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -43,26 +43,27 @@ struct CatImageGallery: View {
                         if newY > 50, !isTriggeringFetch, !viewModel.isLoading {
                             isTriggeringFetch = true
                             Task {
-                                viewModel.fetchAdditionalImages()
+                                await viewModel.fetchAdditionalImages()
                                 isTriggeringFetch = false
+                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                generator.impactOccurred()
                             }
                         }
                     }
             }
             .frame(height: 0)
 
-            if viewModel.isLoading, viewModel.catImages.isEmpty {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-            } else if viewModel.isLoading {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .padding()
-            }
-
-            Spacer().frame(height: 24)
-
             Spacer().frame(height: headerHeight)
+                .overlay {
+                    if viewModel.isLoading, viewModel.catImages.isEmpty {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                    } else if viewModel.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .padding()
+                    }
+                }
         }
         .rotationEffect(.degrees(180))
     }
