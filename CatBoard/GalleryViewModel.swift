@@ -1,24 +1,24 @@
-import ScaryCatScreeningKit
-import Kingfisher
 import CBShared
 import Infrastructure
+import Kingfisher
+import ScaryCatScreeningKit
 import SwiftUI
 
 class GalleryViewModel: ObservableObject {
     @Published var imageURLsToShow: [CatImageURLModel] = []
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
-    
+
     private let repository: CatImageURLRepository
     private let imageClient: CatAPIClient
     private static let imagesPerFetch = 10
     private static let maxImageCount = 300
-    
+
     private static let targetInitialDisplayCount = 20
     private static let targetPrefetchCount = 50
     private static let minPrefetchThreshold = 20
     private static let batchDisplayCount = 10
-    
+
     private var prefetchedImages: [CatImageURLModel] = []
     private var screener: ScaryCatScreener?
 
@@ -29,8 +29,7 @@ class GalleryViewModel: ObservableObject {
         KingfisherManager.shared.cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500MB
         KingfisherManager.shared.cache.diskStorage.config.expiration = .days(3)
     }
-    
-    
+
     @MainActor func onAppear() {
         if imageURLsToShow.isEmpty {
             print("初期画像の読み込み開始: 現在0枚 → 目標\(Self.targetInitialDisplayCount)枚")
@@ -45,7 +44,10 @@ class GalleryViewModel: ObservableObject {
                 }
                 var loadedModels: [CatImageURLModel] = []
                 var loadedImages: [UIImage] = []
-                let loaded = try? await repository.provideImageURLs(imagesCount: Self.targetInitialDisplayCount, using: imageClient)
+                let loaded = try? await repository.provideImageURLs(
+                    imagesCount: Self.targetInitialDisplayCount,
+                    using: imageClient
+                )
                 for urlModel in loaded ?? [] {
                     guard let url = URL(string: urlModel.imageURL) else { continue }
                     do {
@@ -61,11 +63,11 @@ class GalleryViewModel: ObservableObject {
                     }
                 }
                 do {
-                    let screenedImages = try await screener!.screen(
+                    let screenedImages = try await screener?.screen(
                         images: loadedImages,
                         probabilityThreshold: 0.85,
                         enableLogging: false
-                    )
+                    ) ?? []
                     var filteredModels: [CatImageURLModel] = []
                     for screenedImage in screenedImages {
                         if let index = loadedImages.firstIndex(of: screenedImage) {
@@ -79,18 +81,18 @@ class GalleryViewModel: ObservableObject {
                     self.errorMessage = error.localizedDescription
                     self.imageURLsToShow = []
                 }
-                
+
                 await startBackgroundPrefetchingIfNeeded()
             }
         }
     }
-    
+
     @MainActor
     func fetchAdditionalImages() async {
         guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
-        
+
         let batchCount = min(Self.batchDisplayCount, prefetchedImages.count)
         if batchCount > 0 {
             let batch = prefetchedImages.prefix(batchCount)
@@ -98,7 +100,7 @@ class GalleryViewModel: ObservableObject {
             prefetchedImages.removeFirst(batchCount)
             print("追加画像の表示完了: プリフェッチから\(batchCount)枚追加 → 現在\(imageURLsToShow.count)枚表示中")
         }
-        
+
         if imageURLsToShow.count > Self.maxImageCount {
             print("キャッシュクリアを実行: 表示数\(imageURLsToShow.count)枚が上限\(Self.maxImageCount)枚を超過 → リセット")
             imageURLsToShow = []
@@ -107,14 +109,14 @@ class GalleryViewModel: ObservableObject {
                 await KingfisherManager.shared.cache.clearDiskCache()
             }
         }
-        
+
         if prefetchedImages.count <= Self.minPrefetchThreshold {
             await startBackgroundPrefetchingIfNeeded()
         }
-        
+
         isLoading = false
     }
-    
+
     private func prefetchImage(_ model: CatImageURLModel) {
         if let url = URL(string: model.imageURL) {
             let resource = KF.ImageResource(downloadURL: url)
@@ -122,7 +124,7 @@ class GalleryViewModel: ObservableObject {
             prefetchedImages.append(model)
         }
     }
-    
+
     @MainActor
     func startBackgroundPrefetchingIfNeeded() async {
         guard prefetchedImages.count < Self.targetPrefetchCount else { return }
@@ -151,7 +153,11 @@ class GalleryViewModel: ObservableObject {
                     continue
                 }
             }
-            let screened = try await screener!.screen(images: loadedUIImages, probabilityThreshold: 0.99, enableLogging: false)
+            let screened = try await screener?.screen(
+                images: loadedUIImages,
+                probabilityThreshold: 0.99,
+                enableLogging: false
+            ) ?? []
             for screenedImage in screened {
                 if let index = loadedUIImages.firstIndex(of: screenedImage) {
                     prefetchImage(loadedModels[index])
@@ -160,7 +166,7 @@ class GalleryViewModel: ObservableObject {
             print("プリフェッチ完了: \(loadedUIImages.count)枚読み込み → \(screened.count)枚追加済")
         } catch {
             print("プリフェッチに失敗: \(error.localizedDescription)")
-            self.errorMessage = error.localizedDescription
+            errorMessage = error.localizedDescription
         }
     }
 }

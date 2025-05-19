@@ -1,8 +1,8 @@
+import CBShared
 import Infrastructure
+import SwiftData
 import SwiftUI
 import TieredGridLayout
-import CBShared
-import SwiftData
 
 struct CatImageGallery: View {
     let modelContext: ModelContext
@@ -15,6 +15,7 @@ struct CatImageGallery: View {
         ))
         self.modelContext = modelContext
     }
+
     @State private var isTriggeringFetch = false
 
     var body: some View {
@@ -107,7 +108,7 @@ struct CatImageGallery: View {
 private extension Array {
     func chunked(into size: Int) -> [[Element]] {
         stride(from: 0, to: count, by: size).map {
-            Array(self[$0..<Swift.min($0 + size, count)])
+            Array(self[$0 ..< Swift.min($0 + size, count)])
         }
     }
 }

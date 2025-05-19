@@ -18,8 +18,8 @@ public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable {
 // SwiftData の CatImageEntity からの変換用
 public extension CatImageURLModel {
     init(entity: CatImageURLEntity) {
-        self.id = UUID()
-        self.imageURL = entity.url
-        self.isLoading = false
+        id = UUID()
+        imageURL = entity.url
+        isLoading = false
     }
 }

@@ -4,14 +4,16 @@ import UIKit
 
 public struct CatAPIClient {
     public init() {}
-    
+
     public func fetchImageURLs(totalCount: Int, batchSize: Int) async throws -> [CatImageURLModel] {
         print("CatAPIから画像URL取得開始: 目標\(totalCount)枚(バッチサイズ\(batchSize))")
         var result: [CatImageURLModel] = []
         var pagesRetrieved = 0
 
-        for page in 0..<(Int(ceil(Double(totalCount) / Double(batchSize)))) {
-            guard let url = URL(string: "https://api.thecatapi.com/v1/images/search?limit=\(batchSize)&page=\(page)&order=Rand") else {
+        for page in 0 ..< Int(ceil(Double(totalCount) / Double(batchSize))) {
+            guard let url =
+                URL(string: "https://api.thecatapi.com/v1/images/search?limit=\(batchSize)&page=\(page)&order=Rand")
+            else {
                 print("無効なURL")
                 throw URLError(.badURL)
             }
