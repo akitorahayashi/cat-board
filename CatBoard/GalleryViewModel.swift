@@ -100,7 +100,7 @@ class GalleryViewModel: ObservableObject {
         }
         
         if imageURLsToShow.count > Self.maxImageCount {
-            print("キャッシュクリア実行: 表示数\(imageURLsToShow.count)枚が上限\(Self.maxImageCount)枚を超過 → リセット")
+            print("キャッシュクリアを実行: 表示数\(imageURLsToShow.count)枚が上限\(Self.maxImageCount)枚を超過 → リセット")
             imageURLsToShow = []
             KingfisherManager.shared.cache.clearMemoryCache()
             Task.detached {
