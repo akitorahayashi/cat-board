@@ -1,9 +1,20 @@
 import Infrastructure
 import SwiftUI
 import TieredGridLayout
+import CBShared
+import SwiftData
 
 struct CatImageGallery: View {
-    @StateObject var viewModel = GalleryViewModel(imageClient: CatAPIClient())
+    let modelContext: ModelContext
+    @StateObject var viewModel: GalleryViewModel
+
+    init(modelContext: ModelContext) {
+        _viewModel = StateObject(wrappedValue: GalleryViewModel(
+            repository: CatImageURLRepository(modelContext: modelContext),
+            imageClient: CatAPIClient()
+        ))
+        self.modelContext = modelContext
+    }
     @State private var isTriggeringFetch = false
 
     var body: some View {
@@ -55,7 +66,7 @@ struct CatImageGallery: View {
 
             Spacer().frame(height: headerHeight)
                 .overlay {
-                    if viewModel.isLoading, viewModel.catImages.isEmpty {
+                    if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                     } else if viewModel.isLoading {
@@ -80,7 +91,7 @@ struct CatImageGallery: View {
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
-            ForEach(viewModel.catImages.chunked(into: 10), id: \.self) { chunk in
+            ForEach(viewModel.imageURLsToShow.chunked(into: 10), id: \.self) { chunk in
                 TieredGridLayout {
                     ForEach(chunk, id: \.id) { image in
                         SquareGalleryImageAsync(url: URL(string: image.imageURL))

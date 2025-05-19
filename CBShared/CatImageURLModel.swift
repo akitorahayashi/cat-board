@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CatImageModel: Identifiable, Decodable, Equatable, Hashable {
+public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable {
     public var id = UUID()
     public var imageURL: String
     public var isLoading: Bool = true
@@ -16,8 +16,8 @@ public struct CatImageModel: Identifiable, Decodable, Equatable, Hashable {
 }
 
 // SwiftData の CatImageEntity からの変換用
-public extension CatImageModel {
-    init(entity: CatImageEntity) {
+public extension CatImageURLModel {
+    init(entity: CatImageURLEntity) {
         self.id = UUID()
         self.imageURL = entity.url
         self.isLoading = false

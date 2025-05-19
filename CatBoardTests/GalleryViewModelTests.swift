@@ -26,7 +26,7 @@ final class GalleryViewModelTests: XCTestCase {
 
     // 初期状態のプロパティ値が正しいことを確認するテスト
     func testInitialState() {
-        XCTAssertTrue(viewModel.catImages.isEmpty, "catImagesは初期状態で空")
+        XCTAssertTrue(viewModel.imageURLsToShow.isEmpty, "catImagesは初期状態で空")
         XCTAssertNil(viewModel.errorMessage, "errorMessageは初期状態でnil")
         XCTAssertFalse(viewModel.isLoading, "isLoadingは初期状態でfalse")
     }
@@ -35,7 +35,7 @@ final class GalleryViewModelTests: XCTestCase {
     func testOnAppear_whenCatImagesIsEmpty_fetchesImages() async {
         // 前提
         let expectedImagesCount = 7 // MockImageClient はデフォルトで最大7つのダミー画像を返す
-        viewModel.catImages = []
+        viewModel.imageURLsToShow = []
 
         // 検証
         let expectation = XCTestExpectation(description: "isLoading becomes false after fetching images on appear")
@@ -59,7 +59,7 @@ final class GalleryViewModelTests: XCTestCase {
 
         // isLoadingが完了した後の最終アサーション
         XCTAssertFalse(viewModel.isLoading, "画像取得後はisLoadingがfalse")
-        let currentImages = viewModel.catImages
+        let currentImages = viewModel.imageURLsToShow
         XCTAssertGreaterThan(currentImages.count, 0, "catImages should have loaded some images")
         XCTAssertLessThanOrEqual(currentImages.count, expectedImagesCount, "catImages count should be up to the expected count")
     }
@@ -67,14 +67,14 @@ final class GalleryViewModelTests: XCTestCase {
     // onAppearが呼ばれ、catImagesが既に存在する場合に画像を取得しないことを確認するテスト
     func testOnAppear_whenCatImagesIsNotEmpty_doesNotFetchImages() {
         // 前提
-        viewModel.catImages = [CatImageModel(imageURL: "url1")]
+        viewModel.imageURLsToShow = [CatImageURLModel(imageURL: "url1")]
 
         // 実行
         viewModel.onAppear()
 
         // 検証
-        XCTAssertEqual(viewModel.catImages.count, 1, "catImages は変更されない")
-        XCTAssertEqual(viewModel.catImages.first?.imageURL, "url1", "catImages は変更されない")
+        XCTAssertEqual(viewModel.imageURLsToShow.count, 1, "catImages は変更されない")
+        XCTAssertEqual(viewModel.imageURLsToShow.first?.imageURL, "url1", "catImages は変更されない")
     }
 
     // 追加の画像取得が成功することを確認するテスト
@@ -109,7 +109,7 @@ final class GalleryViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isLoading, "画像取得成功後はisLoadingがfalse")
         XCTAssertNil(viewModel.errorMessage, "画像取得成功後はerrorMessageがnil")
         
-        let receivedImages = viewModel.catImages // オペレーション完了後に画像を取得
+        let receivedImages = viewModel.imageURLsToShow // オペレーション完了後に画像を取得
         XCTAssertNotNil(receivedImages, "画像を受信すること (receivedImages should not be nil)") // 技術的には viewModel.catImages は非オプショナル
         XCTAssertGreaterThan(receivedImages.count, 0, "MockImageClient から画像のバッチを受信すること (count > 0)")
         XCTAssertLessThanOrEqual(receivedImages.count, expectedTotalImages, "MockImageClient から画像のバッチを受信すること (count <= \\(expectedTotalImages))")
@@ -129,7 +129,7 @@ final class GalleryViewModelTests: XCTestCase {
         }
 
         // 検証
-        XCTAssertTrue(viewModel.catImages.isEmpty, "フェッチが発生しないためcatImagesは空のまま")
+        XCTAssertTrue(viewModel.imageURLsToShow.isEmpty, "フェッチが発生しないためcatImagesは空のまま")
         XCTAssertTrue(viewModel.isLoading, "isLoadingはtrueのまま")
     }
 } 

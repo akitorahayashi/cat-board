@@ -4,7 +4,7 @@ import Foundation
 import SwiftData
 
 @Model
-public class CatImageEntity {
+public class CatImageURLEntity {
     @Attribute(.unique) public var url: String
     public var createdAt: Date
 
@@ -13,7 +13,7 @@ public class CatImageEntity {
         self.createdAt = createdAt
     }
 
-    public convenience init(model: CatImageModel) {
+    public convenience init(model: CatImageURLModel) {
         self.init(url: model.imageURL)
     }
 }
