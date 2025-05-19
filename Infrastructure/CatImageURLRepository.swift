@@ -90,12 +90,22 @@ public actor CatImageURLRepository {
     ) async throws -> Int {
         var savedCount = 0
         let fetched = try await apiClient.fetchImageURLs(totalCount: imageCountPerFetch * timesOfFetch, batchSize: imageCountPerFetch)
+        
+        // 既存のURLを取得
+        let existingURLs = try modelContext.fetch(FetchDescriptor<CatImageURLEntity>()).map(\.url)
+        
         for model in fetched {
-            let entity = CatImageURLEntity(url: model.imageURL)
-            modelContext.insert(entity)
-            savedCount += 1
+            // 既存のURLと重複していない場合のみ保存
+            if !existingURLs.contains(model.imageURL) {
+                let entity = CatImageURLEntity(url: model.imageURL)
+                modelContext.insert(entity)
+                savedCount += 1
+            }
         }
-        try modelContext.save()
+        
+        if savedCount > 0 {
+            try modelContext.save()
+        }
         return savedCount
     }
 }
