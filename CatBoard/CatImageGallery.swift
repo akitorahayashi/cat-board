@@ -3,7 +3,7 @@ import SwiftUI
 import TieredGridLayout
 
 struct CatImageGallery: View {
-    @StateObject var viewModel = GalleryViewModel(imageClient: LiveImageClient())
+    @StateObject var viewModel = GalleryViewModel(imageClient: CatAPIClient())
     @State private var isTriggeringFetch = false
 
     var body: some View {

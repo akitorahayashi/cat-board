@@ -10,13 +10,15 @@ class GalleryViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
     
-    private var imageClient: ImageClientProtocol
+    private var imageClient: CatAPIClientProtocol
+    private let repository: CatImageRepository
     private var cancellables = Set<AnyCancellable>()
     private static let imagesPerFetch = 10
     private static let maxImageCount = 300
     
-    init(imageClient: ImageClientProtocol) {
+    init(imageClient: CatAPIClientProtocol, repository: CatImageRepository) {
         self.imageClient = imageClient
+        self.repository = repository
         
         // KingfisherManagerのキャッシュの保存期間を設定
         KingfisherManager.shared.cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500MB
@@ -50,7 +52,8 @@ class GalleryViewModel: ObservableObject {
                     return mutableModel
                 }
             }
-            self.catImages.append(contentsOf: newItems)
+            self.repository.saveNewImages(newItems)
+            self.catImages += newItems
             
             if self.catImages.count > Self.maxImageCount {
                 self.catImages = []
