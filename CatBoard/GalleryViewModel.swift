@@ -33,7 +33,7 @@ class GalleryViewModel: ObservableObject {
     
     @MainActor func onAppear() {
         if imageURLsToShow.isEmpty {
-            print("初期画像の読み込み開始")
+            print("初期画像の読み込み開始: 現在0枚 → 目標\(Self.targetInitialDisplayCount)枚")
             Task {
                 if screener == nil {
                     do {
@@ -72,7 +72,7 @@ class GalleryViewModel: ObservableObject {
                             filteredModels.append(loadedModels[index])
                         }
                     }
-                    print("初期画像の読み込み完了: \(filteredModels.count)枚")
+                    print("初期画像の読み込み完了: \(loadedModels.count)枚読み込み → \(filteredModels.count)枚表示")
                     self.imageURLsToShow = Array(filteredModels.prefix(Self.targetInitialDisplayCount))
                 } catch {
                     print("スクリーニングに失敗: \(error.localizedDescription)")
@@ -96,11 +96,11 @@ class GalleryViewModel: ObservableObject {
             let batch = prefetchedImages.prefix(batchCount)
             imageURLsToShow += batch
             prefetchedImages.removeFirst(batchCount)
-            print("追加画像の表示: \(batchCount)枚")
+            print("追加画像の表示完了: プリフェッチから\(batchCount)枚追加 → 現在\(imageURLsToShow.count)枚表示中")
         }
         
         if imageURLsToShow.count > Self.maxImageCount {
-            print("最大表示数を超えたため、キャッシュをクリア")
+            print("キャッシュクリア実行: 表示数\(imageURLsToShow.count)枚が上限\(Self.maxImageCount)枚を超過 → リセット")
             imageURLsToShow = []
             KingfisherManager.shared.cache.clearMemoryCache()
             Task.detached {
@@ -126,7 +126,7 @@ class GalleryViewModel: ObservableObject {
     @MainActor
     func startBackgroundPrefetchingIfNeeded() async {
         guard prefetchedImages.count < Self.targetPrefetchCount else { return }
-        print("プリフェッチ開始")
+        print("プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 目標\(Self.targetPrefetchCount)枚")
         if screener == nil {
             do {
                 screener = try await ScaryCatScreener()
@@ -157,7 +157,7 @@ class GalleryViewModel: ObservableObject {
                     prefetchImage(loadedModels[index])
                 }
             }
-            print("プリフェッチ完了: \(screened.count)枚")
+            print("プリフェッチ完了: \(loadedUIImages.count)枚読み込み → \(screened.count)枚追加済")
         } catch {
             print("プリフェッチに失敗: \(error.localizedDescription)")
             self.errorMessage = error.localizedDescription

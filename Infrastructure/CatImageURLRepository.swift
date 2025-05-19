@@ -21,7 +21,7 @@ public actor CatImageURLRepository {
     /// 終わったら裏で補充
     public func provideImageURLs(imagesCount: Int, using apiClient: CatAPIClient) async throws -> [CatImageURLModel] {
         if loadedImageURLs.count < imagesCount {
-            print("キャッシュ不足: APIから直接取得")
+            print("キャッシュ不足: 現在\(loadedImageURLs.count)枚 → API経由で\(imagesCount)枚取得")
             let fetched = try await apiClient.fetchImageURLs(
                 totalCount: imagesCount,
                 batchSize: apiFetchBatchSize
@@ -37,7 +37,7 @@ public actor CatImageURLRepository {
         let count = min(imagesCount, loadedImageURLs.count)
         let provided = Array(loadedImageURLs.prefix(count))
         loadedImageURLs.removeFirst(count)
-        print("キャッシュから提供: \(count)枚")
+        print("キャッシュから提供完了: \(count)枚提供 → 残り\(loadedImageURLs.count)枚")
 
         if loadedImageURLs.count <= minLoadedURLThreshold {
             Task {
@@ -57,8 +57,9 @@ public actor CatImageURLRepository {
             descriptor.fetchLimit = limit
         }
         let entities = try modelContext.fetch(descriptor)
+        let beforeCount = self.loadedImageURLs.count
         self.loadedImageURLs += entities.map(CatImageURLModel.init(entity:))
-        print("データベースから読み込み: \(entities.count)枚")
+        print("データベースから読み込み完了: \(entities.count)枚追加 → 現在\(self.loadedImageURLs.count)枚")
         return entities.map(CatImageURLModel.init(entity:))
     }
 
@@ -67,11 +68,12 @@ public actor CatImageURLRepository {
         if loadedImageURLs.count > minLoadedURLThreshold { return }
 
         let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
-        print("キャッシュ補充開始: \(neededToLoad)枚")
+        print("キャッシュ補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
         let fetched = try await apiClient.fetchImageURLs(totalCount: neededToLoad, batchSize: apiFetchBatchSize)
         self.loadedImageURLs += fetched
 
         var currentStored = try modelContext.fetchCount(FetchDescriptor<CatImageURLEntity>())
+        let initialStored = currentStored
         while currentStored < maxStoredURLCount {
             let remaining = maxStoredURLCount - currentStored
             let times = Int(ceil(Double(remaining) / Double(apiFetchBatchSize)))
@@ -79,7 +81,7 @@ public actor CatImageURLRepository {
             if newlyStored == 0 { break }
             currentStored += newlyStored
         }
-        print("データベース補充完了: 合計\(currentStored)件")
+        print("データベース補充完了: \(initialStored)件から\(currentStored - initialStored)件追加 → 合計\(currentStored)件")
     }
 
     /// APIから画像URLを取って 保存する
@@ -88,6 +90,7 @@ public actor CatImageURLRepository {
         imageCountPerFetch: Int = 10,
         timesOfFetch: Int = 3
     ) async throws -> Int {
+        print("画像URL保存処理開始: \(imageCountPerFetch)枚×\(timesOfFetch)回取得予定")
         var savedCount = 0
         let fetched = try await apiClient.fetchImageURLs(totalCount: imageCountPerFetch * timesOfFetch, batchSize: imageCountPerFetch)
         
@@ -106,6 +109,7 @@ public actor CatImageURLRepository {
         if savedCount > 0 {
             try modelContext.save()
         }
+        print("画像URL保存完了: \(fetched.count)枚取得 → \(savedCount)枚保存(重複除外)")
         return savedCount
     }
 }
