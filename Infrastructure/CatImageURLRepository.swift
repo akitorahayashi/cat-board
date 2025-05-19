@@ -21,13 +21,12 @@ public actor CatImageURLRepository {
     /// 終わったら裏で補充
     public func provideImageURLs(imagesCount: Int, using apiClient: CatAPIClient) async throws -> [CatImageURLModel] {
         if loadedImageURLs.count < imagesCount {
-            // 1. Fetch directly from API
+            print("キャッシュ不足: APIから直接取得")
             let fetched = try await apiClient.fetchImageURLs(
                 totalCount: imagesCount,
                 batchSize: apiFetchBatchSize
             )
 
-            // Start background refill
             Task {
                 try? await self.refillIfNeeded(using: apiClient)
             }
@@ -38,6 +37,7 @@ public actor CatImageURLRepository {
         let count = min(imagesCount, loadedImageURLs.count)
         let provided = Array(loadedImageURLs.prefix(count))
         loadedImageURLs.removeFirst(count)
+        print("キャッシュから提供: \(count)枚")
 
         if loadedImageURLs.count <= minLoadedURLThreshold {
             Task {
@@ -58,6 +58,7 @@ public actor CatImageURLRepository {
         }
         let entities = try modelContext.fetch(descriptor)
         self.loadedImageURLs += entities.map(CatImageURLModel.init(entity:))
+        print("データベースから読み込み: \(entities.count)枚")
         return entities.map(CatImageURLModel.init(entity:))
     }
 
@@ -66,10 +67,10 @@ public actor CatImageURLRepository {
         if loadedImageURLs.count > minLoadedURLThreshold { return }
 
         let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
+        print("キャッシュ補充開始: \(neededToLoad)枚")
         let fetched = try await apiClient.fetchImageURLs(totalCount: neededToLoad, batchSize: apiFetchBatchSize)
         self.loadedImageURLs += fetched
 
-        // 永続化層に最大まで補充
         var currentStored = try modelContext.fetchCount(FetchDescriptor<CatImageURLEntity>())
         while currentStored < maxStoredURLCount {
             let remaining = maxStoredURLCount - currentStored
@@ -78,6 +79,7 @@ public actor CatImageURLRepository {
             if newlyStored == 0 { break }
             currentStored += newlyStored
         }
+        print("データベース補充完了: 合計\(currentStored)件")
     }
 
     /// APIから画像URLを取って 保存する

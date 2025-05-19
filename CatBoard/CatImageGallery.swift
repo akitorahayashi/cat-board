@@ -56,8 +56,6 @@ struct CatImageGallery: View {
                             Task {
                                 await viewModel.fetchAdditionalImages()
                                 isTriggeringFetch = false
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
                             }
                         }
                     }

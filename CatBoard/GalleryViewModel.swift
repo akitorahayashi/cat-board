@@ -33,11 +33,13 @@ class GalleryViewModel: ObservableObject {
     
     @MainActor func onAppear() {
         if imageURLsToShow.isEmpty {
+            print("初期画像の読み込み開始")
             Task {
                 if screener == nil {
                     do {
                         screener = try await ScaryCatScreener()
                     } catch {
+                        print("ScaryCatScreenerの初期化に失敗")
                         return
                     }
                 }
@@ -59,15 +61,21 @@ class GalleryViewModel: ObservableObject {
                     }
                 }
                 do {
-                    let screenedImages = try await screener!.screen(images: loadedImages)
+                    let screenedImages = try await screener!.screen(
+                        images: loadedImages,
+                        probabilityThreshold: 0.85,
+                        enableLogging: false
+                    )
                     var filteredModels: [CatImageURLModel] = []
                     for screenedImage in screenedImages {
                         if let index = loadedImages.firstIndex(of: screenedImage) {
                             filteredModels.append(loadedModels[index])
                         }
                     }
+                    print("初期画像の読み込み完了: \(filteredModels.count)枚")
                     self.imageURLsToShow = Array(filteredModels.prefix(Self.targetInitialDisplayCount))
                 } catch {
+                    print("スクリーニングに失敗: \(error.localizedDescription)")
                     self.errorMessage = error.localizedDescription
                     self.imageURLsToShow = []
                 }
@@ -88,9 +96,11 @@ class GalleryViewModel: ObservableObject {
             let batch = prefetchedImages.prefix(batchCount)
             imageURLsToShow += batch
             prefetchedImages.removeFirst(batchCount)
+            print("追加画像の表示: \(batchCount)枚")
         }
         
         if imageURLsToShow.count > Self.maxImageCount {
+            print("最大表示数を超えたため、キャッシュをクリア")
             imageURLsToShow = []
             KingfisherManager.shared.cache.clearMemoryCache()
             Task.detached {
@@ -113,14 +123,15 @@ class GalleryViewModel: ObservableObject {
         }
     }
     
-    
     @MainActor
     func startBackgroundPrefetchingIfNeeded() async {
         guard prefetchedImages.count < Self.targetPrefetchCount else { return }
+        print("プリフェッチ開始")
         if screener == nil {
             do {
                 screener = try await ScaryCatScreener()
             } catch {
+                print("ScaryCatScreenerの初期化に失敗")
                 return
             }
         }
@@ -141,20 +152,14 @@ class GalleryViewModel: ObservableObject {
                 }
             }
             let screened = try await screener!.screen(images: loadedUIImages, probabilityThreshold: 0.99, enableLogging: false)
-            // Remove cache for images that did not pass screening
-            let passedSet = Set(screened)
-            for (index, image) in loadedUIImages.enumerated() {
-                if !passedSet.contains(image) {
-                    let urlString = loadedModels[index].imageURL
-                    KingfisherManager.shared.cache.removeImage(forKey: urlString)
-                }
-            }
             for screenedImage in screened {
                 if let index = loadedUIImages.firstIndex(of: screenedImage) {
                     prefetchImage(loadedModels[index])
                 }
             }
+            print("プリフェッチ完了: \(screened.count)枚")
         } catch {
+            print("プリフェッチに失敗: \(error.localizedDescription)")
             self.errorMessage = error.localizedDescription
         }
     }
