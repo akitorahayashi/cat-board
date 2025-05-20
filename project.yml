@@ -3,7 +3,7 @@
 name: CatBoard
 options:
   deploymentTarget:
-    iOS: 16.0
+    iOS: 17.0
   createIntermediateGroups: true
 
 configs:
@@ -17,14 +17,10 @@ settings:
     CURRENT_PROJECT_VERSION: 1
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
 
-# signing:
-#   automaticSigning:
-#     teamID: YOUR_TEAM_ID
-
 packages:
   ScaryCatScreeningKit:
     url: https://github.com/atrh95/scary-cat-screening-kit
-    from: "1.3.1"
+    from: "1.4.1"
   TieredGridLayout:
     url: https://github.com/atrh95/tiered-grid-layout
     from: "1.1.2"

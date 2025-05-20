@@ -15,6 +15,7 @@ struct CatBoardApp: App {
             GalleryView(
                 store: CatBoardApp.store.scope(state: \.gallery, action: \.gallery)
             )
+            .modelContainer(for: CatImageEntity.self)
         }
     }
 }
