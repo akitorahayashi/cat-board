@@ -207,9 +207,14 @@ class GalleryViewModel: ObservableObject {
                     screener = try await ScaryCatScreener()
                 }
                 
-                // 目標枚数に達するまでループ
-                while prefetchedImages.count < Self.targetPrefetchCount {
-                    print("画像プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 次の\(Self.prefetchBatchCount)枚を取得")
+                // 必要なプリフェッチ枚数を計算
+                let remainingCount = Self.targetPrefetchCount - prefetchedImages.count
+                let requiredBatches = Int(ceil(Double(remainingCount) / Double(Self.prefetchBatchCount)))
+                print("プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 目標\(Self.targetPrefetchCount)枚 (残り\(remainingCount)枚, \(requiredBatches)バッチ必要)")
+                
+                // 必要なバッチ数だけループ
+                for batchIndex in 0..<requiredBatches {
+                    print("画像プリフェッチ開始: バッチ\(batchIndex + 1)/\(requiredBatches) → 次の\(Self.prefetchBatchCount)枚を取得")
                     
                     let newImages = try await repository.getNextImageURLsFromCacheOrAPI(
                         count: Self.prefetchBatchCount,
@@ -250,7 +255,7 @@ class GalleryViewModel: ObservableObject {
                     prefetchedImages += filteredModels
                     print("画像プリフェッチバッチ完了: \(loadedImages.count)枚読み込み → \(Self.isScreeningEnabled ? "スクリーニング通過" : "")\(filteredModels.count)枚追加 (現在\(prefetchedImages.count)枚)")
                     
-                    if prefetchedImages.count < Self.targetPrefetchCount {
+                    if batchIndex < requiredBatches - 1 {
                         print("次のプリフェッチバッチを開始します")
                     }
                 }
