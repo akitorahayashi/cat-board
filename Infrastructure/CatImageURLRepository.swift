@@ -8,9 +8,10 @@ public actor CatImageURLRepository {
     private var isRefilling: Bool = false
     private var refillTask: Task<Void, Never>?
 
-    private let maxLoadedURLCount = 100
-    private let minLoadedURLThreshold = 30
-    private let maxStoredURLCount = 200
+    private let maxLoadedURLCount = 300
+    private let loadedURLThreshold = 100
+    private let maxStoredURLCount = 300
+    private let storedURLThreshold = 100
     private let apiFetchBatchSize = 10
 
     /// 初期化 データベースへのアクセスに使う modelContext を持つ
@@ -68,7 +69,7 @@ public actor CatImageURLRepository {
             let provided = try await getImageURLsFromLoadedURLs(count: count, using: apiClient)
             
             // 提供後の残りが閾値以下になった場合、補充を開始
-            if loadedImageURLs.count <= minLoadedURLThreshold {
+            if loadedImageURLs.count <= loadedURLThreshold {
                 let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
                 print("loadedURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
                 startBackgroundURLRefill(using: apiClient)
@@ -107,8 +108,8 @@ public actor CatImageURLRepository {
         guard !isRefilling else { return }
         
         // loadedURLsが十分にある場合は補充しない
-        guard loadedImageURLs.count <= minLoadedURLThreshold else {
-            print("loadedURLs補充不要: 現在\(loadedImageURLs.count)枚(閾値\(minLoadedURLThreshold)枚)")
+        guard loadedImageURLs.count <= loadedURLThreshold else {
+            print("loadedURLs補充不要: 現在\(loadedImageURLs.count)枚(閾値\(loadedURLThreshold)枚)")
             return
         }
         
@@ -134,7 +135,7 @@ public actor CatImageURLRepository {
 
     /// キャッシュのURLが少なくなったら補充する
     private func refillLoadedURLsIfNeeded(using apiClient: CatAPIClient) async throws {
-        if loadedImageURLs.count > minLoadedURLThreshold { return }
+        if loadedImageURLs.count > loadedURLThreshold { return }
 
         let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
         print("loadedURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
@@ -155,17 +156,22 @@ public actor CatImageURLRepository {
 
         // データベースの補充
         var currentStored = try modelContext.fetchCount(FetchDescriptor<CatImageURLEntity>())
-        let initialStored = currentStored
-        while currentStored < maxStoredURLCount {
-            let remaining = maxStoredURLCount - currentStored
-            let times = Int(ceil(Double(remaining) / Double(apiFetchBatchSize)))
-            let newlyStored = try await fetchAndStoreImageURLsToSwiftData(
-                apiClient: apiClient,
-                imageCountPerFetch: apiFetchBatchSize,
-                timesOfFetch: times
-            )
-            if newlyStored == 0 { break }
-            currentStored += newlyStored
+        if currentStored <= storedURLThreshold {
+            print("SwiftData補充開始: 現在\(currentStored)件 → 目標\(maxStoredURLCount)件")
+            while currentStored < maxStoredURLCount {
+                let remaining = maxStoredURLCount - currentStored
+                let times = Int(ceil(Double(remaining) / Double(apiFetchBatchSize)))
+                let newlyStored = try await fetchAndStoreImageURLsToSwiftData(
+                    apiClient: apiClient,
+                    imageCountPerFetch: apiFetchBatchSize,
+                    timesOfFetch: times
+                )
+                if newlyStored == 0 { break }
+                currentStored += newlyStored
+            }
+            print("SwiftData補充完了: \(currentStored)件")
+        } else {
+            print("SwiftData補充不要: 現在\(currentStored)件(閾値\(storedURLThreshold)件)")
         }
         print("プリフェッチ完了: loadedURLs=\(loadedImageURLs.count)枚, SwiftData=\(currentStored)件")
     }
