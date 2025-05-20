@@ -32,6 +32,7 @@ disabled_rules:
   - trailing_comma # SwiftFormatで制御するため無効化
   - cyclomatic_complexity # 循環的複雑度のチェックを無効化
   - missing_docs # 公開APIのドキュメント要求を無効化
+  - opening_brace # 波括弧の配置ルールを無効化
 
 opt_in_rules:
   - empty_count # count == 0 の代わりに isEmpty を使用

@@ -22,8 +22,24 @@ struct CatImageGallery: View {
         NavigationView {
             Group {
                 ZStack(alignment: .top) {
-                    scrollContent
-                    headerView
+                    ZStack(alignment: .top) {
+                        scrollContent
+                        if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
+                            VStack {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .scaleEffect(1.5)
+                                Text("Loading...")
+                                    .font(.headline)
+                                    .padding(.top, 8)
+                                Spacer()
+                            }
+                            .transition(.opacity.combined(with: .scale))
+                        }
+                        headerView
+                    }
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.isLoading)
                 }
             }
             .navigationBarHidden(true)
@@ -52,7 +68,7 @@ struct CatImageGallery: View {
                 Color.clear
                     .frame(height: 0)
                     .onChange(of: geo.frame(in: .global).minY) { newY in
-                        if newY > 50, !isTriggeringFetch, !viewModel.isLoading {
+                        if newY > 50, !isTriggeringFetch, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                             isTriggeringFetch = true
                             Task {
                                 await viewModel.fetchAdditionalImages()
@@ -65,10 +81,7 @@ struct CatImageGallery: View {
 
             Spacer().frame(height: headerHeight)
                 .overlay {
-                    if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                    } else if viewModel.isLoading {
+                    if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                             .padding()
@@ -99,9 +112,9 @@ struct CatImageGallery: View {
                             .rotationEffect(.degrees(180))
                     }
                 }
-                .padding(2)
             }
         }
+        .padding(2)
     }
 }
 
