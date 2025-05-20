@@ -40,22 +40,22 @@ public actor CatImageURLRepository {
         var descriptor = FetchDescriptor<CatImageURLEntity>(
             sortBy: [.init(\.createdAt, order: .forward)]
         )
-        
+
         // 必要な分だけを取得
         let neededCount = limit ?? maxLoadedURLCount
         descriptor.fetchLimit = neededCount
-        
+
         let entities = try modelContext.fetch(descriptor)
-        
+
         // 取得したエンティティを削除
         for entity in entities {
             modelContext.delete(entity)
         }
         try modelContext.save()
-        
+
         let models = entities.map(CatImageURLModel.init(entity:))
         loadedImageURLs += models
-        
+
         print("SwiftDataからloadedURLsへ移行: \(models.count)枚取得 → 現在\(loadedImageURLs.count)枚")
         return models
     }
@@ -63,21 +63,24 @@ public actor CatImageURLRepository {
     /// 指定した数の画像URLを返す
     /// なければAPIから取って返す
     /// 終わったら裏で補充
-    public func getNextImageURLsFromCacheOrAPI(count: Int, using apiClient: CatAPIClient) async throws -> [CatImageURLModel] {
+    public func getNextImageURLsFromCacheOrAPI(
+        count: Int,
+        using apiClient: CatAPIClient
+    ) async throws -> [CatImageURLModel] {
         // キャッシュが十分にある場合
         if loadedImageURLs.count >= count {
             let provided = try await getImageURLsFromLoadedURLs(count: count, using: apiClient)
-            
+
             // 提供後の残りが閾値以下になった場合、補充を開始
             if loadedImageURLs.count <= loadedURLThreshold {
                 let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
                 print("loadedURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
                 startBackgroundURLRefill(using: apiClient)
             }
-            
+
             return provided
         }
-        
+
         // キャッシュが不足している場合
         // 1. 利用可能なキャッシュを全て提供
         let available = try await getImageURLsFromLoadedURLs(count: loadedImageURLs.count, using: apiClient)
@@ -88,16 +91,18 @@ public actor CatImageURLRepository {
         )
         // 3. 補充を開始
         startBackgroundURLRefill(using: apiClient)
-        
-        print("URL供給完了: loadedURLsから\(available.count)枚 + APIから\(remaining.count)枚 = 合計\(available.count + remaining.count)枚")
+
+        print(
+            "URL供給完了: loadedURLsから\(available.count)枚 + APIから\(remaining.count)枚 = 合計\(available.count + remaining.count)枚"
+        )
         return available + remaining
     }
 
     /// キャッシュから画像URLを提供
-    private func getImageURLsFromLoadedURLs(count: Int, using apiClient: CatAPIClient) async throws -> [CatImageURLModel] {
+    private func getImageURLsFromLoadedURLs(count: Int, using _: CatAPIClient) async throws -> [CatImageURLModel] {
         let count = min(count, loadedImageURLs.count)
         let provided = Array(loadedImageURLs.prefix(count))
-        loadedImageURLs = Array(loadedImageURLs.dropFirst(count))  // 提供した分を確実に削除
+        loadedImageURLs = Array(loadedImageURLs.dropFirst(count)) // 提供した分を確実に削除
         print("loadedURLsから提供: \(count)枚提供 → 残り\(loadedImageURLs.count)枚")
         return provided
     }
@@ -106,26 +111,26 @@ public actor CatImageURLRepository {
     private func startBackgroundURLRefill(using apiClient: CatAPIClient) {
         // 既に補充中なら何もしない
         guard !isRefilling else { return }
-        
+
         // loadedURLsが十分にある場合は補充しない
         guard loadedImageURLs.count <= loadedURLThreshold else {
             print("loadedURLs補充不要: 現在\(loadedImageURLs.count)枚(閾値\(loadedURLThreshold)枚)")
             return
         }
-        
+
         // 前回のタスクをキャンセル
         refillTask?.cancel()
-        
+
         // 新しいタスクを開始
         refillTask = Task { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             do {
-                await self.updateIsRefilling(true)
-                try await self.refillLoadedURLsIfNeeded(using: apiClient)
+                await updateIsRefilling(true)
+                try await refillLoadedURLsIfNeeded(using: apiClient)
             } catch {
                 print("loadedURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
             }
-            await self.updateIsRefilling(false)
+            await updateIsRefilling(false)
         }
     }
 
