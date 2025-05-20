@@ -10,6 +10,8 @@ on:
 jobs:
   unit-test:
     runs-on: macos-latest
+    env:
+      MINT_PATH: ${{ github.workspace }}/.mint
     outputs:
       result: ${{ steps.unit_tests.outcome }}
     steps:
@@ -82,6 +84,8 @@ jobs:
 
   ui-test:
     runs-on: macos-latest
+    env:
+      MINT_PATH: ${{ github.workspace }}/.mint
     outputs:
       result: ${{ steps.ui_tests.outcome }}
     steps:
