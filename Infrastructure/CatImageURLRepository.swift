@@ -174,6 +174,12 @@ public actor CatImageURLRepository {
             print("SwiftData補充不要: 現在\(currentStored)件(閾値\(storedURLThreshold)件)")
         }
         print("プリフェッチ完了: loadedURLs=\(loadedImageURLs.count)枚, SwiftData=\(currentStored)件")
+
+        // プリフェッチ後も閾値を下回っている場合は再度補充を開始
+        if loadedImageURLs.count <= loadedURLThreshold {
+            print("loadedURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
+            try await refillLoadedURLsIfNeeded(using: apiClient)
+        }
     }
 
     /// APIから画像URLを取って 保存する
