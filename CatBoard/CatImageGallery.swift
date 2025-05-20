@@ -7,7 +7,7 @@ import TieredGridLayout
 struct CatImageGallery: View {
     let modelContext: ModelContext
     @StateObject var viewModel: GalleryViewModel
-    
+
     init(modelContext: ModelContext) {
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: CatImageURLRepository(modelContext: modelContext),
@@ -15,16 +15,16 @@ struct CatImageGallery: View {
         ))
         self.modelContext = modelContext
     }
-    
+
     @State private var isTriggeringFetch = false
-    
+
     var body: some View {
         NavigationView {
             Group {
                 ZStack(alignment: .top) {
                     ZStack(alignment: .top) {
                         scrollContent
-                        if viewModel.isLoading && viewModel.imageURLsToShow.isEmpty {
+                        if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
                             VStack {
                                 Spacer()
                                 ProgressView()
@@ -49,9 +49,9 @@ struct CatImageGallery: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
-    
+
     private var headerHeight: CGFloat { 16 + UIFont.preferredFont(forTextStyle: .headline).lineHeight }
-    
+
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
@@ -63,7 +63,7 @@ struct CatImageGallery: View {
                     galleryGrid
                 }
             }
-            
+
             GeometryReader { geo in
                 Color.clear
                     .frame(height: 0)
@@ -78,7 +78,7 @@ struct CatImageGallery: View {
                     }
             }
             .frame(height: 0)
-            
+
             Spacer().frame(height: headerHeight)
                 .overlay {
                     if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
@@ -90,7 +90,7 @@ struct CatImageGallery: View {
         }
         .rotationEffect(.degrees(180))
     }
-    
+
     private var headerView: some View {
         Text("Cat Board")
             .font(.headline)
@@ -99,7 +99,7 @@ struct CatImageGallery: View {
             .padding(.bottom, 16)
             .background(Material.ultraThin)
     }
-    
+
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {

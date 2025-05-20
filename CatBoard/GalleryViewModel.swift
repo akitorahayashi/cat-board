@@ -27,7 +27,7 @@ class GalleryViewModel: ObservableObject {
 
     // キャッシュの保存期間関係の定数
     private static let kingfisherCacheSizeLimit: UInt = 500 * 1024 * 1024 // 500MB
-    private static let kingfisherCacheExpirationDays = 3
+    private static let kingfisherCacheExpirationDays = 1
 
     private var prefetchedImages: [CatImageURLModel] = []
     private static let prefetchBatchCount = 10 // 一回のプリフェッチで取得する枚数
@@ -119,6 +119,10 @@ class GalleryViewModel: ObservableObject {
 
     @MainActor
     func fetchAdditionalImages() async {
+        // 追加取得前にmaxImageCountを超えていたら20枚だけ残す
+        if imageURLsToShow.count > Self.maxImageCount {
+            imageURLsToShow = Array(imageURLsToShow.suffix(10))
+        }
         guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
@@ -179,14 +183,6 @@ class GalleryViewModel: ObservableObject {
                 print(
                     "画像直接取得完了: \(loadedImages.count)枚読み込み → \(Self.isScreeningEnabled ? "スクリーニング通過" : "")\(screenedURLs.count)枚"
                 )
-            }
-
-            if imageURLsToShow.count > Self.maxImageCount {
-                imageURLsToShow = []
-                KingfisherManager.shared.cache.clearMemoryCache()
-                Task.detached {
-                    await KingfisherManager.shared.cache.clearDiskCache()
-                }
             }
         } catch {
             errorMessage = error.localizedDescription
