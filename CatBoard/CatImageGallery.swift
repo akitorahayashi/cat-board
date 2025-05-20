@@ -7,7 +7,7 @@ import TieredGridLayout
 struct CatImageGallery: View {
     let modelContext: ModelContext
     @StateObject var viewModel: GalleryViewModel
-
+    
     init(modelContext: ModelContext) {
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: CatImageURLRepository(modelContext: modelContext),
@@ -15,15 +15,31 @@ struct CatImageGallery: View {
         ))
         self.modelContext = modelContext
     }
-
+    
     @State private var isTriggeringFetch = false
-
+    
     var body: some View {
         NavigationView {
             Group {
                 ZStack(alignment: .top) {
-                    scrollContent
-                    headerView
+                    ZStack(alignment: .top) {
+                        scrollContent
+                        if viewModel.isLoading && viewModel.imageURLsToShow.isEmpty {
+                            VStack {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .scaleEffect(1.5)
+                                Text("Loading...")
+                                    .font(.headline)
+                                    .padding(.top, 8)
+                                Spacer()
+                            }
+                            .transition(.opacity.combined(with: .scale))
+                        }
+                        headerView
+                    }
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.isLoading)
                 }
             }
             .navigationBarHidden(true)
@@ -33,9 +49,9 @@ struct CatImageGallery: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
-
+    
     private var headerHeight: CGFloat { 16 + UIFont.preferredFont(forTextStyle: .headline).lineHeight }
-
+    
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
@@ -47,7 +63,7 @@ struct CatImageGallery: View {
                     galleryGrid
                 }
             }
-
+            
             GeometryReader { geo in
                 Color.clear
                     .frame(height: 0)
@@ -62,13 +78,10 @@ struct CatImageGallery: View {
                     }
             }
             .frame(height: 0)
-
+            
             Spacer().frame(height: headerHeight)
                 .overlay {
-                    if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                    } else if viewModel.isLoading {
+                    if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                             .padding()
@@ -77,7 +90,7 @@ struct CatImageGallery: View {
         }
         .rotationEffect(.degrees(180))
     }
-
+    
     private var headerView: some View {
         Text("Cat Board")
             .font(.headline)
@@ -86,7 +99,7 @@ struct CatImageGallery: View {
             .padding(.bottom, 16)
             .background(Material.ultraThin)
     }
-
+    
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
@@ -99,9 +112,9 @@ struct CatImageGallery: View {
                             .rotationEffect(.degrees(180))
                     }
                 }
-                .padding(2)
             }
         }
+        .padding(2)
     }
 }
 

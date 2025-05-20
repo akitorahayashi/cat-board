@@ -52,6 +52,7 @@ class GalleryViewModel: ObservableObject {
     @MainActor func onAppear() {
         if imageURLsToShow.isEmpty {
             print("初期画像の読み込み開始: 現在0枚 → 目標\(Self.targetInitialDisplayCount)枚")
+            isLoading = true
             Task {
                 do {
                     if screener == nil {
@@ -101,6 +102,7 @@ class GalleryViewModel: ObservableObject {
                     // 画像URLの更新を一括で行う
                     await MainActor.run {
                         self.imageURLsToShow = screenedURLs
+                        self.isLoading = false
                     }
 
                     startCatImagePrefetchingIfNeeded()
@@ -108,6 +110,7 @@ class GalleryViewModel: ObservableObject {
                     await MainActor.run {
                         self.errorMessage = error.localizedDescription
                         self.imageURLsToShow = []
+                        self.isLoading = false
                     }
                 }
             }
