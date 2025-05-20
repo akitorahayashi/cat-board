@@ -52,7 +52,7 @@ struct CatImageGallery: View {
                 Color.clear
                     .frame(height: 0)
                     .onChange(of: geo.frame(in: .global).minY) { newY in
-                        if newY > 50, !isTriggeringFetch, !viewModel.isLoading {
+                        if newY > 50, !isTriggeringFetch, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                             isTriggeringFetch = true
                             Task {
                                 await viewModel.fetchAdditionalImages()

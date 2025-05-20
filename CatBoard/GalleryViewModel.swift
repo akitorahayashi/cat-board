@@ -31,8 +31,8 @@ class GalleryViewModel: ObservableObject {
     private static let kingfisherCacheExpirationDays = 3
     
     private var prefetchedImages: [CatImageURLModel] = []
-    private static let targetPrefetchCount = 80
-    private static let minPrefetchThreshold = 40
+    private static let prefetchBatchCount = 60  // 一回のプリフェッチで取得する枚数
+    private static let minPrefetchThreshold = 50  // プリフェッチを開始する閾値
 
     // MARK: - Initialization
     init(repository: CatImageURLRepository, imageClient: CatAPIClient) {
@@ -56,19 +56,21 @@ class GalleryViewModel: ObservableObject {
                         screener = try await ScaryCatScreener()
                     }
                     
-                    let loaded = try await repository.provideImageURLs(
-                        imagesCount: Self.targetInitialDisplayCount,
+                    let loaded = try await repository.getNextImageURLsFromCacheOrAPI(
+                        count: Self.targetInitialDisplayCount,
                         using: imageClient
                     )
                     
                     var loadedImages: [UIImage] = []
                     var screenedURLs: [CatImageURLModel] = []
                     
-                    for urlModel in loaded {
+                    // 一度に必要な枚数を読み込む
+                    for urlModel in loaded.prefix(Self.targetInitialDisplayCount) {
                         guard let url = URL(string: urlModel.imageURL) else { continue }
                         do {
                             let result = try await KingfisherManager.shared.downloader.downloadImage(with: url)
                             loadedImages.append(result.image)
+                            screenedURLs.append(urlModel)
                             if loadedImages.count >= Self.targetInitialDisplayCount {
                                 break
                             }
@@ -85,22 +87,28 @@ class GalleryViewModel: ObservableObject {
                     
                     // スクリーニング通過した画像のURLのみを保持
                     if Self.isScreeningEnabled {
-                        for (index, urlModel) in loaded.prefix(loadedImages.count).enumerated() {
+                        var filteredURLs: [CatImageURLModel] = []
+                        for (index, urlModel) in screenedURLs.enumerated() {
                             if index < screenedImages.count {
-                                screenedURLs.append(urlModel)
+                                filteredURLs.append(urlModel)
                             }
                         }
-                    } else {
-                        screenedURLs = Array(loaded.prefix(loadedImages.count))
+                        screenedURLs = filteredURLs
                     }
                     
                     print("初期画像の読み込み完了: \(loadedImages.count)枚読み込み → \(screenedURLs.count)枚表示")
-                    self.imageURLsToShow = Array(screenedURLs.prefix(Self.targetInitialDisplayCount))
+                    
+                    // 画像URLの更新を一括で行う
+                    await MainActor.run {
+                        self.imageURLsToShow = screenedURLs
+                    }
                     
                     startBackgroundPrefetchingIfNeeded()
                 } catch {
-                    self.errorMessage = error.localizedDescription
-                    self.imageURLsToShow = []
+                    await MainActor.run {
+                        self.errorMessage = error.localizedDescription
+                        self.imageURLsToShow = []
+                    }
                 }
             }
         }
@@ -118,15 +126,15 @@ class GalleryViewModel: ObservableObject {
                 let batch = prefetchedImages.prefix(batchCount)
                 imageURLsToShow += batch
                 prefetchedImages.removeFirst(batchCount)
-                print("追加画像の表示完了: プリフェッチから\(batchCount)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedImages.count)枚)")
+                print("画像表示完了: プリフェッチから\(batchCount)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedImages.count)枚)")
 
                 if prefetchedImages.count <= Self.minPrefetchThreshold {
                     startBackgroundPrefetchingIfNeeded()
                 }
             } else {
                 print("プリフェッチがないため直接取得を開始")
-                let newImages = try await repository.provideImageURLs(
-                    imagesCount: Self.batchDisplayCount,
+                let newImages = try await repository.getNextImageURLsFromCacheOrAPI(
+                    count: Self.batchDisplayCount,
                     using: imageClient
                 )
                 
@@ -165,7 +173,7 @@ class GalleryViewModel: ObservableObject {
                 }
 
                 imageURLsToShow += screenedURLs
-                print("直接取得完了: \(loadedImages.count)枚読み込み → \(Self.isScreeningEnabled ? "スクリーニング通過" : "")\(screenedURLs.count)枚")
+                print("画像直接取得完了: \(loadedImages.count)枚読み込み → \(Self.isScreeningEnabled ? "スクリーニング通過" : "")\(screenedURLs.count)枚")
             }
 
             if imageURLsToShow.count > Self.maxImageCount {
@@ -185,7 +193,7 @@ class GalleryViewModel: ObservableObject {
     @MainActor
     func startBackgroundPrefetchingIfNeeded() {
         guard !isPrefetching else { return }
-        guard prefetchedImages.count < Self.targetPrefetchCount else { return }
+        guard prefetchedImages.count < Self.minPrefetchThreshold else { return }
         
         prefetchTask?.cancel()
         
@@ -193,14 +201,16 @@ class GalleryViewModel: ObservableObject {
             guard let self = self else { return }
             do {
                 self.isPrefetching = true
-                print("プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 目標\(Self.targetPrefetchCount)枚")
+                print("画像プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 目標\(Self.prefetchBatchCount)枚")
                 
                 if screener == nil {
                     screener = try await ScaryCatScreener()
                 }
                 
-                let countToFetch = Self.targetPrefetchCount - prefetchedImages.count
-                let newImages = try await repository.provideImageURLs(imagesCount: countToFetch, using: imageClient)
+                let newImages = try await repository.getNextImageURLsFromCacheOrAPI(
+                    count: Self.prefetchBatchCount,
+                    using: imageClient
+                )
                 
                 var loadedImages: [UIImage] = []
                 var loadedModels: [CatImageURLModel] = []
@@ -234,7 +244,7 @@ class GalleryViewModel: ObservableObject {
                 }
                 
                 prefetchedImages = filteredModels
-                print("プリフェッチ完了: \(loadedImages.count)枚読み込み → \(Self.isScreeningEnabled ? "スクリーニング通過" : "")\(filteredModels.count)枚")
+                print("画像プリフェッチ完了: \(loadedImages.count)枚読み込み → \(Self.isScreeningEnabled ? "スクリーニング通過" : "")\(filteredModels.count)枚")
             } catch {
                 self.errorMessage = error.localizedDescription
             }
