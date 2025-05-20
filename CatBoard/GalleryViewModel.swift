@@ -21,7 +21,6 @@ class GalleryViewModel: ObservableObject {
     // スクリーニング関連
     private static let isScreeningEnabled = false
     private static let screeningProbabilityThreshold: Float = 0.85
-    private static let prefetchScreeningProbabilityThreshold: Float = 1.00
     private var screener: ScaryCatScreener?
     private var isPrefetching: Bool = false
     private var prefetchTask: Task<Void, Never>?
@@ -82,7 +81,7 @@ class GalleryViewModel: ObservableObject {
                     
                     let screenedImages = try await screener?.screen(
                         images: loadedImages,
-                        probabilityThreshold: GalleryViewModel.screeningProbabilityThreshold,
+                        probabilityThreshold: Self.screeningProbabilityThreshold,
                         enableLogging: false
                     ) ?? []
                     
@@ -158,7 +157,7 @@ class GalleryViewModel: ObservableObject {
 
                 let screened = try await screener?.screen(
                     images: loadedImages,
-                    probabilityThreshold: GalleryViewModel.screeningProbabilityThreshold,
+                    probabilityThreshold: Self.screeningProbabilityThreshold,
                     enableLogging: false
                 ) ?? []
 
@@ -237,7 +236,7 @@ class GalleryViewModel: ObservableObject {
                     
                     let screened = try await screener?.screen(
                         images: loadedImages,
-                        probabilityThreshold: GalleryViewModel.prefetchScreeningProbabilityThreshold,
+                        probabilityThreshold: Self.screeningProbabilityThreshold,
                         enableLogging: false
                     ) ?? []
                     
