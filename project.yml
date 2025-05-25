@@ -41,6 +41,8 @@ targets:
       - target: CBModel
       - target: CatAPIClient
       - target: CatImageURLRepository
+      - target: CatImagePrefetcher
+      - target: CatImageScreener
       - package: TieredGridLayout
         product: TieredGridLayout
       - package: ScaryCatScreeningKit
@@ -120,6 +122,41 @@ targets:
       base:
         DEVELOPMENT_LANGUAGE: ja
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CatImageURLRepository
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: "NO"
+
+  CatImagePrefetcher:
+    type: framework
+    platform: iOS
+    sources:
+      - path: CatImagePrefetcher
+    dependencies:
+      - target: CBModel
+      - target: CatAPIClient
+      - target: CatImageURLRepository
+      - target: CatImageScreener
+      - package: Kingfisher
+    settings:
+      base:
+        DEVELOPMENT_LANGUAGE: ja
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CatImagePrefetcher
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: "NO"
+
+  CatImageScreener:
+    type: framework
+    platform: iOS
+    sources:
+      - path: CatImageScreener
+    dependencies:
+      - target: CBModel
+      - package: ScaryCatScreeningKit
+    settings:
+      base:
+        DEVELOPMENT_LANGUAGE: ja
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CatImageScreener
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
         SKIP_INSTALL: "NO"
