@@ -12,10 +12,10 @@ class GalleryViewModel: ObservableObject {
     private let repository: CatImageURLRepository
     private let imageClient: CatAPIClient
 
-    // 画像取得関連の定数
-    private static let imagesPerFetch = 10
+    // 画像取得関連
     private static let maxImageCount = 300
     private static let targetInitialDisplayCount = 20
+    private static let imagesPerFetch = 10
     private static let batchDisplayCount = 10
 
     // スクリーニング関連
@@ -32,8 +32,8 @@ class GalleryViewModel: ObservableObject {
 
     private var prefetchedImages: [CatImageURLModel] = []
     private static let prefetchBatchCount = 10 // 一回のプリフェッチでロードして screener に通す枚数
-    private static let minPrefetchThreshold = 50 // プリフェッチを開始する閾値
-    private static let targetPrefetchCount = 100 // プリフェッチの目標枚数
+    private static let minPrefetchThreshold = 180 // プリフェッチを開始する閾値
+    private static let targetPrefetchCount = 200 // プリフェッチの目標枚数
 
     // MARK: - Initialization
 
@@ -162,11 +162,17 @@ class GalleryViewModel: ObservableObject {
 
     @MainActor
     func fetchAdditionalImages() async {
-        // 追加取得前にmaxImageCountを超えていたら20枚だけ残す
+        print("fetchAdditionalImages開始: 現在\(imageURLsToShow.count)枚表示中")
+        // 追加取得前にmaxImageCountを超えていたらクリアして再読み込み
         if imageURLsToShow.count > Self.maxImageCount {
-            imageURLsToShow = Array(imageURLsToShow.suffix(10))
+            print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
+            clearDisplayedImages()
+            return
         }
-        guard !isLoading else { return }
+        guard !isLoading else {
+            print("既にローディング中のため、スキップします")
+            return
+        }
         isLoading = true
         errorMessage = nil
 
@@ -229,9 +235,11 @@ class GalleryViewModel: ObservableObject {
             }
         } catch let error as NSError {
             errorMessage = error.localizedDescription
+            print("画像取得中にエラーが発生: \(error.localizedDescription)")
         }
 
         isLoading = false
+        print("fetchAdditionalImages完了: 現在\(imageURLsToShow.count)枚表示中")
     }
 
     @MainActor
@@ -279,7 +287,7 @@ class GalleryViewModel: ObservableObject {
                             // プリフェッチ用のダウンロードオプションを設定
                             let options: KingfisherOptionsInfo = [
                                 .cacheMemoryOnly,  // メモリキャッシュのみを使用
-                                .memoryCacheExpiration(.never),  // スクリーニング中にキャッシュが消えないようにする
+                                .memoryCacheExpiration(.days(1)),  // スクリーニング中にキャッシュが消えないようにする
                                 .memoryCacheAccessExtendingExpiration(.none),  // アクセスによる有効期限の自動延長を無効化
                                 .requestModifier(AnyModifier { request in
                                     var r = request
@@ -372,6 +380,25 @@ class GalleryViewModel: ObservableObject {
             let elapsed = Date().timeIntervalSince(prefetchStartTime)
             print("プリフェッチ完了までの所要時間: \(elapsed)秒")
             isPrefetching = false
+        }
+    }
+
+    @MainActor
+    func clearDisplayedImages() {
+        print("画像のクリアを開始")
+        // 表示中の画像をクリア
+        imageURLsToShow = []
+        
+        // メモリキャッシュのクリア
+        KingfisherManager.shared.cache.clearMemoryCache()
+        
+        // エラーメッセージのクリア
+        errorMessage = nil
+        
+        // 画像の再読み込みを開始
+        print("画像の再読み込みを開始")
+        Task {
+            await fetchAdditionalImages()
         }
     }
 }

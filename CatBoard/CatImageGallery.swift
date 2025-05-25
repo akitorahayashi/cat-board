@@ -3,8 +3,11 @@ import Infrastructure
 import SwiftData
 import SwiftUI
 import TieredGridLayout
+import Kingfisher
 
 struct CatImageGallery: View {
+    private static let minImageCountForRefresh = 30
+    
     let modelContext: ModelContext
     @StateObject var viewModel: GalleryViewModel
 
@@ -23,27 +26,40 @@ struct CatImageGallery: View {
         NavigationView {
             Group {
                 ZStack(alignment: .top) {
-                    ZStack(alignment: .top) {
-                        scrollContent
-                        if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
-                            VStack {
-                                Spacer()
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .scaleEffect(1.5)
-                                Text("Loading...")
-                                    .font(.headline)
-                                    .padding(.top, 8)
-                                Spacer()
-                            }
-                            .transition(.opacity.combined(with: .scale))
+                    scrollContent
+                    if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
+                        VStack {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(1.5)
+                            Text("Loading...")
+                                .font(.headline)
+                                .padding(.top, 8)
+                            Spacer()
                         }
-                        headerView
+                        .transition(.opacity.combined(with: .scale))
                     }
-                    .animation(.easeInOut(duration: 0.3), value: viewModel.isLoading)
                 }
             }
-            .navigationBarHidden(true)
+            .navigationTitle("Cat Board")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if !viewModel.isLoading && viewModel.imageURLsToShow.count >= Self.minImageCountForRefresh {
+                        Button(action: {
+                            withAnimation {
+                                viewModel.clearDisplayedImages()
+                            }
+                        }) {
+                            ZStack {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                    }
+                }
+            }
             .onAppear {
                 viewModel.onAppear()
             }
@@ -72,11 +88,14 @@ struct CatImageGallery: View {
                         guard abs(newY - lastTriggerY) > 50 else { return }
                         guard newY > 50, !isTriggeringFetch, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty else { return }
 
-                        lastTriggerY = newY
                         isTriggeringFetch = true
+                        lastTriggerY = newY
+
                         Task {
                             await viewModel.fetchAdditionalImages()
-                            isTriggeringFetch = false
+                            await MainActor.run {
+                                isTriggeringFetch = false
+                            }
                         }
                     }
             }
@@ -92,15 +111,6 @@ struct CatImageGallery: View {
                 }
         }
         .rotationEffect(.degrees(180))
-    }
-
-    private var headerView: some View {
-        Text("Cat Board")
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 8)
-            .padding(.bottom, 16)
-            .background(Material.ultraThin)
     }
 
     @ViewBuilder
@@ -127,4 +137,27 @@ private extension Array {
             Array(self[$0 ..< Swift.min($0 + size, count)])
         }
     }
+}
+
+private struct RotationModifier: ViewModifier {
+    let angle: Double
+    func body(content: Content) -> some View {
+        content.rotationEffect(.degrees(angle))
+    }
+}
+
+private struct RotationAndFadeModifier: ViewModifier {
+    let angle: Double
+    func body(content: Content) -> some View {
+        content
+            .rotationEffect(.degrees(angle))
+            .opacity(angle == 0 ? 1 : 0)
+    }
+}
+
+private var rotatingFadeTransition: AnyTransition {
+    .modifier(
+        active: RotationAndFadeModifier(angle: 180),
+        identity: RotationAndFadeModifier(angle: 0)
+    )
 }
