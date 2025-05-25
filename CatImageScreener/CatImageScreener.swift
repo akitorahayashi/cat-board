@@ -4,12 +4,14 @@ import CoreGraphics
 import Foundation
 
 public actor CatImageScreener {
-    private var screener: ScaryCatScreener?
+    private let screener: ScaryCatScreener
     private static let screeningProbabilityThreshold: Float = 0.85
     private static let isScreeningEnabled = true
     private static let scaryMode = false
 
-    public init() {}
+    public init() async throws {
+        screener = try await ScaryCatScreener()
+    }
 
     public func screenImages(
         cgImages: [CGImage],
@@ -20,11 +22,7 @@ public actor CatImageScreener {
             throw NSError(domain: "CatImageScreener", code: -1, userInfo: [NSLocalizedDescriptionKey: "画像とモデルの数が一致しません"])
         }
 
-        if screener == nil {
-            screener = try await ScaryCatScreener()
-        }
-
-        let screeningResults = try await screener?.screen(
+        let screeningResults = try await screener.screen(
             cgImages: cgImages,
             probabilityThreshold: Self.screeningProbabilityThreshold,
             enableLogging: false
@@ -50,9 +48,5 @@ public actor CatImageScreener {
                 models[cgImages.firstIndex(of: result.cgImage) ?? 0]
             }
         }
-    }
-
-    public func clearCache() {
-        screener = nil
     }
 } 

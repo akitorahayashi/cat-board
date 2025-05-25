@@ -139,26 +139,3 @@ private extension Array {
         }
     }
 }
-
-private struct RotationModifier: ViewModifier {
-    let angle: Double
-    func body(content: Content) -> some View {
-        content.rotationEffect(.degrees(angle))
-    }
-}
-
-private struct RotationAndFadeModifier: ViewModifier {
-    let angle: Double
-    func body(content: Content) -> some View {
-        content
-            .rotationEffect(.degrees(angle))
-            .opacity(angle == 0 ? 1 : 0)
-    }
-}
-
-private var rotatingFadeTransition: AnyTransition {
-    .modifier(
-        active: RotationAndFadeModifier(angle: 180),
-        identity: RotationAndFadeModifier(angle: 0)
-    )
-}

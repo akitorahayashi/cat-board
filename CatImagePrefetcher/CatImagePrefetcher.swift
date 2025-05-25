@@ -17,6 +17,7 @@ public actor CatImagePrefetcher {
     private static let prefetchBatchCount = 10 // 一回のプリフェッチでロードして screener に通す枚数
     private static let minPrefetchThreshold = 180 // プリフェッチを開始する閾値
     private static let targetPrefetchCount = 200 // プリフェッチの目標枚数
+    private static let maxFetchAttempts = 30 // 最大取得試行回数
 
     public init(repository: CatImageURLRepository, imageClient: CatAPIClient) {
         self.repository = repository
@@ -36,10 +37,6 @@ public actor CatImagePrefetcher {
         return batch
     }
 
-    public func getPrefetchedCount() -> Int {
-        return prefetchedImages.count
-    }
-
     public func fetchImages(count: Int) async throws -> [CatImageURLModel] {
         let newImages = try await repository.getNextImageURLsFromCacheOrAPI(
             count: count,
@@ -49,7 +46,7 @@ public actor CatImagePrefetcher {
         var loadedImages: [CGImage] = []
         var loadedModels: [CatImageURLModel] = []
 
-        // 画像のダウンロードとスクリーニングを一括で行う
+        // 画像のダウンロードとスクリーニングを行う
         for item in newImages {
             guard let url = URL(string: item.imageURL) else { continue }
             do {
@@ -73,7 +70,7 @@ public actor CatImagePrefetcher {
             }
         }
 
-        // スクリーニングを一括で実行
+        // スクリーニングを実行
         if !loadedImages.isEmpty {
             let filteredModels = try await screener.screenImages(
                 cgImages: loadedImages,
@@ -100,7 +97,6 @@ public actor CatImagePrefetcher {
     }
 
     private func prefetchImages() async {
-        let prefetchStartTime = Date()
         do {
             // 必要なプリフェッチ枚数を計算
             let remainingCount = Self.targetPrefetchCount - prefetchedImages.count
@@ -110,9 +106,8 @@ public actor CatImagePrefetcher {
 
             var totalFetched = 0
             var totalScreened = 0
-            let maxFetchAttempts = 30  // 最大取得試行回数
 
-            while prefetchedImages.count < Self.targetPrefetchCount && totalFetched < maxFetchAttempts * Self.prefetchBatchCount {
+            while prefetchedImages.count < Self.targetPrefetchCount && totalFetched < Self.maxFetchAttempts * Self.prefetchBatchCount {
                 let filteredModels = try await fetchImages(count: Self.prefetchBatchCount)
                 totalFetched += Self.prefetchBatchCount
                 totalScreened += filteredModels.count
@@ -132,8 +127,6 @@ public actor CatImagePrefetcher {
         } catch let error as NSError {
             print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
         }
-        let elapsed = Date().timeIntervalSince(prefetchStartTime)
-        print("プリフェッチ完了までの所要時間: \(elapsed)秒")
     }
 
     public func startPrefetchingIfNeeded() async {
