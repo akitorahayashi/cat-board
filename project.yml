@@ -20,10 +20,12 @@ settings:
 packages:
   ScaryCatScreeningKit:
     url: https://github.com/atrh95/scary-cat-screening-kit
-    from: "2.0.0"
+    from: "2.0.1"
+    exact: true
   TieredGridLayout:
     url: https://github.com/atrh95/tiered-grid-layout
     from: "1.1.2"
+    exact: true
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher.git
     from: "8.3.2"
@@ -36,8 +38,9 @@ targets:
     sources:
       - path: CatBoard
     dependencies:
-      - target: Infrastructure
-      - target: CBShared
+      - target: CBModel
+      - target: CatAPIClient
+      - target: CatImageURLRepository
       - package: TieredGridLayout
         product: TieredGridLayout
       - package: ScaryCatScreeningKit
@@ -77,32 +80,46 @@ targets:
         UIRequiresFullScreen: false
         # Add other necessary plist keys
 
-  Infrastructure:
+  CBModel:
     type: framework
     platform: iOS
     sources:
-      - path: Infrastructure
-    dependencies:
-      - target: CBShared
-      - package: ScaryCatScreeningKit
-        product: ScaryCatScreeningKit
+      - path: CBModel
     settings:
       base:
         DEVELOPMENT_LANGUAGE: ja
-        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.Infrastructure
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CBModel
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
         SKIP_INSTALL: "NO"
 
-  CBShared:
+  CatAPIClient:
     type: framework
     platform: iOS
     sources:
-      - path: CBShared
+      - path: CatAPIClient
+    dependencies:
+      - target: CBModel
     settings:
       base:
         DEVELOPMENT_LANGUAGE: ja
-        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CBShared
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CatAPIClient
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: "NO"
+
+  CatImageURLRepository:
+    type: framework
+    platform: iOS
+    sources:
+      - path: CatImageURLRepository
+    dependencies:
+      - target: CBModel
+      - target: CatAPIClient
+    settings:
+      base:
+        DEVELOPMENT_LANGUAGE: ja
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CatImageURLRepository
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
         SKIP_INSTALL: "NO"
@@ -114,8 +131,7 @@ targets:
       - path: CatBoardTests
     dependencies:
       - target: CatBoard
-      - target: Infrastructure
-      - target: CBShared
+      - target: CBModel
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardTests

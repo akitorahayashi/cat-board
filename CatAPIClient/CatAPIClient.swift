@@ -1,4 +1,4 @@
-import CBShared
+import CBModel
 import ScaryCatScreeningKit
 import UIKit
 

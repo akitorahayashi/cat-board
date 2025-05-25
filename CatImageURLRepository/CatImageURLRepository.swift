@@ -1,4 +1,5 @@
-import CBShared
+import CBModel
+import CatAPIClient
 import Foundation
 import SwiftData
 

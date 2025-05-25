@@ -1,6 +1,6 @@
-import CBShared
 import SwiftData
 import SwiftUI
+import CBModel
 
 @main
 struct CatBoardApp: App {

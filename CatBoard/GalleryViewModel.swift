@@ -1,5 +1,6 @@
-import CBShared
-import Infrastructure
+import CBModel
+import CatAPIClient
+import CatImageURLRepository
 import Kingfisher
 import ScaryCatScreeningKit
 import SwiftUI

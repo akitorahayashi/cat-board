@@ -1,5 +1,6 @@
-import CBShared
-import Infrastructure
+import CBModel
+import CatAPIClient
+import CatImageURLRepository
 import SwiftData
 import SwiftUI
 import TieredGridLayout
