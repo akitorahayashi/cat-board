@@ -31,9 +31,9 @@ class GalleryViewModel: ObservableObject {
     private static let kingfisherCacheExpirationDays = 1
 
     private var prefetchedImages: [CatImageURLModel] = []
-    private static let prefetchBatchCount = 10 // 一回のプリフェッチで取得する枚数
+    private static let prefetchBatchCount = 10 // 一回のプリフェッチでロードして screener に通す枚数
     private static let minPrefetchThreshold = 50 // プリフェッチを開始する閾値
-    private static let targetPrefetchCount = 150 // プリフェッチの目標枚数
+    private static let targetPrefetchCount = 100 // プリフェッチの目標枚数
 
     // MARK: - Initialization
 
@@ -83,7 +83,16 @@ class GalleryViewModel: ObservableObject {
                             }
 
                             do {
-                                let result = try await KingfisherManager.shared.downloader.downloadImage(with: url)
+                                let result = try await KingfisherManager.shared.downloader.downloadImage(
+                                    with: url,
+                                    options: [
+                                        .requestModifier(AnyModifier { request in
+                                            var r = request
+                                            r.timeoutInterval = 10
+                                            return r
+                                        })
+                                    ]
+                                )
                                 guard let cgImage = result.image.cgImage else {
                                     remainingURLs.removeFirst()
                                     continue
@@ -125,7 +134,6 @@ class GalleryViewModel: ObservableObject {
                         print("\(fetchCount + 1)回目の取得完了: \(batchScreenedURLs.count)枚通過 → 現在\(screenedURLs.count)枚")
 
                         if screenedURLs.count >= Self.targetInitialDisplayCount {
-                            print("目標枚数達成: \(screenedURLs.count)枚")
                             break
                         }
 
@@ -235,6 +243,7 @@ class GalleryViewModel: ObservableObject {
 
         prefetchTask = Task { [weak self] in
             guard let self else { return }
+            let prefetchStartTime = Date()
             do {
                 isPrefetching = true
 
@@ -253,7 +262,6 @@ class GalleryViewModel: ObservableObject {
                 let maxFetchAttempts = 30  // 最大取得試行回数
 
                 while prefetchedImages.count < Self.targetPrefetchCount && totalFetched < maxFetchAttempts * Self.prefetchBatchCount {
-                    print("画像プリフェッチ開始: 次の\(Self.prefetchBatchCount)枚を取得")
 
                     let newImages = try await repository.getNextImageURLsFromCacheOrAPI(
                         count: Self.prefetchBatchCount,
@@ -268,12 +276,16 @@ class GalleryViewModel: ObservableObject {
                     for item in newImages {
                         guard let url = URL(string: item.imageURL) else { continue }
                         do {
-                            // プリフェッチ用の軽量なダウンロードオプションを設定
+                            // プリフェッチ用のダウンロードオプションを設定
                             let options: KingfisherOptionsInfo = [
-                                .processor(DownsamplingImageProcessor(size: CGSize(width: 200, height: 200))),
                                 .cacheMemoryOnly,  // メモリキャッシュのみを使用
                                 .memoryCacheExpiration(.never),  // スクリーニング中にキャッシュが消えないようにする
-                                .memoryCacheAccessExtendingExpiration(.none)  // アクセスによる有効期限の自動延長を無効化
+                                .memoryCacheAccessExtendingExpiration(.none),  // アクセスによる有効期限の自動延長を無効化
+                                .requestModifier(AnyModifier { request in
+                                    var r = request
+                                    r.timeoutInterval = 10
+                                    return r
+                                })
                             ]
                             let result = try await KingfisherManager.shared.downloader.downloadImage(
                                 with: url,
@@ -284,7 +296,7 @@ class GalleryViewModel: ObservableObject {
                                 loadedModels.append(item)
                             }
                         } catch {
-                            print("画像のダウンロードに失敗: \(error.localizedDescription)")
+                            print("画像のダウンロードに失敗（URL: \(item.imageURL)）: \(error.localizedDescription)")
                             continue
                         }
                     }
@@ -297,6 +309,9 @@ class GalleryViewModel: ObservableObject {
                                 probabilityThreshold: Self.screeningProbabilityThreshold,
                                 enableLogging: false
                             )
+
+                            // Capture the number of downloaded images before filtering
+                            let downloadedCount = loadedImages.count
 
                             var filteredModels: [CatImageURLModel] = []
                             if Self.isScreeningEnabled, let results = screeningResults {
@@ -321,7 +336,7 @@ class GalleryViewModel: ObservableObject {
                                 )
                                 for index in failedIndices {
                                     if let url = URL(string: loadedModels[index].imageURL) {
-                                        KingfisherManager.shared.cache.removeImage(forKey: url.absoluteString)
+                                        try? await KingfisherManager.shared.cache.removeImage(forKey: url.absoluteString)
                                     }
                                 }
 
@@ -334,12 +349,9 @@ class GalleryViewModel: ObservableObject {
 
                             totalScreened += filteredModels.count
                             await MainActor.run {
-                                prefetchedImages += filteredModels
+                                self.prefetchedImages += filteredModels
+                                print("画像プリフェッチバッチ完了: \(downloadedCount)枚読み込み → \(Self.isScreeningEnabled ? "スクリーニング通過" : "")\(filteredModels.count)枚追加 (現在\(self.prefetchedImages.count)枚)")
                             }
-                            
-                            print(
-                                "画像プリフェッチバッチ完了: \(loadedImages.count)枚読み込み → \(Self.isScreeningEnabled ? "スクリーニング通過" : "")\(filteredModels.count)枚追加 (現在\(prefetchedImages.count)枚, 合計\(totalFetched)枚取得, \(totalScreened)枚通過)"
-                            )
                         } catch {
                             print("スクリーニングに失敗: \(error.localizedDescription)")
                         }
@@ -357,6 +369,8 @@ class GalleryViewModel: ObservableObject {
             } catch let error as NSError {
                 errorMessage = error.localizedDescription
             }
+            let elapsed = Date().timeIntervalSince(prefetchStartTime)
+            print("プリフェッチ完了までの所要時間: \(elapsed)秒")
             isPrefetching = false
         }
     }

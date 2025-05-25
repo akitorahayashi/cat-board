@@ -9,7 +9,9 @@ struct SquareGalleryImageAsync: View {
         GeometryReader { geo in
             let size = geo.size.width
 
-            KFImage(url)
+            KFImage(source: url.map { .network($0) })
+                .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 200, height: 200)))
+                .cacheMemoryOnly()
                 .placeholder {
                     Color(.secondarySystemBackground)
                         .frame(width: size, height: size)
@@ -24,7 +26,6 @@ struct SquareGalleryImageAsync: View {
                     RoundedRectangle(cornerRadius: cornerRadius)
                         .stroke(Color(.systemBackground).opacity(0.3), lineWidth: 2)
                 )
-                .setOptions([.cacheMemoryOnly])
         }
     }
 }

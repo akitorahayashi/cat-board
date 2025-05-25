@@ -17,6 +17,7 @@ struct CatImageGallery: View {
     }
 
     @State private var isTriggeringFetch = false
+    @State private var lastTriggerY: CGFloat = 0
 
     var body: some View {
         NavigationView {
@@ -68,12 +69,14 @@ struct CatImageGallery: View {
                 Color.clear
                     .frame(height: 0)
                     .onChange(of: geo.frame(in: .global).minY) { newY in
-                        if newY > 50, !isTriggeringFetch, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
-                            isTriggeringFetch = true
-                            Task {
-                                await viewModel.fetchAdditionalImages()
-                                isTriggeringFetch = false
-                            }
+                        guard abs(newY - lastTriggerY) > 50 else { return }
+                        guard newY > 50, !isTriggeringFetch, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty else { return }
+
+                        lastTriggerY = newY
+                        isTriggeringFetch = true
+                        Task {
+                            await viewModel.fetchAdditionalImages()
+                            isTriggeringFetch = false
                         }
                     }
             }
