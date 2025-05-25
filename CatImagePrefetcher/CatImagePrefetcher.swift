@@ -4,14 +4,16 @@ import CatImageURLRepository
 import CatImageScreener
 import Kingfisher
 import SwiftUI
+import SwiftData
 
-public actor CatImagePrefetcher {
-    private let repository: CatImageURLRepository
+public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
+    private let repository: CatImageURLRepositoryProtocol
     private let imageClient: CatAPIClient
-    private let screener: CatImageScreener
+    private var screener: CatImageScreener?
     private var isPrefetching: Bool = false
     private var prefetchTask: Task<Void, Never>?
     private var prefetchedImages: [CatImageURLModel] = []
+    private let modelContainer: ModelContainer
 
     // プリフェッチ関連の定数
     private static let prefetchBatchCount = 10 // 一回のプリフェッチでロードして screener に通す枚数
@@ -19,15 +21,19 @@ public actor CatImagePrefetcher {
     private static let targetPrefetchCount = 200 // プリフェッチの目標枚数
     private static let maxFetchAttempts = 30 // 最大取得試行回数
 
-    public init(repository: CatImageURLRepository, imageClient: CatAPIClient) {
-        self.repository = repository
-        self.imageClient = imageClient
-        self.screener = CatImageScreener()
+    public init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+        self.repository = CatImageURLRepository(modelContainer: modelContainer)
+        self.imageClient = CatAPIClient()
     }
 
     deinit {
         prefetchTask?.cancel()
         KingfisherManager.shared.cache.clearMemoryCache()
+    }
+
+    public func getPrefetchedCount() -> Int {
+        prefetchedImages.count
     }
 
     public func getPrefetchedImages(count: Int) -> [CatImageURLModel] {
@@ -38,10 +44,12 @@ public actor CatImagePrefetcher {
     }
 
     public func fetchImages(count: Int) async throws -> [CatImageURLModel] {
-        let newImages = try await repository.getNextImageURLsFromCacheOrAPI(
-            count: count,
-            using: imageClient
-        )
+        let newImages = try await repository.getNextImageURLs(count: count)
+
+        // スクリーナーがない場合はそのまま返す
+        if screener == nil {
+            return newImages
+        }
 
         var loadedImages: [CGImage] = []
         var loadedModels: [CatImageURLModel] = []
@@ -72,32 +80,65 @@ public actor CatImagePrefetcher {
 
         // スクリーニングを実行
         if !loadedImages.isEmpty {
-            let filteredModels = try await screener.screenImages(
-                cgImages: loadedImages,
-                models: loadedModels
-            )
+            await checkScreenerInitialization()
+            if let screener = screener {
+                let filteredModels = try await screener.screenImages(
+                    cgImages: loadedImages,
+                    models: loadedModels
+                )
 
-            // 通過しなかった画像のキャッシュをクリア
-            let failedIndices = Set(0..<loadedImages.count).subtracting(
-                filteredModels.map { model in
-                    loadedModels.firstIndex(of: model) ?? -1
+                // 通過しなかった画像のキャッシュをクリア
+                let failedIndices = Set(0..<loadedImages.count).subtracting(
+                    filteredModels.map { model in
+                        loadedModels.firstIndex(of: model) ?? -1
+                    }
+                )
+                for index in failedIndices {
+                    if let url = URL(string: loadedModels[index].imageURL) {
+                        try? await KingfisherManager.shared.cache.removeImage(forKey: url.absoluteString)
+                    }
                 }
-            )
-            for index in failedIndices {
-                if let url = URL(string: loadedModels[index].imageURL) {
-                    try? await KingfisherManager.shared.cache.removeImage(forKey: url.absoluteString)
-                }
+
+                print("画像取得完了: \(loadedImages.count)枚読み込み → スクリーニング通過\(filteredModels.count)枚")
+                return filteredModels
             }
-
-            print("画像取得完了: \(loadedImages.count)枚読み込み → スクリーニング通過\(filteredModels.count)枚")
-            return filteredModels
         }
 
         return []
     }
 
+    public func startPrefetchingIfNeeded() async {
+        guard !isPrefetching else { return }
+        guard prefetchedImages.count < Self.targetPrefetchCount else { return }
+
+        prefetchTask?.cancel()
+        isPrefetching = true
+
+        prefetchTask = Task { [weak self] in
+            guard let self else { return }
+            await self.prefetchImages()
+            await self.setPrefetching(false)
+        }
+    }
+
+    private func setPrefetching(_ value: Bool) {
+        isPrefetching = value
+    }
+
+    private func checkScreenerInitialization() async {
+        if screener == nil {
+            do {
+                self.screener = try await CatImageScreener()
+            } catch {
+                print("画像スクリーナーの初期化に失敗しました: \(error.localizedDescription)")
+            }
+        }
+    }
+
     private func prefetchImages() async {
         do {
+            await checkScreenerInitialization()
+
             // 必要なプリフェッチ枚数を計算
             let remainingCount = Self.targetPrefetchCount - prefetchedImages.count
             print(
@@ -127,23 +168,5 @@ public actor CatImagePrefetcher {
         } catch let error as NSError {
             print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
         }
-    }
-
-    public func startPrefetchingIfNeeded() async {
-        guard !isPrefetching else { return }
-        guard prefetchedImages.count < Self.targetPrefetchCount else { return }
-
-        prefetchTask?.cancel()
-        isPrefetching = true
-
-        prefetchTask = Task { [weak self] in
-            guard let self else { return }
-            await self.prefetchImages()
-            await self.setPrefetching(false)
-        }
-    }
-
-    private func setPrefetching(_ value: Bool) {
-        isPrefetching = value
     }
 } 

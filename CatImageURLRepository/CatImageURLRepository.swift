@@ -3,11 +3,12 @@ import CatAPIClient
 import Foundation
 import SwiftData
 
-public actor CatImageURLRepository {
-    private let modelContext: ModelContext
+public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
+    
     private var loadedImageURLs: [CatImageURLModel] = []
     private var isRefilling: Bool = false
     private var refillTask: Task<Void, Never>?
+    private let modelContainer: ModelContainer
 
     private let maxLoadedURLCount = 300
     private let loadedURLThreshold = 100
@@ -15,12 +16,11 @@ public actor CatImageURLRepository {
     private let storedURLThreshold = 100
     private let apiFetchBatchSize = 10
 
-    /// 初期化 データベースへのアクセスに使う modelContext を持つ
-    public init(modelContext: ModelContext) {
-        self.modelContext = modelContext
+    public init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
         // 初期化時にデータベースからURLを読み込む
         Task {
-            try? await loadInitialImageURLsFromSwiftData()
+            await loadInitialImageURLsFromSwiftData()
         }
     }
 
@@ -29,15 +29,22 @@ public actor CatImageURLRepository {
     }
 
     /// 初期化時にデータベースから画像URLを読み込む
-    private func loadInitialImageURLsFromSwiftData() async throws {
+    private func loadInitialImageURLsFromSwiftData() async {
         print("SwiftDataから初期URL読み込み開始: 目標\(maxLoadedURLCount)枚")
-        let loaded = try loadImageURLsFromSwiftData(limit: maxLoadedURLCount)
-        loadedImageURLs = loaded
-        print("SwiftDataから初期URL読み込み完了: \(loaded.count)枚")
+        do {
+            let modelContext = await modelContainer.mainContext
+            let loaded = try loadImageURLsFromSwiftData(modelContext: modelContext, limit: maxLoadedURLCount)
+            loadedImageURLs = loaded
+            print("SwiftDataから初期URL読み込み完了: \(loaded.count)枚")
+        } catch {
+            print("SwiftDataから初期URL読み込み失敗: \(error.localizedDescription)")
+            // エラーが発生しても空の配列で開始
+            loadedImageURLs = []
+        }
     }
 
     /// データベースから画像URLを読み込んで loadedImageURLs に足す
-    private func loadImageURLsFromSwiftData(limit: Int? = nil) throws -> [CatImageURLModel] {
+    private func loadImageURLsFromSwiftData(modelContext: ModelContext, limit: Int? = nil) throws -> [CatImageURLModel] {
         var descriptor = FetchDescriptor<CatImageURLEntity>(
             sortBy: [.init(\.createdAt, order: .forward)]
         )
@@ -68,6 +75,7 @@ public actor CatImageURLRepository {
         count: Int,
         using apiClient: CatAPIClient
     ) async throws -> [CatImageURLModel] {
+        let modelContext = await modelContainer.mainContext
         // キャッシュが十分にある場合
         if loadedImageURLs.count >= count {
             let provided = try await getImageURLsFromLoadedURLs(count: count, using: apiClient)
@@ -76,7 +84,7 @@ public actor CatImageURLRepository {
             if loadedImageURLs.count <= loadedURLThreshold {
                 let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
                 print("loadedURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
-                startBackgroundURLRefill(using: apiClient)
+                await startBackgroundURLRefill(using: apiClient)
             }
 
             return provided
@@ -91,7 +99,7 @@ public actor CatImageURLRepository {
             batchSize: apiFetchBatchSize
         )
         // 3. 補充を開始
-        startBackgroundURLRefill(using: apiClient)
+        await startBackgroundURLRefill(using: apiClient)
 
         print(
             "URL供給完了: loadedURLsから\(available.count)枚 + APIから\(remaining.count)枚 = 合計\(available.count + remaining.count)枚"
@@ -109,7 +117,7 @@ public actor CatImageURLRepository {
     }
 
     /// バックグラウンドでの補充処理を開始
-    private func startBackgroundURLRefill(using apiClient: CatAPIClient) {
+    private func startBackgroundURLRefill(using apiClient: CatAPIClient) async {
         // 既に補充中なら何もしない
         guard !isRefilling else { return }
 
@@ -126,28 +134,29 @@ public actor CatImageURLRepository {
         refillTask = Task { [weak self] in
             guard let self else { return }
             do {
-                await updateIsRefilling(true)
+                await self.setRefilling(true)
                 try await refillLoadedURLsIfNeeded(using: apiClient)
             } catch {
                 print("loadedURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
             }
-            await updateIsRefilling(false)
+            await self.setRefilling(false)
         }
     }
 
-    private func updateIsRefilling(_ value: Bool) {
+    private func setRefilling(_ value: Bool) {
         isRefilling = value
     }
 
     /// キャッシュのURLが少なくなったら補充する
     private func refillLoadedURLsIfNeeded(using apiClient: CatAPIClient) async throws {
+        let modelContext = await modelContainer.mainContext
         if loadedImageURLs.count > loadedURLThreshold { return }
 
         let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
         print("loadedURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
 
         // まずデータベースから読み込める分を読み込む
-        let storedURLs = try loadImageURLsFromSwiftData(limit: neededToLoad)
+        let storedURLs = try loadImageURLsFromSwiftData(modelContext: modelContext, limit: neededToLoad)
         if !storedURLs.isEmpty {
             print("loadedURLs補充完了: \(storedURLs.count)枚追加 → 現在\(loadedImageURLs.count)枚")
         }
@@ -194,29 +203,31 @@ public actor CatImageURLRepository {
         imageCountPerFetch: Int = 10,
         timesOfFetch: Int = 3
     ) async throws -> Int {
-        print("SwiftDataへの画像URL保存開始: \(imageCountPerFetch)枚×\(timesOfFetch)回取得予定")
-        var savedCount = 0
-        let fetched = try await apiClient.fetchImageURLs(
-            totalCount: imageCountPerFetch * timesOfFetch,
-            batchSize: imageCountPerFetch
-        )
-
-        // 既存のURLを取得
-        let existingURLs = try modelContext.fetch(FetchDescriptor<CatImageURLEntity>()).map(\.url)
-
-        for model in fetched {
-            // 既存のURLと重複していない場合のみ保存
-            if !existingURLs.contains(model.imageURL) {
-                let entity = CatImageURLEntity(url: model.imageURL)
+        let modelContext = await modelContainer.mainContext
+        var totalStored = 0
+        for _ in 0..<timesOfFetch {
+            let urls = try await apiClient.fetchImageURLs(totalCount: imageCountPerFetch, batchSize: imageCountPerFetch)
+            for url in urls {
+                let entity = CatImageURLEntity(model: url)
                 modelContext.insert(entity)
-                savedCount += 1
             }
-        }
-
-        if savedCount > 0 {
             try modelContext.save()
+            totalStored += urls.count
         }
-        print("SwiftDataへの画像URL保存完了: \(fetched.count)枚取得 → \(savedCount)枚保存(重複除外)")
-        return savedCount
+        return totalStored
+    }
+
+    public func getNextImageURLs(count: Int) async throws -> [CatImageURLModel] {
+        return try await getNextImageURLsFromCacheOrAPI(
+            count: count,
+            using: CatAPIClient()
+        )
+    }
+
+    public func clearCache() async {
+        loadedImageURLs = []
+        refillTask?.cancel()
+        refillTask = nil
+        isRefilling = false
     }
 }

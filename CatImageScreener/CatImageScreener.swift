@@ -28,11 +28,7 @@ public actor CatImageScreener {
             enableLogging: false
         )
 
-        guard let results = screeningResults else {
-            return models
-        }
-
-        let overallResults = SCSOverallScreeningResults(results: results)
+        let overallResults = SCSOverallScreeningResults(results: screeningResults)
         if !Self.isScreeningEnabled {
             return models
         }

@@ -4,20 +4,24 @@ import CatImageURLRepository
 import SwiftData
 import SwiftUI
 import TieredGridLayout
+import CatImageScreener
+import CatImagePrefetcher
 import Kingfisher
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
     
-    let modelContext: ModelContext
-    @StateObject var viewModel: GalleryViewModel
+    private let modelContainer: ModelContainer
+    @StateObject private var viewModel: GalleryViewModel
 
-    init(modelContext: ModelContext) {
+    init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+        let repository = CatImageURLRepository(modelContainer: modelContainer)
+        let prefetcher = CatImagePrefetcher(modelContainer: modelContainer)
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
-            repository: CatImageURLRepository(modelContext: modelContext),
-            imageClient: CatAPIClient()
+            repository: repository,
+            prefetcher: prefetcher
         ))
-        self.modelContext = modelContext
     }
 
     @State private var isTriggeringFetch = false
