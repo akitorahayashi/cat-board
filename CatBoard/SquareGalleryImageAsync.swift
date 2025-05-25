@@ -24,6 +24,7 @@ struct SquareGalleryImageAsync: View {
                     RoundedRectangle(cornerRadius: cornerRadius)
                         .stroke(Color(.systemBackground).opacity(0.3), lineWidth: 2)
                 )
+                .setOptions([.cacheMemoryOnly])
         }
     }
 }
