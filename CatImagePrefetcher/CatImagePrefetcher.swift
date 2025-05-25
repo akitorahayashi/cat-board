@@ -32,11 +32,11 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
         KingfisherManager.shared.cache.clearMemoryCache()
     }
 
-    public func getPrefetchedCount() -> Int {
+    public func getPrefetchedCount() async -> Int {
         prefetchedImages.count
     }
 
-    public func getPrefetchedImages(count: Int) -> [CatImageURLModel] {
+    public func getPrefetchedImages(count: Int) async -> [CatImageURLModel] {
         let batchCount = min(count, prefetchedImages.count)
         let batch = Array(prefetchedImages.prefix(batchCount))
         prefetchedImages.removeFirst(batchCount)

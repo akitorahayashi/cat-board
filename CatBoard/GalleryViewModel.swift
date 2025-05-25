@@ -65,10 +65,10 @@ final class GalleryViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let prefetchedCount = prefetcher.getPrefetchedCount()
+            let prefetchedCount = await prefetcher.getPrefetchedCount()
             if prefetchedCount > 0 {
                 let batchCount = min(Self.batchDisplayCount, prefetchedCount)
-                let batch = prefetcher.getPrefetchedImages(count: batchCount)
+                let batch = await prefetcher.getPrefetchedImages(count: batchCount)
                 imageURLsToShow += batch
                 print("画像表示完了: プリフェッチから\(batchCount)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedCount - batchCount)枚)")
             } else {
@@ -92,7 +92,6 @@ final class GalleryViewModel: ObservableObject {
         errorMessage = nil
         
         Task {
-            await repository.clearCache()
             await fetchAdditionalImages()
         }
     }
