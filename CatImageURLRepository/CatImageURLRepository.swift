@@ -55,6 +55,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         descriptor.fetchLimit = neededCount
 
         let entities = try modelContext.fetch(descriptor)
+        let models = entities.map(CatImageURLModel.init(entity:))
 
         // 取得したエンティティを削除
         for entity in entities {
@@ -62,7 +63,6 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         }
         try modelContext.save()
 
-        let models = entities.map(CatImageURLModel.init(entity:))
         print("SwiftDataからloadedURLsへ移行: \(models.count)枚取得")
         return models
     }
