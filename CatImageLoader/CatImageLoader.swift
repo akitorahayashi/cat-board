@@ -19,7 +19,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
     private static let prefetchBatchCount = 10 // 一回のプリフェッチでロードして screener に通す枚数
     private static let targetPrefetchCount = 150 // プリフェッチの目標枚数
     private static let maxFetchAttempts = 30 // 最大取得試行回数
-    private static let maxRetryCount = 3 // 最低限必要な枚数を確保するための最大リトライ回数
 
     public init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
@@ -47,13 +46,11 @@ public actor CatImageLoader: CatImageLoaderProtocol {
     // MARK: - Private Methods
 
     private func getPrefetchURLs(count: Int) async throws -> [CatImageURLModel] {
-        print("プリフェッチ用URL取得開始: \(count)件")
         let urls = try await repository.getNextImageURLs(count: count)
         return urls
     }
 
     private func getDirectURLs(count: Int) async throws -> [CatImageURLModel] {
-        print("直接実行用URL取得開始: \(count)件")
         let urls = try await repository.getNextImageURLs(count: count)
         return urls
     }
@@ -89,15 +86,12 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 continue
             }
         }
-        
-        print("ダウンロード結果: \(models.count)件中\(loadedModels.count)件成功")
         return loadedModels
     }
 
     // MARK: - Public Methods
 
     public func loadImagesWithScreening(count: Int) async throws -> [CatImageURLModel] {
-        print("直接実行開始: \(count)枚の画像を取得します")
         let urls = try await getDirectURLs(count: count)
         let loadedImages = try await loadImages(from: urls)
         
@@ -137,17 +131,9 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         isPrefetching = true
 
         prefetchTask = Task { [self] in
-            do {
-                await self.prefetchImages()
-            } catch {
-                print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
-            }
-            await setPrefetching(false)
+            await self.prefetchImages()
+            isPrefetching = false
         }
-    }
-
-    private func setPrefetching(_ value: Bool) {
-        isPrefetching = value
     }
 
     private func prefetchImages() async {
@@ -164,26 +150,46 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                     break
                 }
 
+                // 1. URL取得・画像ダウンロード
                 let urls = try await getPrefetchURLs(count: Self.prefetchBatchCount)
                 let loadedImages = try await loadImages(from: urls)
-                
-                totalFetched += Self.prefetchBatchCount
-                totalScreened += loadedImages.count
 
-                prefetchedImages += loadedImages
+                // 2. スクリーニング用CGImageリスト作成
+                var cgImages: [CGImage] = []
+                for model in loadedImages {
+                    guard let url = URL(string: model.imageURL) else { continue }
+                    do {
+                        let result = try await KingfisherManager.shared.downloader.downloadImage(with: url)
+                        if let cg = result.image.cgImage {
+                            cgImages.append(cg)
+                        }
+                    } catch {
+                        continue
+                    }
+                }
+
+                // 3. スクリーニング実行
+                let screenedModels = try await screener.screenImages(cgImages: cgImages, models: loadedImages)
+
+                // 4. 集計
+                totalFetched += Self.prefetchBatchCount
+                totalScreened += screenedModels.count
+                prefetchedImages += screenedModels
+
+                // 5. ログ出力
+                print("プリフェッチバッチ完了: 取得\(totalFetched)枚中スクリーニング通過\(screenedModels.count)枚 (現在\(prefetchedImages.count)枚)")
 
                 if prefetchedImages.count >= Self.targetPrefetchCount {
                     print("プリフェッチ完了: 目標\(Self.targetPrefetchCount)枚に達しました")
-                    break
+                    return
                 }
             }
 
             if prefetchedImages.count < Self.targetPrefetchCount {
-                print("プリフェッチ終了: 最大試行回数に達しました (取得\(totalFetched)枚, 通過\(totalScreened)枚, 現在\(prefetchedImages.count)枚)")
+                print("プリフェッチ終了（最大試行回数到達）: 取得\(totalFetched)枚中\(totalScreened)枚通過。目標枚数\(Self.targetPrefetchCount)枚に達しませんでした。現在\(prefetchedImages.count)枚")
             }
         } catch let error as NSError {
             print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
         }
     }
 } 
-

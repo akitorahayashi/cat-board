@@ -63,7 +63,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         }
         try modelContext.save()
 
-        print("SwiftDataからloadedURLsへ移行: \(entities.count)件のURLを取得し、\(models.count)件を移行完了")
+        print("SwiftDataからloadedImageURLsへ移行: \(entities.count)件のURLを取得し、\(models.count)件を移行完了")
         return models
     }
 
@@ -81,7 +81,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
             // 提供後の残りが閾値以下になった場合、補充を開始
             if loadedImageURLs.count <= loadedURLThreshold {
                 let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
-                print("loadedURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
+                print("loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
                 await startBackgroundURLRefill(using: apiClient)
             }
 
@@ -100,7 +100,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         await startBackgroundURLRefill(using: apiClient)
 
         print(
-            "URL供給完了: loadedURLsから\(available.count)枚 + APIから\(remaining.count)枚 = 合計\(available.count + remaining.count)枚"
+            "URL供給完了: loadedImageURLsから\(available.count)枚 + APIから\(remaining.count)枚 = 合計\(available.count + remaining.count)枚"
         )
         return available + remaining
     }
@@ -110,7 +110,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         let count = min(count, loadedImageURLs.count)
         let provided = Array(loadedImageURLs.prefix(count))
         loadedImageURLs = Array(loadedImageURLs.dropFirst(count)) // 提供した分を確実に削除
-        print("loadedURLsから提供: \(count)枚提供 → 残り\(loadedImageURLs.count)枚")
+        print("loadedImageURLsから提供: \(count)枚提供 → 残り\(loadedImageURLs.count)枚")
         return provided
     }
 
@@ -119,9 +119,9 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         // 既に補充中なら何もしない
         guard !isRefilling else { return }
 
-        // loadedURLsが十分にある場合は補充しない
+        // loadedImageURLsが十分にある場合は補充しない
         guard loadedImageURLs.count <= loadedURLThreshold else {
-            print("loadedURLs補充不要: 現在\(loadedImageURLs.count)枚(閾値\(loadedURLThreshold)枚)")
+            print("loadedImageURLs補充不要: 現在\(loadedImageURLs.count)枚(閾値\(loadedURLThreshold)枚)")
             return
         }
 
@@ -135,7 +135,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
                 await self.setRefilling(true)
                 try await refillLoadedURLsIfNeeded(using: apiClient)
             } catch {
-                print("loadedURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
+                print("loadedImageURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
             }
             await self.setRefilling(false)
         }
@@ -150,13 +150,13 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         if loadedImageURLs.count > loadedURLThreshold { return }
 
         let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
-        print("loadedURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
+        print("loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
 
         // まずデータベースから読み込める分を読み込む
         let storedURLs = try await dbLoadImageURLs(limit: neededToLoad)
         if !storedURLs.isEmpty {
             loadedImageURLs += storedURLs
-            print("loadedURLs補充完了: \(storedURLs.count)枚追加 → 現在\(loadedImageURLs.count)枚")
+            print("loadedImageURLs補充完了: \(storedURLs.count)枚追加 → 現在\(loadedImageURLs.count)枚")
         }
 
         // まだ必要な分があればAPIから取得
@@ -164,13 +164,13 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
             let remainingToLoad = maxLoadedURLCount - loadedImageURLs.count
             let fetched = try await apiClient.fetchImageURLs(totalCount: remainingToLoad, batchSize: apiFetchBatchSize)
             loadedImageURLs += fetched
-            print("APIからloadedURLsへ補充: \(fetched.count)枚追加 → 現在\(loadedImageURLs.count)枚")
+            print("APIからloadedImageURLsへ補充: \(fetched.count)枚追加 → 現在\(loadedImageURLs.count)枚")
         }
 
         // データベースの補充
         var currentStored = try await fetchStoredURLCount()
         if currentStored <= storedURLThreshold {
-            print("SwiftData補充開始: 現在\(currentStored)件 → 目標\(maxStoredURLCount)件")
+            print("SwiftData URL補充開始: 現在\(currentStored)件 → 目標\(maxStoredURLCount)件")
             while currentStored < maxStoredURLCount {
                 let remaining = maxStoredURLCount - currentStored
                 let times = Int(ceil(Double(remaining) / Double(apiFetchBatchSize)))
@@ -182,15 +182,15 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
                 if newlyStored == 0 { break }
                 currentStored += newlyStored
             }
-            print("SwiftData補充完了: \(currentStored)件")
+            print("SwiftData URL補充完了: \(currentStored)件")
         } else {
-            print("SwiftData補充不要: 現在\(currentStored)件(閾値\(storedURLThreshold)件)")
+            print("SwiftData URL補充不要: 現在\(currentStored)件(閾値\(storedURLThreshold)件)")
         }
-        print("キャッシュ更新完了: loadedURLs=\(loadedImageURLs.count)枚, SwiftData=\(currentStored)件")
+        print("キャッシュ更新完了: loadedImageURLs=\(loadedImageURLs.count)枚, SwiftData=\(currentStored)件")
 
         // プリフェッチ後も閾値を下回っている場合は再度補充を開始
         if loadedImageURLs.count <= loadedURLThreshold {
-            print("loadedURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
+            print("loadedImageURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
             try await refillLoadedURLsIfNeeded(using: apiClient)
         }
     }
