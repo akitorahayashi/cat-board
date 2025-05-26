@@ -40,7 +40,7 @@ final class GalleryViewModel: ObservableObject {
             return images
         } else {
             print("プリフェッチが不足しているため直接取得を開始: \(imageCount)枚)")
-            let images = try await loader.loadImagesDirectlyAndScreen(imageCount: imageCount)
+            let images = try await loader.loadImagesWithScreening(count: imageCount)
             print("画像直接取得完了: \(images.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中")
             return images
         }

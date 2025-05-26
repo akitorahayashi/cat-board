@@ -44,15 +44,29 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         return batch
     }
 
-    public func loadImagesDirectlyAndScreen(imageCount: Int) async throws -> [CatImageURLModel] {
-        let newImages = try await repository.getNextImageURLs(count: imageCount)
+    // MARK: - Private Methods
 
-        var loadedImages: [CGImage] = []
+    private func getPrefetchURLs(count: Int) async throws -> [CatImageURLModel] {
+        print("プリフェッチ用URL取得開始: \(count)件")
+        let urls = try await repository.getNextImageURLs(count: count)
+        return urls
+    }
+
+    private func getDirectURLs(count: Int) async throws -> [CatImageURLModel] {
+        print("直接実行用URL取得開始: \(count)件")
+        let urls = try await repository.getNextImageURLs(count: count)
+        return urls
+    }
+
+    private func loadImages(from models: [CatImageURLModel]) async throws -> [CatImageURLModel] {
         var loadedModels: [CatImageURLModel] = []
-
-        // 画像のダウンロードとスクリーニングを行う
-        for item in newImages {
-            guard let url = URL(string: item.imageURL) else { continue }
+        
+        for (index, item) in models.enumerated() {
+            guard let url = URL(string: item.imageURL) else {
+                print("無効なURL: \(item.imageURL)")
+                continue
+            }
+            
             do {
                 let result = try await KingfisherManager.shared.downloader.downloadImage(
                     with: url,
@@ -66,34 +80,53 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                     ]
                 )
                 
-                if let cgImage = result.image.cgImage {
-                    loadedImages.append(cgImage)
+                if result.image.cgImage != nil {
                     loadedModels.append(item)
-                } else {
-                    print("画像のデコードに失敗: \(item.imageURL)")
                 }
             } catch let error as NSError {
                 let errorType = error.domain == NSURLErrorDomain ? "ネットワーク" : "その他"
-                print("画像のダウンロードに失敗: \(errorType)エラー (\(item.imageURL))")
-                if error.domain == "com.onevcat.Kingfisher.ErrorDomain" {
-                    print("Kingfisherエラー詳細: \(error.localizedDescription)")
-                }
+                print("画像のダウンロードに失敗 [\(index + 1)/\(models.count)]: \(errorType)エラー (\(item.imageURL))")
                 continue
             }
         }
+        
+        print("ダウンロード結果: \(models.count)件中\(loadedModels.count)件成功")
+        return loadedModels
+    }
 
-        // スクリーニングを実行
-        if !loadedImages.isEmpty {
-            let filteredModels = try await screener.screenImages(
-                cgImages: loadedImages,
-                models: loadedModels
-            )
+    // MARK: - Public Methods
 
-            print("スクリーニング結果: \(loadedImages.count)枚中\(filteredModels.count)枚通過")
-            return filteredModels
+    public func loadImagesWithScreening(count: Int) async throws -> [CatImageURLModel] {
+        print("直接実行開始: \(count)枚の画像を取得します")
+        let urls = try await getDirectURLs(count: count)
+        let loadedImages = try await loadImages(from: urls)
+        
+        if loadedImages.isEmpty {
+            print("取得可能な画像がありませんでした")
+            return []
         }
-
-        return []
+        
+        // スクリーニング実行
+        var cgImages: [CGImage] = []
+        for model in loadedImages {
+            guard let url = URL(string: model.imageURL) else { continue }
+            do {
+                let result = try await KingfisherManager.shared.downloader.downloadImage(with: url)
+                if let cgImage = result.image.cgImage {
+                    cgImages.append(cgImage)
+                }
+            } catch {
+                continue
+            }
+        }
+        
+        let filteredModels = try await screener.screenImages(
+            cgImages: cgImages,
+            models: loadedImages
+        )
+        
+        print("スクリーニング結果: \(loadedImages.count)枚中\(filteredModels.count)枚通過")
+        return filteredModels
     }
 
     public func startPrefetchingIfNeeded() async {
@@ -119,22 +152,25 @@ public actor CatImageLoader: CatImageLoaderProtocol {
 
     private func prefetchImages() async {
         do {
-            // 必要なプリフェッチ枚数を計算
             let remainingCount = Self.targetPrefetchCount - prefetchedImages.count
-            print(
-                "プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 目標\(Self.targetPrefetchCount)枚 (残り\(remainingCount)枚)"
-            )
+            print("プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 目標\(Self.targetPrefetchCount)枚 (残り\(remainingCount)枚)")
 
             var totalFetched = 0
             var totalScreened = 0
 
             while prefetchedImages.count < Self.targetPrefetchCount && totalFetched < Self.maxFetchAttempts * Self.prefetchBatchCount {
-                let filteredModels = try await loadImagesDirectlyAndScreen(imageCount: Self.prefetchBatchCount)
-                totalFetched += Self.prefetchBatchCount
-                totalScreened += filteredModels.count
+                if Task.isCancelled {
+                    print("プリフェッチがキャンセルされました")
+                    break
+                }
 
-                prefetchedImages += filteredModels
-                print("プリフェッチ進捗: \(filteredModels.count)枚追加 (現在\(prefetchedImages.count)枚)")
+                let urls = try await getPrefetchURLs(count: Self.prefetchBatchCount)
+                let loadedImages = try await loadImages(from: urls)
+                
+                totalFetched += Self.prefetchBatchCount
+                totalScreened += loadedImages.count
+
+                prefetchedImages += loadedImages
 
                 if prefetchedImages.count >= Self.targetPrefetchCount {
                     print("プリフェッチ完了: 目標\(Self.targetPrefetchCount)枚に達しました")
