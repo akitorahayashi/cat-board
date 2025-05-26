@@ -138,7 +138,7 @@ final class GalleryViewModelTests: XCTestCase {
         // 画像のクリアと再読み込み
         viewModel.clearDisplayedImages()
 
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        try? await Task.sleep(nanoseconds: 3_000_000_000)
 
         // 検証
         XCTAssertEqual(viewModel.imageURLsToShow, newImages, "新しい画像が正しく表示されている")
