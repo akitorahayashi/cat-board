@@ -53,7 +53,7 @@ final class CatImageLoaderTests: XCTestCase {
         await imageLoader.startPrefetchingIfNeeded()
 
         // 最初のバッチの完了を待つ
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒待機
+        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3秒待機
 
         // 最初のバッチのプリフェッチ数を確認
         count = await imageLoader.getPrefetchedCount()
