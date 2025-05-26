@@ -17,9 +17,9 @@ final class GalleryViewModel: ObservableObject {
     private let loader: CatImageLoaderProtocol
 
     // 画像取得関連
-    private static let maxImageCount = 300
-    private static let targetInitialDisplayCount = 30
-    private static let batchDisplayCount = 10
+    static let maxImageCount = 300
+    static let targetInitialDisplayCount = 30
+    static let batchDisplayCount = 10
 
     // MARK: - Initialization
 
