@@ -6,7 +6,7 @@ import Kingfisher
 import SwiftUI
 import SwiftData
 
-public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
+public actor CatImageLoader: CatImageLoaderProtocol {
     private let repository: CatImageURLRepositoryProtocol
     private let imageClient: CatAPIClient
     private let screener: CatImageScreener

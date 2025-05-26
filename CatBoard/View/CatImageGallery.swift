@@ -5,7 +5,7 @@ import SwiftData
 import SwiftUI
 import TieredGridLayout
 import CatImageScreener
-import CatImagePrefetcher
+import CatImageLoader
 import Kingfisher
 
 struct CatImageGallery: View {
@@ -17,10 +17,10 @@ struct CatImageGallery: View {
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         let repository = CatImageURLRepository(modelContainer: modelContainer)
-        let prefetcher = CatImagePrefetcher(modelContainer: modelContainer)
+        let loader = CatImageLoader(modelContainer: modelContainer)
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,
-            prefetcher: prefetcher
+            loader: loader
         ))
     }
 
@@ -32,6 +32,8 @@ struct CatImageGallery: View {
             Group {
                 ZStack(alignment: .top) {
                     scrollContent
+                    
+                    // 初期ロード時のローディング Indicator
                     if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
                         VStack {
                             Spacer()
@@ -89,7 +91,7 @@ struct CatImageGallery: View {
             GeometryReader { geo in
                 Color.clear
                     .frame(height: 0)
-                    .onChange(of: geo.frame(in: .global).minY) { newY in
+                    .onChange(of: geo.frame(in: .global).minY) { _, newY in
                         guard abs(newY - lastTriggerY) > 50 else { return }
                         guard newY > 50, !isTriggeringFetch, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty else { return }
 

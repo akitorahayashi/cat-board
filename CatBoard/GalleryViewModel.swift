@@ -1,7 +1,7 @@
 import CBModel
 import CatAPIClient
 import CatImageURLRepository
-import CatImagePrefetcher
+import CatImageLoader
 import CatImageScreener
 import Kingfisher
 import ScaryCatScreeningKit
@@ -15,7 +15,7 @@ final class GalleryViewModel: ObservableObject {
     @Published var isLoading: Bool = false
 
     private let repository: CatImageURLRepositoryProtocol
-    private let prefetcher: CatImagePrefetcherProtocol
+    private let loader: CatImageLoaderProtocol
 
     // 画像取得関連
     private static let maxImageCount = 300
@@ -26,10 +26,10 @@ final class GalleryViewModel: ObservableObject {
 
     init(
         repository: CatImageURLRepositoryProtocol,
-        prefetcher: CatImagePrefetcherProtocol
+        loader: CatImageLoaderProtocol
     ) {
         self.repository = repository
-        self.prefetcher = prefetcher
+        self.loader = loader
     }
 
     func onAppear() {
@@ -38,7 +38,7 @@ final class GalleryViewModel: ObservableObject {
             isLoading = true
             Task {
                 do {
-                    let initialImages = try await prefetcher.fetchImages(count: Self.targetInitialDisplayCount)
+                    let initialImages = try await loader.fetchImages(count: Self.targetInitialDisplayCount)
                     self.imageURLsToShow = initialImages
                     self.isLoading = false
                 } catch let error as NSError {
@@ -65,15 +65,15 @@ final class GalleryViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let prefetchedCount = await prefetcher.getPrefetchedCount()
+            let prefetchedCount = await loader.getPrefetchedCount()
             if prefetchedCount > 0 {
                 let batchCount = min(Self.batchDisplayCount, prefetchedCount)
-                let batch = await prefetcher.getPrefetchedImages(count: batchCount)
+                let batch = await loader.getPrefetchedImages(count: batchCount)
                 imageURLsToShow += batch
                 print("画像表示完了: プリフェッチから\(batchCount)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedCount - batchCount)枚)")
             } else {
                 print("プリフェッチがないため直接取得を開始")
-                let newImages = try await prefetcher.fetchImages(count: Self.batchDisplayCount)
+                let newImages = try await loader.fetchImages(count: Self.batchDisplayCount)
                 imageURLsToShow += newImages
                 print("画像直接取得完了: \(newImages.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中")
             }
