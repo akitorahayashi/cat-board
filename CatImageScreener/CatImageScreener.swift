@@ -8,6 +8,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
     private static let screeningProbabilityThreshold: Float = 0.85
     private static let isScreeningEnabled = true
     private static let scaryMode = false
+    private static let enableLogging = false
 
     public init() {
         screener = nil
@@ -17,48 +18,74 @@ public actor CatImageScreener: CatImageScreenerProtocol {
         if let screener {
             return screener
         } else {
-            let newScreener = try await ScaryCatScreener()
-            screener = newScreener
-            return newScreener
+            do {
+                let newScreener = try await ScaryCatScreener(enableLogging: Self.enableLogging)
+                screener = newScreener
+                return newScreener
+            } catch let error as NSError {
+                if Self.enableLogging {
+                    print("ScaryCatScreener の初期化に失敗しました: \(error.localizedDescription)")
+                    print("エラーコード: \(error.code), ドメイン: \(error.domain)")
+                    if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
+                        print("原因: \(underlying.localizedDescription)")
+                    }
+                }
+                throw error
+            }
         }
     }
 
     public func screenImages(
-        cgImages: [CGImage],
-        models: [CatImageURLModel]
+        images: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel] {
-        guard !cgImages.isEmpty else { return [] }
-        guard cgImages.count == models.count else {
-            throw NSError(
-                domain: "CatImageScreener",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "画像とモデルの数が一致しません"]
+        guard !images.isEmpty else { return [] }
+
+        do {
+            let screener = try await getScreener()
+
+            let screeningResults = try await screener.screen(
+                imageDataList: images.map(\.imageData),
+                probabilityThreshold: Self.screeningProbabilityThreshold,
+                enableLogging: Self.enableLogging
             )
-        }
 
-        let screener = try await getScreener()
-
-        let screeningResults = try await screener.screen(
-            cgImages: cgImages,
-            probabilityThreshold: Self.screeningProbabilityThreshold,
-            enableLogging: false
-        )
-
-        let overallResults = SCSOverallScreeningResults(results: screeningResults)
-        if !Self.isScreeningEnabled {
-            return models
-        }
-
-        if Self.scaryMode {
-            // 怖いモードの場合、unsafeResultsを使用
-            return overallResults.unsafeResults.map { result in
-                models[cgImages.firstIndex(of: result.cgImage) ?? 0]
+            if !Self.isScreeningEnabled {
+                return images.map(\.model)
             }
-        } else {
-            // 通常モードの場合、safeResultsを使用
-            return overallResults.safeResults.map { result in
-                models[cgImages.firstIndex(of: result.cgImage) ?? 0]
+
+            // 画像データとモデルのマッピングを作成
+            let imageDataToModel = Dictionary(uniqueKeysWithValues: images.map { ($0.imageData, $0.model) })
+
+            if Self.scaryMode {
+                // 怖いモードの場合、unsafeResultsを使用
+                let results = screeningResults.unsafeResults.compactMap { result in
+                    imageDataToModel[result.imageData]
+                }
+                if Self.enableLogging {
+                    print("スクリーニング結果: \(images.count)枚中\(results.count)枚が危険と判定")
+                    print(screeningResults.generateDetailedReport())
+                }
+                return results
+            } else {
+                // 通常モードの場合、safeResultsを使用
+                let results = screeningResults.safeResults.compactMap { result in
+                    imageDataToModel[result.imageData]
+                }
+                if Self.enableLogging {
+                    print("スクリーニング結果: \(images.count)枚中\(results.count)枚が安全と判定")
+                    print(screeningResults.generateDetailedReport())
+                }
+                return results
             }
+        } catch let error as NSError {
+            if Self.enableLogging {
+                print("スクリーニング処理でエラーが発生しました: \(error.localizedDescription)")
+                print("エラーコード: \(error.code), ドメイン: \(error.domain)")
+                if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
+                    print("原因: \(underlying.localizedDescription)")
+                }
+            }
+            throw error
         }
     }
 }

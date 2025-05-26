@@ -20,14 +20,12 @@ final class CatImageScreenerTests: XCTestCase {
 
     /// 画像とモデルの数が一致しない場合のエラーテスト
     func testMismatchedArrayCounts() async {
-        // モックのCGImageを作成
-        let cgImage = TestResources.createMockCGImage()
+        let imageData = TestResources.createMockImageData()
         let model = TestResources.createMockCatImageURLModels(count: 1)[0]
 
         do {
             _ = try await screener.screenImages(
-                cgImages: [cgImage],
-                models: [model, model] // モデルが1つ多い
+                images: [(imageData: imageData, model: model)]
             )
             XCTFail("エラーが発生するはず")
         } catch {

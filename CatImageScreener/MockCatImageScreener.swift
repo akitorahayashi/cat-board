@@ -1,5 +1,4 @@
 import CBModel
-import CoreGraphics
 import Foundation
 
 public final class MockCatImageScreener: CatImageScreenerProtocol {
@@ -9,8 +8,7 @@ public final class MockCatImageScreener: CatImageScreenerProtocol {
     public init() {}
 
     public func screenImages(
-        cgImages _: [CGImage],
-        models _: [CatImageURLModel]
+        images: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel] {
         if let error = screeningError {
             throw error

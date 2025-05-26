@@ -106,23 +106,25 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         }
 
         // スクリーニング実行
-        var cgImages: [CGImage] = []
+        var images: [(imageData: Data, model: CatImageURLModel)] = []
         for model in loadedImages {
             guard let url = URL(string: model.imageURL) else { continue }
             do {
                 let result = try await KingfisherManager.shared.downloader.downloadImage(with: url)
-                if let cgImage = result.image.cgImage {
-                    cgImages.append(cgImage)
+                if let imageData = result.image.jpegData(compressionQuality: 0.8) {
+                    // メモリ使用量の計測
+                    let dataSize = imageData.count
+                    let cgImageSize = result.image.cgImage?.width ?? 0 * (result.image.cgImage?.height ?? 0) * 4
+                    print("画像メモリ使用量: Data=\(dataSize)bytes, CGImage=\(cgImageSize)bytes")
+                    
+                    images.append((imageData: imageData, model: model))
                 }
             } catch {
                 continue
             }
         }
 
-        let filteredModels = try await screener.screenImages(
-            cgImages: cgImages,
-            models: loadedImages
-        )
+        let filteredModels = try await screener.screenImages(images: images)
 
         print("スクリーニング結果: \(loadedImages.count)枚中\(filteredModels.count)枚通過")
         return filteredModels
@@ -161,14 +163,14 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 let urls = try await getPrefetchURLs(count: Self.prefetchBatchCount)
                 let loadedImages = try await loadImages(from: urls)
 
-                // 2. スクリーニング用CGImageリスト作成
-                var cgImages: [CGImage] = []
+                // 2. スクリーニング用Dataリスト作成
+                var images: [(imageData: Data, model: CatImageURLModel)] = []
                 for model in loadedImages {
                     guard let url = URL(string: model.imageURL) else { continue }
                     do {
                         let result = try await KingfisherManager.shared.downloader.downloadImage(with: url)
-                        if let cg = result.image.cgImage {
-                            cgImages.append(cg)
+                        if let imageData = result.image.jpegData(compressionQuality: 0.8) {
+                            images.append((imageData: imageData, model: model))
                         }
                     } catch {
                         continue
@@ -176,7 +178,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 }
 
                 // 3. スクリーニング実行
-                let screenedModels = try await screener.screenImages(cgImages: cgImages, models: loadedImages)
+                let screenedModels = try await screener.screenImages(images: images)
 
                 // 4. 集計
                 totalFetched += Self.prefetchBatchCount

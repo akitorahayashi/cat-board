@@ -1,10 +1,8 @@
 import CBModel
-import CoreGraphics
 import Foundation
 
 public protocol CatImageScreenerProtocol: Sendable {
     func screenImages(
-        cgImages: [CGImage],
-        models: [CatImageURLModel]
+        images: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel]
 }

@@ -1,6 +1,7 @@
 import CBModel
 import CoreGraphics
 import Foundation
+import UIKit
 
 enum TestResources {
     static let mockURLs = [
@@ -41,23 +42,13 @@ enum TestResources {
         return jsonString.data(using: .utf8)!
     }
 
-    static func createMockCGImage() -> CGImage {
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        guard let context = CGContext(
-            data: nil,
-            width: 1,
-            height: 1,
-            bitsPerComponent: 8,
-            bytesPerRow: 4,
-            space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else {
-            fatalError("Failed to create CGContext for mock image")
+    static func createMockImageData() -> Data {
+        let size = CGSize(width: 1, height: 1)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            UIColor.black.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
         }
-
-        guard let image = context.makeImage() else {
-            fatalError("Failed to create mock CGImage")
-        }
-        return image
+        return image.jpegData(compressionQuality: 0.8) ?? Data()
     }
 }
