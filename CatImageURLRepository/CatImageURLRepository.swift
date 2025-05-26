@@ -63,7 +63,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         }
         try modelContext.save()
 
-        print("SwiftDataからloadedURLsへ移行: \(models.count)枚取得")
+        print("SwiftDataからloadedURLsへ移行: \(entities.count)件のURLを取得し、\(models.count)件を移行完了")
         return models
     }
 

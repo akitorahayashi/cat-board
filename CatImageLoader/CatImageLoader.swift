@@ -60,9 +60,11 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                             var r = request
                             r.timeoutInterval = 10
                             return r
-                        })
+                        }),
+                        .diskCacheExpiration(.expired)
                     ]
                 )
+                
                 if let cgImage = result.image.cgImage {
                     loadedImages.append(cgImage)
                     loadedModels.append(item)
@@ -80,18 +82,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 models: loadedModels
             )
 
-            // 通過しなかった画像のキャッシュをクリア
-            let failedIndices = Set(0..<loadedImages.count).subtracting(
-                filteredModels.map { model in
-                    loadedModels.firstIndex(of: model) ?? -1
-                }
-            )
-            for index in failedIndices {
-                if let url = URL(string: loadedModels[index].imageURL) {
-                    try? await KingfisherManager.shared.cache.removeImage(forKey: url.absoluteString)
-                }
-            }
-
             print("画像取得完了: \(loadedImages.count)枚読み込み → スクリーニング通過\(filteredModels.count)枚")
             return filteredModels
         }
@@ -103,13 +93,18 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         guard !isPrefetching else { return }
         guard prefetchedImages.count < Self.targetPrefetchCount else { return }
 
+        print("プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 目標\(Self.targetPrefetchCount)枚")
+        
         prefetchTask?.cancel()
         isPrefetching = true
 
-        prefetchTask = Task { [weak self] in
-            guard let self else { return }
-            await self.prefetchImages()
-            await self.setPrefetching(false)
+        prefetchTask = Task { [self] in
+            do {
+                await self.prefetchImages()
+            } catch {
+                print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
+            }
+            await setPrefetching(false)
         }
     }
 
