@@ -1,5 +1,5 @@
 import CatAPIClient
-@testable import CatBoard
+@testable import CatBoardApp
 import CatImageURLRepository
 import CBModel
 import Combine
