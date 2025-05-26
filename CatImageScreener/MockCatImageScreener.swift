@@ -9,12 +9,12 @@ public final class MockCatImageScreener: CatImageScreenerProtocol {
     public init() {}
 
     public func screenImages(
-        cgImages: [CGImage],
-        models: [CatImageURLModel]
+        cgImages _: [CGImage],
+        models _: [CatImageURLModel]
     ) async throws -> [CatImageURLModel] {
         if let error = screeningError {
             throw error
         }
         return screeningResult
     }
-} 
+}

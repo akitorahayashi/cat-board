@@ -66,11 +66,6 @@ final class GalleryViewModel: ObservableObject {
     }
 
     func fetchAdditionalImages() async {
-        if imageURLsToShow.count > Self.maxImageCount {
-            print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
-            clearDisplayedImages()
-            return
-        }
         guard !isLoading else {
             print("既にローディング中のため、スキップします")
             return
@@ -81,6 +76,14 @@ final class GalleryViewModel: ObservableObject {
         do {
             let newImages = try await fetchImages(imageCount: Self.batchDisplayCount)
             imageURLsToShow += newImages
+
+            // 最大画像数を超えた場合はクリアして再読み込み
+            if imageURLsToShow.count > Self.maxImageCount {
+                print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
+                clearDisplayedImages()
+                return
+            }
+
             await loader.startPrefetchingIfNeeded()
         } catch let error as NSError {
             errorMessage = error.localizedDescription

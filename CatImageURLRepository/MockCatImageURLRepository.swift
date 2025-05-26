@@ -14,4 +14,4 @@ public final class MockCatImageURLRepository: CatImageURLRepositoryProtocol {
         }
         return Array(getNextImageURLsResult.prefix(count))
     }
-} 
+}
