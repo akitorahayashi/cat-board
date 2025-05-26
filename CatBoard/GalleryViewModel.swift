@@ -32,7 +32,7 @@ final class GalleryViewModel: ObservableObject {
         self.loader = loader
     }
 
-    func onAppear() {
+    func loadInitialImages() {
         if imageURLsToShow.isEmpty {
             print("初期画像の読み込み開始: 現在0枚 → 目標\(Self.targetInitialDisplayCount)枚")
             isLoading = true
@@ -90,11 +90,14 @@ final class GalleryViewModel: ObservableObject {
 
     func clearDisplayedImages() {
         print("画像のクリアを開始")
+        // 全ての画像をクリア
         imageURLsToShow = []
         errorMessage = nil
         
-        Task {
-            await fetchAdditionalImages()
-        }
+        // Kingfisherのメモリキャッシュをクリア
+        KingfisherManager.shared.cache.clearMemoryCache()
+        
+        // 初期化処理を実行
+        loadInitialImages()
     }
 }

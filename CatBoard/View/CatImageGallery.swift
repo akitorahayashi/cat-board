@@ -25,9 +25,6 @@ struct CatImageGallery: View {
         ))
     }
 
-    @State private var isTriggeringFetch = false
-    @State private var lastTriggerY: CGFloat = 0
-
     var body: some View {
         NavigationView {
             Group {
@@ -69,7 +66,7 @@ struct CatImageGallery: View {
                 }
             }
             .onAppear {
-                viewModel.onAppear()
+                viewModel.loadInitialImages()
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -78,6 +75,9 @@ struct CatImageGallery: View {
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
+                Color.clear
+                    .frame(height: 0)
+                
                 if let errorMessage = viewModel.errorMessage {
                     Text("エラーが発生しました： \(errorMessage)")
                         .rotationEffect(.degrees(180))
@@ -91,22 +91,14 @@ struct CatImageGallery: View {
                 Color.clear
                     .frame(height: 0)
                     .onChange(of: geo.frame(in: .global).minY) { _, newY in
-                        guard abs(newY - lastTriggerY) > 50 else { return }
-                        guard newY > 50, !isTriggeringFetch, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty else { return }
-
-                        isTriggeringFetch = true
-                        lastTriggerY = newY
+                        guard newY > 50, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty else { return }
 
                         Task {
                             await viewModel.fetchAdditionalImages()
-                            await MainActor.run {
-                                isTriggeringFetch = false
-                            }
                         }
                     }
             }
             .frame(height: 0)
-            
             
             if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                 ProgressView()
