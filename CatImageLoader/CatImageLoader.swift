@@ -17,8 +17,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
 
     // プリフェッチ関連の定数
     private static let prefetchBatchCount = 10 // 一回のプリフェッチでロードして screener に通す枚数
-    private static let minPrefetchThreshold = 180 // プリフェッチを開始する閾値
-    private static let targetPrefetchCount = 200 // プリフェッチの目標枚数
+    private static let targetPrefetchCount = 150 // プリフェッチの目標枚数
     private static let maxFetchAttempts = 30 // 最大取得試行回数
 
     public init(modelContainer: ModelContainer) {

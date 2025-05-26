@@ -41,6 +41,7 @@ final class GalleryViewModel: ObservableObject {
                     let initialImages = try await loader.fetchImages(count: Self.targetInitialDisplayCount)
                     self.imageURLsToShow = initialImages
                     self.isLoading = false
+                    await loader.startPrefetchingIfNeeded()
                 } catch let error as NSError {
                     self.errorMessage = error.localizedDescription
                     self.imageURLsToShow = []
@@ -77,6 +78,7 @@ final class GalleryViewModel: ObservableObject {
                 imageURLsToShow += newImages
                 print("画像直接取得完了: \(newImages.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中")
             }
+            await loader.startPrefetchingIfNeeded()
         } catch let error as NSError {
             errorMessage = error.localizedDescription
             print("画像取得中にエラーが発生: \(error.localizedDescription)")
