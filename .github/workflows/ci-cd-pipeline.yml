@@ -43,8 +43,7 @@ jobs:
   # コードレビュー - PRの場合のみ実行
   code-review:
     name: Code Review
-    needs: build-and-test
-    if: github.event_name == 'pull_request' && needs.build-and-test.result == 'success'
+    if: github.event_name == 'pull_request'
     permissions:
       pull-requests: write
       contents: read
