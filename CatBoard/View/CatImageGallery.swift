@@ -87,19 +87,6 @@ struct CatImageGallery: View {
                 }
             }
 
-            GeometryReader { geo in
-                Color.clear
-                    .frame(height: 0)
-                    .onChange(of: geo.frame(in: .global).minY) { _, newY in
-                        guard newY > 50, !viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty else { return }
-
-                        Task {
-                            await viewModel.fetchAdditionalImages()
-                        }
-                    }
-            }
-            .frame(height: 0)
-            
             if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
@@ -119,6 +106,13 @@ struct CatImageGallery: View {
                             .padding(2)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                             .rotationEffect(.degrees(180))
+                            .onAppear {
+                                if image.id == viewModel.imageURLsToShow.last?.id {
+                                    Task {
+                                        await viewModel.fetchAdditionalImages()
+                                    }
+                                }
+                            }
                     }
                 }
             }

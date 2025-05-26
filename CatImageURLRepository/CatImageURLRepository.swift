@@ -186,7 +186,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         } else {
             print("SwiftData補充不要: 現在\(currentStored)件(閾値\(storedURLThreshold)件)")
         }
-        print("プリフェッチ完了: loadedURLs=\(loadedImageURLs.count)枚, SwiftData=\(currentStored)件")
+        print("キャッシュ更新完了: loadedURLs=\(loadedImageURLs.count)枚, SwiftData=\(currentStored)件")
 
         // プリフェッチ後も閾値を下回っている場合は再度補充を開始
         if loadedImageURLs.count <= loadedURLThreshold {

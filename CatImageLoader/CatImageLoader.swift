@@ -19,6 +19,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
     private static let prefetchBatchCount = 10 // 一回のプリフェッチでロードして screener に通す枚数
     private static let targetPrefetchCount = 150 // プリフェッチの目標枚数
     private static let maxFetchAttempts = 30 // 最大取得試行回数
+    private static let maxRetryCount = 3 // 最低限必要な枚数を確保するための最大リトライ回数
 
     public init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
@@ -36,15 +37,15 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         prefetchedImages.count
     }
 
-    public func getPrefetchedImages(count: Int) async -> [CatImageURLModel] {
-        let batchCount = min(count, prefetchedImages.count)
+    public func getPrefetchedImages(imageCount: Int) async -> [CatImageURLModel] {
+        let batchCount = min(imageCount, prefetchedImages.count)
         let batch = Array(prefetchedImages.prefix(batchCount))
         prefetchedImages.removeFirst(batchCount)
         return batch
     }
 
-    public func fetchImages(count: Int) async throws -> [CatImageURLModel] {
-        let newImages = try await repository.getNextImageURLs(count: count)
+    public func loadImagesDirectlyAndScreen(imageCount: Int) async throws -> [CatImageURLModel] {
+        let newImages = try await repository.getNextImageURLs(count: imageCount)
 
         var loadedImages: [CGImage] = []
         var loadedModels: [CatImageURLModel] = []
@@ -68,9 +69,15 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 if let cgImage = result.image.cgImage {
                     loadedImages.append(cgImage)
                     loadedModels.append(item)
+                } else {
+                    print("画像のデコードに失敗: \(item.imageURL)")
                 }
-            } catch {
-                print("画像のダウンロードに失敗（URL: \(item.imageURL)）: \(error.localizedDescription)")
+            } catch let error as NSError {
+                let errorType = error.domain == NSURLErrorDomain ? "ネットワーク" : "その他"
+                print("画像のダウンロードに失敗: \(errorType)エラー (\(item.imageURL))")
+                if error.domain == "com.onevcat.Kingfisher.ErrorDomain" {
+                    print("Kingfisherエラー詳細: \(error.localizedDescription)")
+                }
                 continue
             }
         }
@@ -82,7 +89,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 models: loadedModels
             )
 
-            print("画像取得完了: \(loadedImages.count)枚読み込み → スクリーニング通過\(filteredModels.count)枚")
+            print("スクリーニング結果: \(loadedImages.count)枚中\(filteredModels.count)枚通過")
             return filteredModels
         }
 
@@ -92,8 +99,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
     public func startPrefetchingIfNeeded() async {
         guard !isPrefetching else { return }
         guard prefetchedImages.count < Self.targetPrefetchCount else { return }
-
-        print("プリフェッチ開始: 現在\(prefetchedImages.count)枚 → 目標\(Self.targetPrefetchCount)枚")
         
         prefetchTask?.cancel()
         isPrefetching = true
@@ -124,12 +129,12 @@ public actor CatImageLoader: CatImageLoaderProtocol {
             var totalScreened = 0
 
             while prefetchedImages.count < Self.targetPrefetchCount && totalFetched < Self.maxFetchAttempts * Self.prefetchBatchCount {
-                let filteredModels = try await fetchImages(count: Self.prefetchBatchCount)
+                let filteredModels = try await loadImagesDirectlyAndScreen(imageCount: Self.prefetchBatchCount)
                 totalFetched += Self.prefetchBatchCount
                 totalScreened += filteredModels.count
 
                 prefetchedImages += filteredModels
-                print("画像プリフェッチバッチ完了: \(Self.prefetchBatchCount)枚取得 → スクリーニング通過\(filteredModels.count)枚追加 (現在\(prefetchedImages.count)枚)")
+                print("プリフェッチ進捗: \(filteredModels.count)枚追加 (現在\(prefetchedImages.count)枚)")
 
                 if prefetchedImages.count >= Self.targetPrefetchCount {
                     print("プリフェッチ完了: 目標\(Self.targetPrefetchCount)枚に達しました")
@@ -145,3 +150,4 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         }
     }
 } 
+

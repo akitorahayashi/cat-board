@@ -19,7 +19,7 @@ final class GalleryViewModel: ObservableObject {
 
     // 画像取得関連
     private static let maxImageCount = 300
-    private static let targetInitialDisplayCount = 20
+    private static let targetInitialDisplayCount = 30
     private static let batchDisplayCount = 10
 
     // MARK: - Initialization
@@ -32,14 +32,27 @@ final class GalleryViewModel: ObservableObject {
         self.loader = loader
     }
 
+    private func fetchImages(imageCount: Int) async throws -> [CatImageURLModel] {
+        let prefetchedCount = await loader.getPrefetchedCount()
+        if prefetchedCount >= imageCount {
+            let images = await loader.getPrefetchedImages(imageCount: imageCount)
+            print("画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)")
+            return images
+        } else {
+            print("プリフェッチが不足しているため直接取得を開始: \(imageCount)枚)")
+            let images = try await loader.loadImagesDirectlyAndScreen(imageCount: imageCount)
+            print("画像直接取得完了: \(images.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中")
+            return images
+        }
+    }
+
     func loadInitialImages() {
         if imageURLsToShow.isEmpty {
             print("初期画像の読み込み開始: 現在0枚 → 目標\(Self.targetInitialDisplayCount)枚")
             isLoading = true
             Task {
                 do {
-                    let initialImages = try await loader.fetchImages(count: Self.targetInitialDisplayCount)
-                    self.imageURLsToShow = initialImages
+                    self.imageURLsToShow = try await fetchImages(imageCount: Self.targetInitialDisplayCount)
                     self.isLoading = false
                     await loader.startPrefetchingIfNeeded()
                 } catch let error as NSError {
@@ -52,7 +65,6 @@ final class GalleryViewModel: ObservableObject {
     }
 
     func fetchAdditionalImages() async {
-        print("fetchAdditionalImages開始: 現在\(imageURLsToShow.count)枚表示中")
         if imageURLsToShow.count > Self.maxImageCount {
             print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
             clearDisplayedImages()
@@ -66,18 +78,8 @@ final class GalleryViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let prefetchedCount = await loader.getPrefetchedCount()
-            if prefetchedCount > 0 {
-                let batchCount = min(Self.batchDisplayCount, prefetchedCount)
-                let batch = await loader.getPrefetchedImages(count: batchCount)
-                imageURLsToShow += batch
-                print("画像表示完了: プリフェッチから\(batchCount)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedCount - batchCount)枚)")
-            } else {
-                print("プリフェッチがないため直接取得を開始")
-                let newImages = try await loader.fetchImages(count: Self.batchDisplayCount)
-                imageURLsToShow += newImages
-                print("画像直接取得完了: \(newImages.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中")
-            }
+            let newImages = try await fetchImages(imageCount: Self.batchDisplayCount)
+            imageURLsToShow += newImages
             await loader.startPrefetchingIfNeeded()
         } catch let error as NSError {
             errorMessage = error.localizedDescription
@@ -85,7 +87,6 @@ final class GalleryViewModel: ObservableObject {
         }
 
         isLoading = false
-        print("fetchAdditionalImages完了: 現在\(imageURLsToShow.count)枚表示中")
     }
 
     func clearDisplayedImages() {
