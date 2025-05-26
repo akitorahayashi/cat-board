@@ -1,12 +1,12 @@
-import CBModel
 import CatAPIClient
-import CatImageURLRepository
 import CatImageLoader
 import CatImageScreener
+import CatImageURLRepository
+import CBModel
 import Kingfisher
 import ScaryCatScreeningKit
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @MainActor
 final class GalleryViewModel: ObservableObject {
@@ -36,7 +36,9 @@ final class GalleryViewModel: ObservableObject {
         let prefetchedCount = await loader.getPrefetchedCount()
         if prefetchedCount >= imageCount {
             let images = await loader.getPrefetchedImages(imageCount: imageCount)
-            print("画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)")
+            print(
+                "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
+            )
             return images
         } else {
             print("プリフェッチが不足しているため直接取得を開始: \(imageCount)枚)")
@@ -94,10 +96,10 @@ final class GalleryViewModel: ObservableObject {
         // 全ての画像をクリア
         imageURLsToShow = []
         errorMessage = nil
-        
+
         // Kingfisherのメモリキャッシュをクリア
         KingfisherManager.shared.cache.clearMemoryCache()
-        
+
         // 初期化処理を実行
         loadInitialImages()
     }

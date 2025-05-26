@@ -1,10 +1,9 @@
-import CBModel
 import CatAPIClient
+import CBModel
 import Foundation
 import SwiftData
 
 public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
-    
     private var loadedImageURLs: [CatImageURLModel] = []
     private var isRefilling: Bool = false
     private var refillTask: Task<Void, Never>?
@@ -81,7 +80,9 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
             // 提供後の残りが閾値以下になった場合、補充を開始
             if loadedImageURLs.count <= loadedURLThreshold {
                 let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
-                print("loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)")
+                print(
+                    "loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)"
+                )
                 await startBackgroundURLRefill(using: apiClient)
             }
 
@@ -132,12 +133,12 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         refillTask = Task { [weak self] in
             guard let self else { return }
             do {
-                await self.setRefilling(true)
+                await setRefilling(true)
                 try await refillLoadedURLsIfNeeded(using: apiClient)
             } catch {
                 print("loadedImageURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
             }
-            await self.setRefilling(false)
+            await setRefilling(false)
         }
     }
 
@@ -204,7 +205,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     ) async throws -> Int {
         let modelContext = modelContainer.mainContext
         var totalStored = 0
-        for _ in 0..<timesOfFetch {
+        for _ in 0 ..< timesOfFetch {
             let urls = try await apiClient.fetchImageURLs(totalCount: imageCountPerFetch, batchSize: imageCountPerFetch)
             for url in urls {
                 let entity = CatImageURLEntity(model: url)
@@ -217,7 +218,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     }
 
     public func getNextImageURLs(count: Int) async throws -> [CatImageURLModel] {
-        return try await getNextImageURLsFromCacheOrAPI(
+        try await getNextImageURLsFromCacheOrAPI(
             count: count,
             using: CatAPIClient()
         )
@@ -229,7 +230,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         refillTask = nil
         isRefilling = false
     }
-    
+
     @MainActor
     private func fetchStoredURLCount() throws -> Int {
         let modelContext = modelContainer.mainContext

@@ -8,7 +8,7 @@ public class CatImageURLEntity {
     public var createdAt: Date
 
     public init(url: String, createdAt: Date = .now) {
-        self.id = UUID()
+        id = UUID()
         self.url = url
         self.createdAt = createdAt
     }

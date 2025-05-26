@@ -1,11 +1,11 @@
+import CBModel
 import SwiftData
 import SwiftUI
-import CBModel
 
 @main
 struct CatBoardApp: App {
     let modelContainer: ModelContainer
-    
+
     init() {
         do {
             let schema = Schema([CatImageURLEntity.self])
@@ -15,7 +15,7 @@ struct CatBoardApp: App {
             fatalError("Could not initialize ModelContainer: \(error)")
         }
     }
-    
+
     var body: some Scene {
         WindowGroup {
             CatImageGallery(modelContainer: modelContainer)

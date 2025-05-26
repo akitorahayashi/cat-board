@@ -1,8 +1,8 @@
+import CatAPIClient
 @testable import CatBoard
+import CatImageURLRepository
 import CBModel
 import Combine
-import CatAPIClient
-import CatImageURLRepository
 import XCTest
 
 @MainActor

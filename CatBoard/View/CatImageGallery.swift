@@ -1,17 +1,17 @@
-import CBModel
 import CatAPIClient
+import CatImageLoader
+import CatImageScreener
 import CatImageURLRepository
+import CBModel
+import Kingfisher
 import SwiftData
 import SwiftUI
 import TieredGridLayout
-import CatImageScreener
-import CatImageLoader
-import Kingfisher
 import UIKit
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
-    
+
     private let modelContainer: ModelContainer
     @StateObject private var viewModel: GalleryViewModel
 
@@ -30,7 +30,7 @@ struct CatImageGallery: View {
             Group {
                 ZStack(alignment: .top) {
                     scrollContent
-                    
+
                     // 初期ロード時のローディング Indicator
                     if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
                         VStack {
@@ -51,17 +51,20 @@ struct CatImageGallery: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    if !viewModel.isLoading && viewModel.imageURLsToShow.count >= Self.minImageCountForRefresh {
-                        Button(action: {
-                            withAnimation {
-                                viewModel.clearDisplayedImages()
+                    if !viewModel.isLoading, viewModel.imageURLsToShow.count >= Self.minImageCountForRefresh {
+                        Button(
+                            action: {
+                                withAnimation {
+                                    viewModel.clearDisplayedImages()
+                                }
+                            },
+                            label: {
+                                ZStack {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                        .foregroundColor(.primary)
+                                }
                             }
-                        }) {
-                            ZStack {
-                                Image(systemName: "arrow.triangle.2.circlepath")
-                                    .foregroundColor(.primary)
-                            }
-                        }
+                        )
                     }
                 }
             }
@@ -77,7 +80,7 @@ struct CatImageGallery: View {
             VStack(spacing: 0) {
                 Color.clear
                     .frame(height: 0)
-                
+
                 if let errorMessage = viewModel.errorMessage {
                     Text("エラーが発生しました： \(errorMessage)")
                         .rotationEffect(.degrees(180))

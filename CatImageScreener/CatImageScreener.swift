@@ -1,7 +1,7 @@
 import CBModel
-import ScaryCatScreeningKit
 import CoreGraphics
 import Foundation
+import ScaryCatScreeningKit
 
 public actor CatImageScreener {
     private var screener: ScaryCatScreener?
@@ -10,15 +10,15 @@ public actor CatImageScreener {
     private static let scaryMode = false
 
     public init() {
-        self.screener = nil
+        screener = nil
     }
 
     private func getScreener() async throws -> ScaryCatScreener {
-        if let screener = self.screener {
+        if let screener {
             return screener
         } else {
             let newScreener = try await ScaryCatScreener()
-            self.screener = newScreener
+            screener = newScreener
             return newScreener
         }
     }
@@ -29,7 +29,11 @@ public actor CatImageScreener {
     ) async throws -> [CatImageURLModel] {
         guard !cgImages.isEmpty else { return [] }
         guard cgImages.count == models.count else {
-            throw NSError(domain: "CatImageScreener", code: -1, userInfo: [NSLocalizedDescriptionKey: "画像とモデルの数が一致しません"])
+            throw NSError(
+                domain: "CatImageScreener",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "画像とモデルの数が一致しません"]
+            )
         }
 
         let screener = try await getScreener()
@@ -57,4 +61,4 @@ public actor CatImageScreener {
             }
         }
     }
-} 
+}

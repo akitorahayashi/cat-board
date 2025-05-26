@@ -6,4 +6,4 @@ public protocol CatImageLoaderProtocol: Sendable {
     func getPrefetchedImages(imageCount: Int) async -> [CatImageURLModel]
     func loadImagesWithScreening(count: Int) async throws -> [CatImageURLModel]
     func startPrefetchingIfNeeded() async
-} 
+}
