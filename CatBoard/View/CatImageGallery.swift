@@ -7,6 +7,7 @@ import TieredGridLayout
 import CatImageScreener
 import CatImageLoader
 import Kingfisher
+import UIKit
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
@@ -74,8 +75,6 @@ struct CatImageGallery: View {
         .navigationViewStyle(StackNavigationViewStyle())
     }
 
-    private var headerHeight: CGFloat { 16 + UIFont.preferredFont(forTextStyle: .headline).lineHeight }
-
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
@@ -107,15 +106,13 @@ struct CatImageGallery: View {
                     }
             }
             .frame(height: 0)
-
-            Spacer().frame(height: headerHeight)
-                .overlay {
-                    if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                            .padding()
-                    }
-                }
+            
+            
+            if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .padding(.bottom, 20)
+            }
         }
         .rotationEffect(.degrees(180))
     }
