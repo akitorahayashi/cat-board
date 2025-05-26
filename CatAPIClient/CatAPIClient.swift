@@ -1,7 +1,7 @@
 import CBModel
 import UIKit
 
-public struct CatAPIClient {
+public struct CatAPIClient: CatAPIClientProtocol {
     public init() {}
 
     public func fetchImageURLs(totalCount: Int, batchSize: Int) async throws -> [CatImageURLModel] {

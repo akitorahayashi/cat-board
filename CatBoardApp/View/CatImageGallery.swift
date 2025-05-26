@@ -17,8 +17,15 @@ struct CatImageGallery: View {
 
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
-        let repository = CatImageURLRepository(modelContainer: modelContainer)
-        let loader = CatImageLoader(modelContainer: modelContainer)
+        let imageClient = CatAPIClient()
+        let repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: imageClient)
+        let screener = CatImageScreener()
+        let loader = CatImageLoader(
+            modelContainer: modelContainer,
+            repository: repository,
+            screener: screener,
+            imageClient: imageClient
+        )
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,
             loader: loader

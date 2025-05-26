@@ -8,8 +8,8 @@ import SwiftUI
 
 public actor CatImageLoader: CatImageLoaderProtocol {
     private let repository: CatImageURLRepositoryProtocol
-    private let imageClient: CatAPIClient
-    private let screener: CatImageScreener
+    private let imageClient: CatAPIClientProtocol
+    private let screener: CatImageScreenerProtocol
     private var isPrefetching: Bool = false
     private var prefetchTask: Task<Void, Never>?
     private var prefetchedImages: [CatImageURLModel] = []
@@ -20,11 +20,16 @@ public actor CatImageLoader: CatImageLoaderProtocol {
     private static let targetPrefetchCount = 150 // プリフェッチの目標枚数
     private static let maxFetchAttempts = 30 // 最大取得試行回数
 
-    public init(modelContainer: ModelContainer) {
+    public init(
+        modelContainer: ModelContainer,
+        repository: CatImageURLRepositoryProtocol,
+        screener: CatImageScreenerProtocol,
+        imageClient: CatAPIClientProtocol
+    ) {
         self.modelContainer = modelContainer
-        repository = CatImageURLRepository(modelContainer: modelContainer)
-        imageClient = CatAPIClient()
-        screener = CatImageScreener()
+        self.repository = repository
+        self.imageClient = imageClient
+        self.screener = screener
     }
 
     deinit {
@@ -180,21 +185,10 @@ public actor CatImageLoader: CatImageLoaderProtocol {
 
                 // 5. ログ出力
                 print(
-                    "プリフェッチバッチ完了: 取得\(totalFetched)枚中スクリーニング通過\(screenedModels.count)枚 (現在\(prefetchedImages.count)枚)"
-                )
-
-                if prefetchedImages.count >= Self.targetPrefetchCount {
-                    print("プリフェッチ完了: 目標\(Self.targetPrefetchCount)枚に達しました")
-                    return
-                }
-            }
-
-            if prefetchedImages.count < Self.targetPrefetchCount {
-                print(
-                    "プリフェッチ終了（最大試行回数到達）: 取得\(totalFetched)枚中\(totalScreened)枚通過。目標枚数\(Self.targetPrefetchCount)枚に達しませんでした。現在\(prefetchedImages.count)枚"
+                    "プリフェッチ進捗: 取得\(totalFetched)枚中\(totalScreened)枚通過 → 現在\(prefetchedImages.count)枚"
                 )
             }
-        } catch let error as NSError {
+        } catch {
             print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
         }
     }

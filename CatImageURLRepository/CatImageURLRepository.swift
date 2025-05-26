@@ -8,6 +8,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     private var isRefilling: Bool = false
     private var refillTask: Task<Void, Never>?
     private let modelContainer: ModelContainer
+    private let apiClient: CatAPIClientProtocol
 
     private let maxLoadedURLCount = 300
     private let loadedURLThreshold = 100
@@ -15,8 +16,9 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     private let storedURLThreshold = 100
     private let apiFetchBatchSize = 10
 
-    public init(modelContainer: ModelContainer) {
+    public init(modelContainer: ModelContainer, apiClient: CatAPIClientProtocol) {
         self.modelContainer = modelContainer
+        self.apiClient = apiClient
         // 初期化時にデータベースからURLを読み込む
         Task {
             await loadInitialImageURLsFromSwiftData()
@@ -69,13 +71,10 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     /// 指定した数の画像URLを返す
     /// なければAPIから取って返す
     /// 終わったら裏で補充
-    public func getNextImageURLsFromCacheOrAPI(
-        count: Int,
-        using apiClient: CatAPIClient
-    ) async throws -> [CatImageURLModel] {
+    private func getNextImageURLsFromCacheOrAPI(count: Int) async throws -> [CatImageURLModel] {
         // キャッシュが十分にある場合
         if loadedImageURLs.count >= count {
-            let provided = try await getImageURLsFromLoadedURLs(count: count, using: apiClient)
+            let provided = try await getImageURLsFromLoadedURLs(count: count)
 
             // 提供後の残りが閾値以下になった場合、補充を開始
             if loadedImageURLs.count <= loadedURLThreshold {
@@ -83,7 +82,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
                 print(
                     "loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)"
                 )
-                await startBackgroundURLRefill(using: apiClient)
+                await startBackgroundURLRefill()
             }
 
             return provided
@@ -91,14 +90,14 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
 
         // キャッシュが不足している場合
         // 1. 利用可能なキャッシュを全て提供
-        let available = try await getImageURLsFromLoadedURLs(count: loadedImageURLs.count, using: apiClient)
+        let available = try await getImageURLsFromLoadedURLs(count: loadedImageURLs.count)
         // 2. 残りをAPIから取得
         let remaining = try await apiClient.fetchImageURLs(
             totalCount: count - available.count,
             batchSize: apiFetchBatchSize
         )
         // 3. 補充を開始
-        await startBackgroundURLRefill(using: apiClient)
+        await startBackgroundURLRefill()
 
         print(
             "URL供給完了: loadedImageURLsから\(available.count)枚 + APIから\(remaining.count)枚 = 合計\(available.count + remaining.count)枚"
@@ -107,7 +106,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     }
 
     /// キャッシュから画像URLを提供
-    private func getImageURLsFromLoadedURLs(count: Int, using _: CatAPIClient) async throws -> [CatImageURLModel] {
+    private func getImageURLsFromLoadedURLs(count: Int) async throws -> [CatImageURLModel] {
         let count = min(count, loadedImageURLs.count)
         let provided = Array(loadedImageURLs.prefix(count))
         loadedImageURLs = Array(loadedImageURLs.dropFirst(count)) // 提供した分を確実に削除
@@ -116,7 +115,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     }
 
     /// バックグラウンドでの補充処理を開始
-    private func startBackgroundURLRefill(using apiClient: CatAPIClient) async {
+    private func startBackgroundURLRefill() async {
         // 既に補充中なら何もしない
         guard !isRefilling else { return }
 
@@ -134,7 +133,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
             guard let self else { return }
             do {
                 await setRefilling(true)
-                try await refillLoadedURLsIfNeeded(using: apiClient)
+                try await refillLoadedURLsIfNeeded()
             } catch {
                 print("loadedImageURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
             }
@@ -147,7 +146,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     }
 
     /// キャッシュのURLが少なくなったら補充する
-    private func refillLoadedURLsIfNeeded(using apiClient: CatAPIClient) async throws {
+    private func refillLoadedURLsIfNeeded() async throws {
         if loadedImageURLs.count > loadedURLThreshold { return }
 
         let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
@@ -176,7 +175,6 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
                 let remaining = maxStoredURLCount - currentStored
                 let times = Int(ceil(Double(remaining) / Double(apiFetchBatchSize)))
                 let newlyStored = try await fetchAndStoreImageURLsToSwiftData(
-                    apiClient: apiClient,
                     imageCountPerFetch: apiFetchBatchSize,
                     timesOfFetch: times
                 )
@@ -192,14 +190,13 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         // プリフェッチ後も閾値を下回っている場合は再度補充を開始
         if loadedImageURLs.count <= loadedURLThreshold {
             print("loadedImageURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
-            try await refillLoadedURLsIfNeeded(using: apiClient)
+            try await refillLoadedURLsIfNeeded()
         }
     }
 
     /// APIから画像URLを取って 保存する
     @MainActor
-    func fetchAndStoreImageURLsToSwiftData(
-        apiClient: CatAPIClient,
+    private func fetchAndStoreImageURLsToSwiftData(
         imageCountPerFetch: Int = 10,
         timesOfFetch: Int = 3
     ) async throws -> Int {
@@ -218,10 +215,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     }
 
     public func getNextImageURLs(count: Int) async throws -> [CatImageURLModel] {
-        try await getNextImageURLsFromCacheOrAPI(
-            count: count,
-            using: CatAPIClient()
-        )
+        try await getNextImageURLsFromCacheOrAPI(count: count)
     }
 
     public func clearCache() async {
