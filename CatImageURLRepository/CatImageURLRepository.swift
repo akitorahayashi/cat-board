@@ -218,13 +218,6 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         try await getNextImageURLsFromCacheOrAPI(count: count)
     }
 
-    public func clearCache() async {
-        loadedImageURLs = []
-        refillTask?.cancel()
-        refillTask = nil
-        isRefilling = false
-    }
-
     @MainActor
     private func fetchStoredURLCount() throws -> Int {
         let modelContext = modelContainer.mainContext

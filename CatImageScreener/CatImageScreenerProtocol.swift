@@ -7,4 +7,4 @@ public protocol CatImageScreenerProtocol: Sendable {
         cgImages: [CGImage],
         models: [CatImageURLModel]
     ) async throws -> [CatImageURLModel]
-} 
+}
