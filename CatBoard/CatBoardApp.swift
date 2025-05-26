@@ -1,21 +1,24 @@
-import CBShared
+import CBModel
 import SwiftData
 import SwiftUI
 
 @main
 struct CatBoardApp: App {
-    var body: some Scene {
-        WindowGroup {
-            CatImageGalleryLauncher()
-                .modelContainer(for: CatImageURLEntity.self)
+    let modelContainer: ModelContainer
+
+    init() {
+        do {
+            let schema = Schema([CatImageURLEntity.self])
+            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not initialize ModelContainer: \(error)")
         }
     }
-}
 
-struct CatImageGalleryLauncher: View {
-    @Environment(\.modelContext) private var modelContext
-
-    var body: some View {
-        CatImageGallery(modelContext: modelContext)
+    var body: some Scene {
+        WindowGroup {
+            CatImageGallery(modelContainer: modelContainer)
+        }
     }
 }

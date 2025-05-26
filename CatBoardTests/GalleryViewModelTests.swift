@@ -1,7 +1,8 @@
+import CatAPIClient
 @testable import CatBoard
-import CBShared
+import CatImageURLRepository
+import CBModel
 import Combine
-import Infrastructure
 import XCTest
 
 @MainActor

@@ -1,12 +1,10 @@
-import CBShared
-import ScaryCatScreeningKit
+import CBModel
 import UIKit
 
 public struct CatAPIClient {
     public init() {}
 
     public func fetchImageURLs(totalCount: Int, batchSize: Int) async throws -> [CatImageURLModel] {
-        print("CatAPIから画像URL取得開始: 目標\(totalCount)枚(バッチサイズ\(batchSize))")
         var result: [CatImageURLModel] = []
         var pagesRetrieved = 0
 
@@ -32,7 +30,6 @@ public struct CatAPIClient {
             if result.count >= totalCount { break }
         }
 
-        print("画像URL取得完了: \(pagesRetrieved)ページ取得 → \(result.count)枚の画像URL取得")
         return Array(result.prefix(totalCount))
     }
 }
