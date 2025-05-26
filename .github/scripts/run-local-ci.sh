@@ -1,4 +1,12 @@
 #!/bin/bash
+#
+#   $ .github/scripts/run-local-ci.sh                # 全てのテスト・アーカイブを実行
+#   $ .github/scripts/run-local-ci.sh --all-tests    # ユニットテストとUIテストのみ実行
+#   $ .github/scripts/run-local-ci.sh --unit-test    # ユニットテストのみ実行
+#   $ .github/scripts/run-local-ci.sh --ui-test      # UIテストのみ実行
+#   $ .github/scripts/run-local-ci.sh --archive-only # アーカイブのみ実行
+#   $ .github/scripts/run-local-ci.sh --test-without-building # 既存ビルド成果物でテストのみ
+
 set -euo pipefail
 
 # === Configuration ===
@@ -9,10 +17,11 @@ PRODUCTION_DIR="$OUTPUT_DIR/production"
 ARCHIVE_DIR="$PRODUCTION_DIR/archives"
 PRODUCTION_DERIVED_DATA_DIR="$ARCHIVE_DIR/DerivedData"
 EXPORT_DIR="$PRODUCTION_DIR/Export"
-PROJECT_FILE="CatBoard.xcodeproj"
-WATCH_APP_SCHEME="CatBoard"
+PROJECT_FILE="CatBoardApp.xcodeproj"
+APP_SCHEME="CatBoardApp"
 UNIT_TEST_SCHEME="CatBoardTests"
 UI_TEST_SCHEME="CatBoardUITests"
+WATCH_APP_SCHEME="CatBoardApp"
 
 # === Default Flags ===
 run_unit_tests=false
@@ -174,7 +183,7 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
     echo "Building for testing..."
     set -o pipefail && xcodebuild build-for-testing \
       -project "$PROJECT_FILE" \
-      -scheme "$WATCH_APP_SCHEME" \
+      -scheme "$APP_SCHEME" \
       -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
       -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
       -configuration Debug \
@@ -238,13 +247,13 @@ if [ "$run_archive" = true ]; then
   step "Building for Production (Unsigned)"
 
   ARCHIVE_PATH="$ARCHIVE_DIR/CatBoard.xcarchive"
-  ARCHIVE_APP_PATH="$ARCHIVE_PATH/Products/Applications/$WATCH_APP_SCHEME.app"
+  ARCHIVE_APP_PATH="$ARCHIVE_PATH/Products/Applications/$APP_SCHEME.app"
 
   # アーカイブビルド
   echo "Building archive..."
   set -o pipefail && xcodebuild \
     -project "$PROJECT_FILE" \
-    -scheme "$WATCH_APP_SCHEME" \
+    -scheme "$APP_SCHEME" \
     -configuration Release \
     -destination "generic/platform=iOS Simulator" \
     -archivePath "$ARCHIVE_PATH" \
@@ -258,7 +267,7 @@ if [ "$run_archive" = true ]; then
   # アーカイブ内容を検証
   echo "Verifying archive contents..."
   if [ ! -d "$ARCHIVE_APP_PATH" ]; then
-    echo "Error: '$WATCH_APP_SCHEME.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
+    echo "Error: '$APP_SCHEME.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
     echo "--- Listing Archive Contents (on error) ---"
     ls -lR "$ARCHIVE_PATH" || echo "Archive directory not found or empty."
     fail "Archive verification failed."

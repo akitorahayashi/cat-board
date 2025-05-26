@@ -56,7 +56,7 @@ jobs:
           set -o pipefail
           echo "シミュレータ ID (${{ steps.select_simulator.outputs.simulator_id }}) を使用してユニットテストを実行します"
           xcodebuild test \
-            -project "CatBoard.xcodeproj" \
+            -project "CatBoardApp.xcodeproj" \
             -scheme "CatBoardTests" \
             -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
             -enableCodeCoverage NO \
@@ -130,7 +130,7 @@ jobs:
           set -o pipefail
           echo "シミュレータ ID (${{ steps.select_simulator.outputs.simulator_id }}) を使用して UI テストを実行します"
           xcodebuild test \
-            -project "CatBoard.xcodeproj" \
+            -project "CatBoardApp.xcodeproj" \
             -scheme "CatBoardUITests" \
             -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
             -enableCodeCoverage NO \

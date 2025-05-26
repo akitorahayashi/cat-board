@@ -39,8 +39,8 @@ jobs:
           set -euo pipefail
 
           # バージョン情報の取得
-          VERSION=$(grep -A 1 'MARKETING_VERSION' CatBoard.xcodeproj/project.pbxproj | tail -1 | sed 's/[^0-9.]//g')
-          BUILD_NUMBER=$(grep -A 1 'CURRENT_PROJECT_VERSION' CatBoard.xcodeproj/project.pbxproj | tail -1 | sed 's/[^0-9]//g')
+          VERSION=$(grep -A 1 'MARKETING_VERSION' CatBoardApp.xcodeproj/project.pbxproj | tail -1 | sed 's/[^0-9.]//g')
+          BUILD_NUMBER=$(grep -A 1 'CURRENT_PROJECT_VERSION' CatBoardApp.xcodeproj/project.pbxproj | tail -1 | sed 's/[^0-9]//g')
           echo "Building version $VERSION ($BUILD_NUMBER)"
           
           # ビルドディレクトリ作成 (アーカイブ用サブディレクトリも含む)
@@ -49,11 +49,11 @@ jobs:
           
           # 署名なしでビルド
           set -o pipefail && xcodebuild \
-            -project "CatBoard.xcodeproj" \
-            -scheme "CatBoard" \
+            -project "CatBoardApp.xcodeproj" \
+            -scheme "CatBoardApp" \
             -configuration Release \
             -destination "generic/platform=iOS" \
-            -archivePath "./ci-outputs/production/archives/CatBoard.xcarchive" \
+            -archivePath "./ci-outputs/production/archives/CatBoardApp.xcarchive" \
             -derivedDataPath "./ci-outputs/production/archives/DerivedData" \
             -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO \
@@ -65,12 +65,12 @@ jobs:
           set -euo pipefail
           echo "Checking archive contents..."
           # Check if the specific .app directory exists within the archive's Products/Applications path
-          ARCHIVE_APP_PATH="./ci-outputs/production/archives/CatBoard.xcarchive/Products/Applications/CatBoard.app"
+          ARCHIVE_APP_PATH="./ci-outputs/production/archives/CatBoardApp.xcarchive/Products/Applications/CatBoardApp.app"
           if [ ! -d "$ARCHIVE_APP_PATH" ]; then
-            echo "Error: 'CatBoard.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
+            echo "Error: 'CatBoardApp.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
             # Optionally list contents again on error
             echo "--- Archive Contents (on error) ---"
-            ls -lR ./ci-outputs/production/archives/CatBoard.xcarchive || echo "Archive directory not found or empty."
+            ls -lR ./ci-outputs/production/archives/CatBoardApp.xcarchive || echo "Archive directory not found or empty."
             exit 1
           fi
           echo "✅ Archive content verified."
@@ -80,5 +80,5 @@ jobs:
         with:
           name: unsigned-archive
           path: |-
-            ./ci-outputs/production/archives/CatBoard.xcarchive
+            ./ci-outputs/production/archives/CatBoardApp.xcarchive
           retention-days: 7
