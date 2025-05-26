@@ -99,7 +99,7 @@ final class CatImageURLRepositoryTests: XCTestCase {
         _ = try? await repository.getNextImageURLs(count: 3)
 
         // エラーを設定
-        mockAPIClient.shouldThrowError = true
+        mockAPIClient.fetchImageURLsError = NSError(domain: "TestError", code: -1, userInfo: nil)
 
         // キャッシュが空の状態で取得を試みる
         do {
@@ -114,7 +114,7 @@ final class CatImageURLRepositoryTests: XCTestCase {
     // APIエラー時の動作を確認する
     func testAPIError() async {
         // エラーを設定
-        mockAPIClient.shouldThrowError = true
+        mockAPIClient.fetchImageURLsError = NSError(domain: "TestError", code: -1, userInfo: nil)
 
         // エラーが発生することを確認
         do {
