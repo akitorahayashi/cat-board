@@ -19,14 +19,14 @@ public final class MockCatImageLoader: CatImageLoaderProtocol {
     }
 
     public func getPrefetchedCount() async -> Int {
-        return prefetchedCount
+        prefetchedCount
     }
 
     public func getPrefetchedImages(imageCount: Int) async -> [CatImageURLModel] {
-        return Array(prefetchedImages.prefix(imageCount))
+        Array(prefetchedImages.prefix(imageCount))
     }
 
     public func startPrefetchingIfNeeded() async {
         // プリフェッチは無効化
     }
-} 
+}
