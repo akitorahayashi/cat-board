@@ -4,7 +4,6 @@ import CatImageScreener
 import CatImageURLRepository
 import CBModel
 import Kingfisher
-import ScaryCatScreeningKit
 import SwiftData
 import SwiftUI
 

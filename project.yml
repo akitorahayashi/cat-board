@@ -45,8 +45,6 @@ targets:
       - target: CatImageScreener
       - package: TieredGridLayout
         product: TieredGridLayout
-      - package: ScaryCatScreeningKit
-        product: ScaryCatScreeningKit
       - package: Kingfisher
     settings:
       base:

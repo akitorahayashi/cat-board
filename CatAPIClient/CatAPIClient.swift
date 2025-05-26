@@ -1,5 +1,4 @@
 import CBModel
-import ScaryCatScreeningKit
 import UIKit
 
 public struct CatAPIClient {
