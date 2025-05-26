@@ -1,4 +1,4 @@
-name: Release CatBoard
+name: Release CatBoardApp
 
 on:
   push:
@@ -64,14 +64,14 @@ jobs:
         id: archive
         run: |
           set -euo pipefail
-          VERSION=$(grep -A 1 'MARKETING_VERSION' CatBoard.xcodeproj/project.pbxproj | tail -1 | sed 's/[^0-9.]//g')
-          BUILD_NUMBER=$(grep -A 1 'CURRENT_PROJECT_VERSION' CatBoard.xcodeproj/project.pbxproj | tail -1 | sed 's/[^0-9]//g')
+          VERSION=$(grep -A 1 'MARKETING_VERSION' CatBoardApp.xcodeproj/project.pbxproj | tail -1 | sed 's/[^0-9.]//g')
+          BUILD_NUMBER=$(grep -A 1 'CURRENT_PROJECT_VERSION' CatBoardApp.xcodeproj/project.pbxproj | tail -1 | sed 's/[^0-9]//g')
           echo "Building version $VERSION ($BUILD_NUMBER) for tag ${{ github.ref_name }}"
-          ARCHIVE_PATH="./build/CatBoard.xcarchive"
+          ARCHIVE_PATH="./build/CatBoardApp.xcarchive"
           mkdir -p "$(dirname "$ARCHIVE_PATH")"
           set -o pipefail && xcodebuild \
-            -project "CatBoard.xcodeproj" \
-            -scheme "CatBoard" \
+            -project "CatBoardApp.xcodeproj" \
+            -scheme "CatBoardApp" \
             -configuration Release \
             -destination "generic/platform=watchOS" \
             -archivePath "$ARCHIVE_PATH" \
@@ -87,7 +87,7 @@ jobs:
           set -euo pipefail
           ARCHIVE_APP_PATH="${{ steps.archive.outputs.archive_path }}/Products/Applications/CatBoardApp.app"
           if [ ! -d "$ARCHIVE_APP_PATH" ]; then
-            echo "Error: 'CatBoard.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
+            echo "Error: 'CatBoardApp.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
             exit 1
           fi
           echo "✅ Archive content verified."
