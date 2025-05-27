@@ -112,11 +112,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
             do {
                 let result = try await KingfisherManager.shared.downloader.downloadImage(with: url)
                 if let imageData = result.image.jpegData(compressionQuality: 0.8) {
-                    // メモリ使用量の計測
-                    let dataSize = imageData.count
-                    let cgImageSize = result.image.cgImage?.width ?? 0 * (result.image.cgImage?.height ?? 0) * 4
-                    print("画像メモリ使用量: Data=\(dataSize)bytes, CGImage=\(cgImageSize)bytes")
-                    
                     images.append((imageData: imageData, model: model))
                 }
             } catch {

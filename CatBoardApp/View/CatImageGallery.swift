@@ -11,10 +11,10 @@ import UIKit
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
-
+    
     private let modelContainer: ModelContainer
     @StateObject private var viewModel: GalleryViewModel
-
+    
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         let imageClient = CatAPIClient()
@@ -31,26 +31,30 @@ struct CatImageGallery: View {
             loader: loader
         ))
     }
-
+    
     var body: some View {
         NavigationView {
             Group {
-                ZStack(alignment: .top) {
-                    scrollContent
-
-                    // 初期ロード時のローディング Indicator
-                    if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
-                        VStack {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .scaleEffect(1.5)
-                            Text("Loading...")
-                                .font(.headline)
-                                .padding(.top, 8)
-                            Spacer()
+                if viewModel.errorMessage != nil {
+                    errorContent
+                } else {
+                    ZStack(alignment: .top) {
+                        scrollContent
+                        
+                        // 初期ロード時のローディング Indicator
+                        if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
+                            VStack {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .scaleEffect(1.5)
+                                Text("Loading...")
+                                    .font(.headline)
+                                    .padding(.top, 8)
+                                Spacer()
+                            }
+                            .transition(.opacity.combined(with: .scale))
                         }
-                        .transition(.opacity.combined(with: .scale))
                     }
                 }
             }
@@ -81,22 +85,40 @@ struct CatImageGallery: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
-
+    
+    private var errorContent: some View {
+        VStack(spacing: 16) {
+            Text("エラーが発生しました")
+                .font(.headline)
+            Text(viewModel.errorMessage ?? "")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Button(action: {
+                withAnimation {
+                    viewModel.clearDisplayedImages()
+                }
+            }) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+            }
+            .padding()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
                 Color.clear
                     .frame(height: 0)
-
-                if let errorMessage = viewModel.errorMessage {
-                    Text("エラーが発生しました： \(errorMessage)")
-                        .rotationEffect(.degrees(180))
-                        .padding()
-                } else {
-                    galleryGrid
-                }
+                
+                galleryGrid
             }
-
+            
             if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
@@ -105,7 +127,7 @@ struct CatImageGallery: View {
         }
         .rotationEffect(.degrees(180))
     }
-
+    
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
