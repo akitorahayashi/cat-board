@@ -65,21 +65,20 @@ struct CatImageGallery: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    if !viewModel.isLoading, viewModel.imageURLsToShow.count >= Self.minImageCountForRefresh {
-                        Button(
-                            action: {
-                                withAnimation {
-                                    viewModel.clearDisplayedImages()
-                                }
-                            },
-                            label: {
-                                ZStack {
-                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                        .foregroundColor(.primary)
-                                }
+                    Button(
+                        action: {
+                            withAnimation {
+                                viewModel.clearDisplayedImages()
                             }
-                        )
-                    }
+                        },
+                        label: {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .foregroundColor(.primary)
+                        }
+                    )
+                    .opacity(!viewModel.isLoading && viewModel.imageURLsToShow.count >= Self.minImageCountForRefresh ? 1 : 0)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.isLoading)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
                 }
             }
             .onAppear {
