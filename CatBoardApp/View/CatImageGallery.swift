@@ -37,6 +37,7 @@ struct CatImageGallery: View {
             Group {
                 if viewModel.errorMessage != nil {
                     errorContent
+                        .transition(.opacity)
                 } else {
                     ZStack(alignment: .top) {
                         scrollContent
@@ -53,11 +54,13 @@ struct CatImageGallery: View {
                                     .padding(.top, 8)
                                 Spacer()
                             }
-                            .transition(.opacity.combined(with: .scale))
+                            .transition(.opacity)
                         }
                     }
+                    .transition(.opacity)
                 }
             }
+            .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)
             .navigationTitle("Cat Board")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

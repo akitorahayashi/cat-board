@@ -86,6 +86,9 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                     loadedModels.append(item)
                 }
             } catch let error as NSError {
+                if error.domain == NSURLErrorDomain && error.code == NSURLErrorNotConnectedToInternet {
+                    throw error
+                }
                 let errorType = error.domain == NSURLErrorDomain ? "ネットワーク" : "その他"
                 print("画像のダウンロードに失敗 [\(index + 1)/\(models.count)]: \(errorType)エラー (\(item.imageURL))")
                 continue

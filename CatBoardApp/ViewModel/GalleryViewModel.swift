@@ -97,8 +97,10 @@ final class GalleryViewModel: ObservableObject {
     func clearDisplayedImages() {
         print("画像のクリアを開始")
         // 全ての画像をクリア
-        imageURLsToShow = []
-        errorMessage = nil
+        withAnimation(.easeInOut(duration: 0.3)) {
+            imageURLsToShow = []
+            errorMessage = nil
+        }
 
         // Kingfisherのメモリキャッシュをクリア
         KingfisherManager.shared.cache.clearMemoryCache()
