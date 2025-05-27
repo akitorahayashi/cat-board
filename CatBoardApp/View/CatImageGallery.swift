@@ -41,6 +41,7 @@ struct CatImageGallery: View {
                 } else {
                     ZStack(alignment: .top) {
                         scrollContent
+                            .transition(.opacity)
                         
                         // 初期ロード時のローディング Indicator
                         if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
@@ -57,7 +58,6 @@ struct CatImageGallery: View {
                             .transition(.opacity)
                         }
                     }
-                    .transition(.opacity)
                 }
             }
             .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)

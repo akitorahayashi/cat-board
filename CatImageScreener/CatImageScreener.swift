@@ -14,7 +14,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
         screener = nil
     }
 
-    private func getScreener() async throws -> ScaryCatScreener {
+    private func getScreener() async throws -> ScaryCatScreener? {
         if let screener {
             return screener
         } else {
@@ -23,14 +23,12 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                 screener = newScreener
                 return newScreener
             } catch let error as NSError {
-                if Self.enableLogging {
-                    print("ScaryCatScreener の初期化に失敗しました: \(error.localizedDescription)")
-                    print("エラーコード: \(error.code), ドメイン: \(error.domain)")
-                    if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
-                        print("原因: \(underlying.localizedDescription)")
-                    }
+                print("ScaryCatScreener の初期化に失敗しました: \(error.localizedDescription)")
+                print("エラーコード: \(error.code), ドメイン: \(error.domain)")
+                if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
+                    print("原因: \(underlying.localizedDescription)")
                 }
-                throw error
+                return nil
             }
         }
     }
@@ -42,6 +40,12 @@ public actor CatImageScreener: CatImageScreenerProtocol {
 
         do {
             let screener = try await getScreener()
+            
+            // スクリーナーがnilの場合は全ての画像を安全として返す
+            guard let screener = screener else {
+                print("スクリーナーの初期化に失敗したため、全ての画像を安全として返します")
+                return images.map(\.model)
+            }
 
             let screeningResults = try await screener.screen(
                 imageDataList: images.map(\.imageData),
@@ -78,14 +82,13 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                 return results
             }
         } catch let error as NSError {
-            if Self.enableLogging {
-                print("スクリーニング処理でエラーが発生しました: \(error.localizedDescription)")
-                print("エラーコード: \(error.code), ドメイン: \(error.domain)")
-                if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
-                    print("原因: \(underlying.localizedDescription)")
-                }
+            print("スクリーニング処理でエラーが発生しました: \(error.localizedDescription)")
+            print("エラーコード: \(error.code), ドメイン: \(error.domain)")
+            if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
+                print("原因: \(underlying.localizedDescription)")
             }
-            throw error
+            // エラーが発生した場合も全ての画像を安全として返す
+            return images.map(\.model)
         }
     }
 }
