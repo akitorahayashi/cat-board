@@ -19,6 +19,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
             return screener
         } else {
             do {
+                // ScaryCatScreenerの初期化でBundle.moduleを使用するように修正済みのことを前提とする
                 let newScreener = try await ScaryCatScreener(enableLogging: Self.enableLogging)
                 screener = newScreener
                 return newScreener
