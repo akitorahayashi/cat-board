@@ -41,9 +41,9 @@ public actor CatImageScreener: CatImageScreenerProtocol {
 
         do {
             let screener = try await getScreener()
-            
+
             // スクリーナーがnilの場合は全ての画像を安全として返す
-            guard let screener = screener else {
+            guard let screener else {
                 print("スクリーナーの初期化に失敗したため、全ての画像を安全として返します")
                 return images.map(\.model)
             }

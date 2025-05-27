@@ -86,7 +86,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                     loadedModels.append(item)
                 }
             } catch let error as NSError {
-                if error.domain == NSURLErrorDomain && error.code == NSURLErrorNotConnectedToInternet {
+                if error.domain == NSURLErrorDomain, error.code == NSURLErrorNotConnectedToInternet {
                     throw error
                 }
                 let errorType = error.domain == NSURLErrorDomain ? "ネットワーク" : "その他"

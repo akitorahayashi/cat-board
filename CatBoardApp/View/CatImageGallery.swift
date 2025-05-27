@@ -11,10 +11,10 @@ import UIKit
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
-    
+
     private let modelContainer: ModelContainer
     @StateObject private var viewModel: GalleryViewModel
-    
+
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         let imageClient = CatAPIClient()
@@ -31,7 +31,7 @@ struct CatImageGallery: View {
             loader: loader
         ))
     }
-    
+
     var body: some View {
         NavigationView {
             Group {
@@ -42,7 +42,7 @@ struct CatImageGallery: View {
                     ZStack(alignment: .top) {
                         scrollContent
                             .transition(.opacity)
-                        
+
                         // 初期ロード時のローディング Indicator
                         if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
                             VStack {
@@ -76,7 +76,10 @@ struct CatImageGallery: View {
                                 .foregroundColor(.primary)
                         }
                     )
-                    .opacity(!viewModel.isLoading && viewModel.imageURLsToShow.count >= Self.minImageCountForRefresh ? 1 : 0)
+                    .opacity(
+                        !viewModel.isLoading && viewModel.imageURLsToShow.count >= Self
+                            .minImageCountForRefresh ? 1 : 0
+                    )
                     .animation(.easeOut(duration: 0.3), value: viewModel.isLoading)
                     .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
                 }
@@ -87,7 +90,7 @@ struct CatImageGallery: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
-    
+
     private var errorContent: some View {
         VStack(spacing: 16) {
             Text("エラーが発生しました")
@@ -97,7 +100,7 @@ struct CatImageGallery: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-            
+
             Button(action: {
                 withAnimation {
                     viewModel.clearDisplayedImages()
@@ -111,16 +114,16 @@ struct CatImageGallery: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
                 Color.clear
                     .frame(height: 0)
-                
+
                 galleryGrid
             }
-            
+
             if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
@@ -129,7 +132,7 @@ struct CatImageGallery: View {
         }
         .rotationEffect(.degrees(180))
     }
-    
+
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {

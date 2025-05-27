@@ -8,7 +8,7 @@ public final class MockCatImageScreener: CatImageScreenerProtocol {
     public init() {}
 
     public func screenImages(
-        images: [(imageData: Data, model: CatImageURLModel)]
+        images _: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel] {
         if let error = screeningError {
             throw error
