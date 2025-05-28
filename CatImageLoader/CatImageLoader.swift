@@ -61,6 +61,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
     }
 
     private func loadImages(from models: [CatImageURLModel]) async throws -> [CatImageURLModel] {
+        print("画像のロードを開始します: \(models.count)枚")
         var loadedModels: [CatImageURLModel] = []
 
         for (index, item) in models.enumerated() {

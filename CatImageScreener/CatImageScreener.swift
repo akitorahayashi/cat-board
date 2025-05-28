@@ -58,13 +58,13 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                 return images.map(\.model)
             }
 
-            // 画像データとモデルのマッピングを作成
-            let imageDataToModel = Dictionary(uniqueKeysWithValues: images.map { ($0.imageData, $0.model) })
+            // スクリーニング結果から元のモデルを取得するために、モデルの配列を準備
+            let models = images.map(\.model)
 
             if Self.scaryMode {
                 // 怖いモードの場合、unsafeResultsを使用
                 let results = screeningResults.unsafeResults.compactMap { result in
-                    imageDataToModel[result.imageData]
+                    models[result.originalIndex]
                 }
                 if Self.enableLogging {
                     print("スクリーニング結果: \(images.count)枚中\(results.count)枚が危険と判定")
@@ -74,7 +74,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
             } else {
                 // 通常モードの場合、safeResultsを使用
                 let results = screeningResults.safeResults.compactMap { result in
-                    imageDataToModel[result.imageData]
+                    models[result.originalIndex]
                 }
                 if Self.enableLogging {
                     print("スクリーニング結果: \(images.count)枚中\(results.count)枚が安全と判定")

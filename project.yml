@@ -20,11 +20,11 @@ settings:
 packages:
   ScaryCatScreeningKit:
     url: https://github.com/atrh95/scary-cat-screening-kit
-    from: "3.0.3"
+    from: "3.1.0"
     exact: true
   TieredGridLayout:
     url: https://github.com/atrh95/tiered-grid-layout
-    from: "1.1.2"
+    from: "1.2.0"
     exact: true
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher.git
