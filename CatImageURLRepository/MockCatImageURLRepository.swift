@@ -12,7 +12,7 @@ public struct MockCatImageURLRepository: CatImageURLRepositoryProtocol {
     }
 
     public func getNextImageURLs(count: Int) async throws -> [CatImageURLModel] {
-        if let error = error {
+        if let error {
             throw error
         }
         return Array(mockImageURLs.prefix(count))

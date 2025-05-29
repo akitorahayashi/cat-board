@@ -11,7 +11,7 @@ public struct MockCatAPIClient: CatAPIClientProtocol {
     }
 
     public func fetchImageURLs(totalCount: Int, batchSize _: Int) async throws -> [CatImageURLModel] {
-        if let error = error {
+        if let error {
             throw error
         }
 

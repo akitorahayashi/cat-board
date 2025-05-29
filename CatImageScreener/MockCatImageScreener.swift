@@ -13,7 +13,7 @@ public struct MockCatImageScreener: CatImageScreenerProtocol {
     public func screenImages(
         images _: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel] {
-        if let error = error {
+        if let error {
             throw error
         }
         return mockImages
