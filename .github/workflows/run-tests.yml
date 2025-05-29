@@ -60,6 +60,8 @@ jobs:
             -scheme "CatBoardTests" \
             -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
             -enableCodeCoverage NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
             -resultBundlePath ./ci-outputs/test-results/unit/TestResults.xcresult \
             | xcbeautify --report junit --report-path ./ci-outputs/test-results/unit/junit.xml
 
@@ -134,6 +136,8 @@ jobs:
             -scheme "CatBoardUITests" \
             -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
             -enableCodeCoverage NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
             -resultBundlePath ./ci-outputs/test-results/ui/TestResults.xcresult \
             | xcbeautify --report junit --report-path ./ci-outputs/test-results/ui/junit.xml
 

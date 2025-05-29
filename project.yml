@@ -20,11 +20,11 @@ settings:
 packages:
   ScaryCatScreeningKit:
     url: https://github.com/atrh95/scary-cat-screening-kit
-    from: "3.0.0"
+    from: "3.1.2"
     exact: true
   TieredGridLayout:
     url: https://github.com/atrh95/tiered-grid-layout
-    from: "1.1.2"
+    from: "1.2.0"
     exact: true
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher.git
@@ -171,7 +171,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardTests
         TARGETED_DEVICE_FAMILY: "1,2"
-        GENERATE_INFOPLIST_FILE: YES
+        GENERATE_INFOPLIST_FILE: NO
 
   CatBoardUITests:
     type: bundle.ui-testing
@@ -185,7 +185,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardUITests
         TARGETED_DEVICE_FAMILY: "1,2"
         TEST_TARGET_NAME: CatBoardApp
-        GENERATE_INFOPLIST_FILE: YES
+        GENERATE_INFOPLIST_FILE: NO
 
 schemes:
   CatBoardApp:

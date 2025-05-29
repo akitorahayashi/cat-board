@@ -2,16 +2,19 @@ import CatAPIClient
 import CBModel
 import Foundation
 
-public final class MockCatImageURLRepository: CatImageURLRepositoryProtocol {
-    public var getNextImageURLsResult: [CatImageURLModel] = []
-    public var getNextImageURLsError: Error?
+public struct MockCatImageURLRepository: CatImageURLRepositoryProtocol {
+    private let mockImageURLs: [CatImageURLModel]
+    private let error: Error?
 
-    public init() {}
+    public init(mockImageURLs: [CatImageURLModel] = [], error: Error? = nil) {
+        self.mockImageURLs = mockImageURLs
+        self.error = error
+    }
 
     public func getNextImageURLs(count: Int) async throws -> [CatImageURLModel] {
-        if let error = getNextImageURLsError {
+        if let error {
             throw error
         }
-        return Array(getNextImageURLsResult.prefix(count))
+        return Array(mockImageURLs.prefix(count))
     }
 }

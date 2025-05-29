@@ -16,9 +16,9 @@ final class CatImageURLRepositoryTests: XCTestCase {
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
 
-        mockAPIClient = MockCatAPIClient()
         // モックデータの設定
-        mockAPIClient.mockImageURLs = TestResources.createMockCatImageURLModels(count: 3)
+        let mockImages = TestResources.createMockCatImageURLModels(count: 3)
+        mockAPIClient = MockCatAPIClient(mockImageURLs: mockImages)
         repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: mockAPIClient)
     }
 
@@ -60,7 +60,8 @@ final class CatImageURLRepositoryTests: XCTestCase {
 
         // 新しい画像URLを設定
         let newImages = TestResources.createMockCatImageURLModels(count: 3)
-        mockAPIClient.mockImageURLs = newImages
+        mockAPIClient = MockCatAPIClient(mockImageURLs: newImages)
+        repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: mockAPIClient)
 
         // キャッシュが空の状態で取得
         let secondResult = try await repository.getNextImageURLs(count: 1)
@@ -78,7 +79,8 @@ final class CatImageURLRepositoryTests: XCTestCase {
 
         // 新しい画像URLを設定
         let newImages = TestResources.createMockCatImageURLModels(count: 3)
-        mockAPIClient.mockImageURLs = newImages
+        mockAPIClient = MockCatAPIClient(mockImageURLs: newImages)
+        repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: mockAPIClient)
 
         // 残り1つのキャッシュを使用
         let secondResult = try await repository.getNextImageURLs(count: 1)
@@ -99,7 +101,9 @@ final class CatImageURLRepositoryTests: XCTestCase {
         _ = try? await repository.getNextImageURLs(count: 3)
 
         // エラーを設定
-        mockAPIClient.fetchImageURLsError = NSError(domain: "TestError", code: -1, userInfo: nil)
+        let error = NSError(domain: "TestError", code: -1, userInfo: nil)
+        mockAPIClient = MockCatAPIClient(error: error)
+        repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: mockAPIClient)
 
         // キャッシュが空の状態で取得を試みる
         do {
@@ -114,7 +118,9 @@ final class CatImageURLRepositoryTests: XCTestCase {
     // APIエラー時の動作を確認する
     func testAPIError() async {
         // エラーを設定
-        mockAPIClient.fetchImageURLsError = NSError(domain: "TestError", code: -1, userInfo: nil)
+        let error = NSError(domain: "TestError", code: -1, userInfo: nil)
+        mockAPIClient = MockCatAPIClient(error: error)
+        repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: mockAPIClient)
 
         // エラーが発生することを確認
         do {

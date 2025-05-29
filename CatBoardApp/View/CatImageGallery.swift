@@ -35,44 +35,53 @@ struct CatImageGallery: View {
     var body: some View {
         NavigationView {
             Group {
-                ZStack(alignment: .top) {
-                    scrollContent
+                if viewModel.errorMessage != nil {
+                    errorContent
+                        .transition(.opacity)
+                } else {
+                    ZStack(alignment: .top) {
+                        scrollContent
+                            .transition(.opacity)
 
-                    // 初期ロード時のローディング Indicator
-                    if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
-                        VStack {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .scaleEffect(1.5)
-                            Text("Loading...")
-                                .font(.headline)
-                                .padding(.top, 8)
-                            Spacer()
+                        // 初期ロード時のローディング Indicator
+                        if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
+                            VStack {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .scaleEffect(1.5)
+                                Text("Loading...")
+                                    .font(.headline)
+                                    .padding(.top, 8)
+                                Spacer()
+                            }
+                            .transition(.opacity)
                         }
-                        .transition(.opacity.combined(with: .scale))
                     }
                 }
             }
+            .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)
             .navigationTitle("Cat Board")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    if !viewModel.isLoading, viewModel.imageURLsToShow.count >= Self.minImageCountForRefresh {
-                        Button(
-                            action: {
-                                withAnimation {
-                                    viewModel.clearDisplayedImages()
-                                }
-                            },
-                            label: {
-                                ZStack {
-                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                        .foregroundColor(.primary)
-                                }
+                    Button(
+                        action: {
+                            withAnimation {
+                                viewModel.clearDisplayedImages()
                             }
-                        )
-                    }
+                        },
+                        label: {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .foregroundColor(.primary)
+                        }
+                    )
+                    .opacity(
+                        !viewModel.isLoading && viewModel.imageURLsToShow.count >= Self
+                            .minImageCountForRefresh ? 1 : 0
+                    )
+                    .animation(.easeOut(duration: 0.3), value: viewModel.isLoading)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
                 }
             }
             .onAppear {
@@ -82,19 +91,37 @@ struct CatImageGallery: View {
         .navigationViewStyle(StackNavigationViewStyle())
     }
 
+    private var errorContent: some View {
+        VStack(spacing: 16) {
+            Text("エラーが発生しました")
+                .font(.headline)
+            Text(viewModel.errorMessage ?? "")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button(action: {
+                withAnimation {
+                    viewModel.clearDisplayedImages()
+                }
+            }) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+            }
+            .padding()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
                 Color.clear
                     .frame(height: 0)
 
-                if let errorMessage = viewModel.errorMessage {
-                    Text("エラーが発生しました： \(errorMessage)")
-                        .rotationEffect(.degrees(180))
-                        .padding()
-                } else {
-                    galleryGrid
-                }
+                galleryGrid
             }
 
             if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {

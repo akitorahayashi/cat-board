@@ -46,8 +46,16 @@ final class CatImageLoaderTests: XCTestCase {
         // モックデータの設定
         let batchSize = 10
         let mockImages = TestResources.createMockCatImageURLModels(count: batchSize)
-        mockRepository.getNextImageURLsResult = mockImages
-        mockScreener.screeningResult = mockImages
+        mockRepository = MockCatImageURLRepository(mockImageURLs: mockImages)
+        mockScreener = MockCatImageScreener(mockImages: mockImages)
+
+        // CatImageLoaderの再初期化
+        imageLoader = CatImageLoader(
+            modelContainer: modelContainer,
+            repository: mockRepository,
+            screener: mockScreener,
+            imageClient: mockImageClient
+        )
 
         // プリフェッチ開始
         await imageLoader.startPrefetchingIfNeeded()
@@ -65,14 +73,28 @@ final class CatImageLoaderTests: XCTestCase {
         // 目標枚数分のモックデータを設定
         let targetCount = 150
         let mockImages = TestResources.createMockCatImageURLModels(count: targetCount)
-        mockRepository.getNextImageURLsResult = mockImages
-        mockScreener.screeningResult = mockImages
+        mockRepository = MockCatImageURLRepository(mockImageURLs: mockImages)
+        mockScreener = MockCatImageScreener(mockImages: mockImages)
+
+        // CatImageLoaderの再初期化
+        imageLoader = CatImageLoader(
+            modelContainer: modelContainer,
+            repository: mockRepository,
+            screener: mockScreener,
+            imageClient: mockImageClient
+        )
 
         // プリフェッチ開始
         await imageLoader.startPrefetchingIfNeeded()
 
-        // プリフェッチの完了を待つ
-        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3秒待機
+        // プリフェッチの完了を待つ（最大30秒）
+        for _ in 0 ..< 30 {
+            let count = await imageLoader.getPrefetchedCount()
+            if count >= targetCount {
+                break
+            }
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1秒待機
+        }
 
         // プリフェッチ数の確認
         let count = await imageLoader.getPrefetchedCount()
@@ -89,7 +111,15 @@ final class CatImageLoaderTests: XCTestCase {
         // モックデータの設定
         let batchSize = 10
         let mockImages = TestResources.createMockCatImageURLModels(count: batchSize)
-        mockRepository.getNextImageURLsResult = mockImages
+        mockRepository = MockCatImageURLRepository(mockImageURLs: mockImages)
+
+        // CatImageLoaderの再初期化
+        imageLoader = CatImageLoader(
+            modelContainer: modelContainer,
+            repository: mockRepository,
+            screener: mockScreener,
+            imageClient: mockImageClient
+        )
 
         // プリフェッチ開始
         await imageLoader.startPrefetchingIfNeeded()

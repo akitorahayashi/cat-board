@@ -1,18 +1,21 @@
-import CBModel
+@preconcurrency import CBModel
 import Foundation
 
-public final class MockCatImageScreener: CatImageScreenerProtocol {
-    public var screeningResult: [CatImageURLModel] = []
-    public var screeningError: Error?
+public struct MockCatImageScreener: CatImageScreenerProtocol {
+    private let mockImages: [CatImageURLModel]
+    private let error: Error?
 
-    public init() {}
+    public init(mockImages: [CatImageURLModel] = [], error: Error? = nil) {
+        self.mockImages = mockImages
+        self.error = error
+    }
 
     public func screenImages(
-        images: [(imageData: Data, model: CatImageURLModel)]
+        images _: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel] {
-        if let error = screeningError {
+        if let error {
             throw error
         }
-        return screeningResult
+        return mockImages
     }
 }

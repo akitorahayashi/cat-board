@@ -57,6 +57,7 @@ final class GalleryViewModel: ObservableObject {
                     self.isLoading = false
                     await loader.startPrefetchingIfNeeded()
                 } catch let error as NSError {
+                    print("loadInitialImages でエラーが発生: \(error.localizedDescription)")
                     self.errorMessage = error.localizedDescription
                     self.imageURLsToShow = []
                     self.isLoading = false
@@ -86,8 +87,8 @@ final class GalleryViewModel: ObservableObject {
 
             await loader.startPrefetchingIfNeeded()
         } catch let error as NSError {
+            print("追加画像読み込みでエラーが発生: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
-            print("画像取得中にエラーが発生: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -96,8 +97,10 @@ final class GalleryViewModel: ObservableObject {
     func clearDisplayedImages() {
         print("画像のクリアを開始")
         // 全ての画像をクリア
-        imageURLsToShow = []
-        errorMessage = nil
+        withAnimation(.easeInOut(duration: 0.3)) {
+            imageURLsToShow = []
+            errorMessage = nil
+        }
 
         // Kingfisherのメモリキャッシュをクリア
         KingfisherManager.shared.cache.clearMemoryCache()

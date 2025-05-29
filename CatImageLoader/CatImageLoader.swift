@@ -61,6 +61,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
     }
 
     private func loadImages(from models: [CatImageURLModel]) async throws -> [CatImageURLModel] {
+        print("画像のロードを開始します: \(models.count)枚")
         var loadedModels: [CatImageURLModel] = []
 
         for (index, item) in models.enumerated() {
@@ -86,6 +87,9 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                     loadedModels.append(item)
                 }
             } catch let error as NSError {
+                if error.domain == NSURLErrorDomain, error.code == NSURLErrorNotConnectedToInternet {
+                    throw error
+                }
                 let errorType = error.domain == NSURLErrorDomain ? "ネットワーク" : "その他"
                 print("画像のダウンロードに失敗 [\(index + 1)/\(models.count)]: \(errorType)エラー (\(item.imageURL))")
                 continue
@@ -112,11 +116,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
             do {
                 let result = try await KingfisherManager.shared.downloader.downloadImage(with: url)
                 if let imageData = result.image.jpegData(compressionQuality: 0.8) {
-                    // メモリ使用量の計測
-                    let dataSize = imageData.count
-                    let cgImageSize = result.image.cgImage?.width ?? 0 * (result.image.cgImage?.height ?? 0) * 4
-                    print("画像メモリ使用量: Data=\(dataSize)bytes, CGImage=\(cgImageSize)bytes")
-                    
                     images.append((imageData: imageData, model: model))
                 }
             } catch {
