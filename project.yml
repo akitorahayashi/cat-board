@@ -171,7 +171,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardTests
         TARGETED_DEVICE_FAMILY: "1,2"
-        GENERATE_INFOPLIST_FILE: YES
+        GENERATE_INFOPLIST_FILE: NO
 
   CatBoardUITests:
     type: bundle.ui-testing
@@ -185,7 +185,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardUITests
         TARGETED_DEVICE_FAMILY: "1,2"
         TEST_TARGET_NAME: CatBoardApp
-        GENERATE_INFOPLIST_FILE: YES
+        GENERATE_INFOPLIST_FILE: NO
 
 schemes:
   CatBoardApp:
