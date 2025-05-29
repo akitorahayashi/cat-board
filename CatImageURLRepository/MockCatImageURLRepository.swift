@@ -2,7 +2,7 @@ import CatAPIClient
 import CBModel
 import Foundation
 
-public final class MockCatImageURLRepository: CatImageURLRepositoryProtocol {
+public final actor MockCatImageURLRepository: CatImageURLRepositoryProtocol {
     public var getNextImageURLsResult: [CatImageURLModel] = []
     public var getNextImageURLsError: Error?
 

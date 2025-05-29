@@ -3,7 +3,7 @@ import CatImageScreener
 import CBModel
 import Foundation
 
-public final class MockCatImageLoader: CatImageLoaderProtocol {
+public final actor MockCatImageLoader: CatImageLoaderProtocol {
     public var loadImagesWithScreeningResult: [CatImageURLModel] = []
     public var loadImagesWithScreeningError: Error?
     public var prefetchedImages: [CatImageURLModel] = []

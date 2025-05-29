@@ -1,14 +1,17 @@
 import CBModel
 import Foundation
 
-public final class MockCatAPIClient: CatAPIClientProtocol {
-    public var fetchImageURLsError: Error?
-    public var mockImageURLs: [CatImageURLModel] = []
+public struct MockCatAPIClient: CatAPIClientProtocol {
+    private let mockImageURLs: [CatImageURLModel]
+    private let error: Error?
 
-    public init() {}
+    public init(mockImageURLs: [CatImageURLModel] = [], error: Error? = nil) {
+        self.mockImageURLs = mockImageURLs
+        self.error = error
+    }
 
     public func fetchImageURLs(totalCount: Int, batchSize _: Int) async throws -> [CatImageURLModel] {
-        if let error = fetchImageURLsError {
+        if let error = error {
             throw error
         }
 

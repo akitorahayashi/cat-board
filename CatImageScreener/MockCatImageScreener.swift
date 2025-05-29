@@ -1,7 +1,7 @@
 import CBModel
 import Foundation
 
-public final class MockCatImageScreener: CatImageScreenerProtocol {
+public final actor MockCatImageScreener: CatImageScreenerProtocol {
     public var screeningResult: [CatImageURLModel] = []
     public var screeningError: Error?
 
