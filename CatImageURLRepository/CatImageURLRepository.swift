@@ -67,7 +67,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         let count = min(count, loadedImageURLs.count)
         let provided = Array(loadedImageURLs.prefix(count))
         loadedImageURLs = Array(loadedImageURLs.dropFirst(count))
-        print("loadedImageURLsから提供: \(count)枚提供 → 残り\(loadedImageURLs.count)枚")
+        print("loadedImageURLsから提供: \(count)枚提供（残り\(loadedImageURLs.count)枚）")
         return provided
     }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable {
+public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable, Sendable {
     public var id = UUID()
     public var imageURL: String
     public var isLoading: Bool = true

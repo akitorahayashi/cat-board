@@ -34,10 +34,15 @@ public actor CatImageScreener: CatImageScreenerProtocol {
         }
     }
 
-    public func screenImages(
-        images: [(imageData: Data, model: CatImageURLModel)]
+    public nonisolated func screenImages(
+        imageDataWithModels: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel] {
-        guard !images.isEmpty else { return [] }
+        guard !imageDataWithModels.isEmpty else { return [] }
+
+        // スクリーニングが無効な場合は早期リターン
+        if !Self.isScreeningEnabled {
+            return imageDataWithModels.map(\.model)
+        }
 
         do {
             let screener = try await getScreener()
@@ -45,21 +50,21 @@ public actor CatImageScreener: CatImageScreenerProtocol {
             // スクリーナーがnilの場合は全ての画像を安全として返す
             guard let screener else {
                 print("スクリーナーの初期化に失敗したため、全ての画像を安全として返します")
-                return images.map(\.model)
+                return imageDataWithModels.map(\.model)
             }
+
+            let imageDataList = imageDataWithModels.map(\.imageData)
+            let probabilityThreshold = Self.screeningProbabilityThreshold
+            let enableLogging = Self.enableLogging
 
             let screeningResults = try await screener.screen(
-                imageDataList: images.map(\.imageData),
-                probabilityThreshold: Self.screeningProbabilityThreshold,
-                enableLogging: Self.enableLogging
+                imageDataList: imageDataList,
+                probabilityThreshold: probabilityThreshold,
+                enableLogging: enableLogging
             )
 
-            if !Self.isScreeningEnabled {
-                return images.map(\.model)
-            }
-
             // スクリーニング結果から元のモデルを取得するために、モデルの配列を準備
-            let models = images.map(\.model)
+            let models = imageDataWithModels.map(\.model)
 
             if Self.scaryMode {
                 // 怖いモードの場合、unsafeResultsを使用
@@ -67,7 +72,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                     models[result.originalIndex]
                 }
                 if Self.enableLogging {
-                    print("スクリーニング結果: \(images.count)枚中\(results.count)枚が危険と判定")
+                    print("スクリーニング結果: \(imageDataWithModels.count)枚中\(results.count)枚が危険と判定")
                     print(screeningResults.generateDetailedReport())
                 }
                 return results
@@ -77,7 +82,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                     models[result.originalIndex]
                 }
                 if Self.enableLogging {
-                    print("スクリーニング結果: \(images.count)枚中\(results.count)枚が安全と判定")
+                    print("スクリーニング結果: \(imageDataWithModels.count)枚中\(results.count)枚が安全と判定")
                     print(screeningResults.generateDetailedReport())
                 }
                 return results
@@ -88,8 +93,8 @@ public actor CatImageScreener: CatImageScreenerProtocol {
             if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
                 print("原因: \(underlying.localizedDescription)")
             }
-            // エラーが発生した場合も全ての画像を安全として返す
-            return images.map(\.model)
+            // エラーが発生した場合、全ての画像を安全として返す
+            return imageDataWithModels.map(\.model)
         }
     }
 }

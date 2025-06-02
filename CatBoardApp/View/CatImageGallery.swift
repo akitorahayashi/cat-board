@@ -2,12 +2,9 @@ import CatAPIClient
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
-import CBModel
-import Kingfisher
 import SwiftData
 import SwiftUI
 import TieredGridLayout
-import UIKit
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
@@ -35,7 +32,7 @@ struct CatImageGallery: View {
     var body: some View {
         NavigationView {
             Group {
-                if viewModel.errorMessage != nil {
+                if viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty) {
                     errorContent
                         .transition(.opacity)
                 } else {
@@ -43,8 +40,8 @@ struct CatImageGallery: View {
                         scrollContent
                             .transition(.opacity)
 
-                        // 初期ロード時のローディング Indicator
-                        if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
+                        // 初期ロード時の ProgressView
+                        if viewModel.isInitializing, viewModel.imageURLsToShow.isEmpty {
                             VStack {
                                 Spacer()
                                 ProgressView()
@@ -69,6 +66,7 @@ struct CatImageGallery: View {
                         action: {
                             withAnimation {
                                 viewModel.clearDisplayedImages()
+                                viewModel.loadInitialImages()
                             }
                         },
                         label: {
@@ -77,10 +75,12 @@ struct CatImageGallery: View {
                         }
                     )
                     .opacity(
-                        !viewModel.isLoading && viewModel.imageURLsToShow.count >= Self
+                        !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
+                            .count >= Self
                             .minImageCountForRefresh ? 1 : 0
                     )
-                    .animation(.easeOut(duration: 0.3), value: viewModel.isLoading)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)
                     .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
                 }
             }
@@ -104,6 +104,7 @@ struct CatImageGallery: View {
             Button(action: {
                 withAnimation {
                     viewModel.clearDisplayedImages()
+                    viewModel.loadInitialImages()
                 }
             }) {
                 Image(systemName: "arrow.clockwise")
@@ -117,20 +118,18 @@ struct CatImageGallery: View {
 
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 0) {
-                Color.clear
-                    .frame(height: 0)
+            galleryGrid
 
-                galleryGrid
-            }
-
-            if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
+            // 追加ロード中の ProgressView
+            if viewModel.isAdditionalFetching, !viewModel.imageURLsToShow.isEmpty {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 16)
             }
         }
         .rotationEffect(.degrees(180))
+        // 上スクロールできるようにするために回転
+        // galleryGrid の中身の要素も回転させている
     }
 
     @ViewBuilder

@@ -36,6 +36,7 @@ final class GalleryViewModelTests: XCTestCase {
     func testInitialState() {
         XCTAssertTrue(viewModel.imageURLsToShow.isEmpty, "初期状態では画像URLの配列が空")
         XCTAssertNil(viewModel.errorMessage, "初期状態ではエラーメッセージがnil")
-        XCTAssertFalse(viewModel.isLoading, "初期状態ではローディング中ではない")
+        XCTAssertFalse(viewModel.isInitializing, "初期状態では初期化中ではない")
+        XCTAssertFalse(viewModel.isAdditionalFetching, "初期状態では追加取得中ではない")
     }
 }

@@ -1,4 +1,4 @@
-@preconcurrency import CBModel
+import CBModel
 import Foundation
 
 public struct MockCatImageScreener: CatImageScreenerProtocol {
@@ -11,7 +11,7 @@ public struct MockCatImageScreener: CatImageScreenerProtocol {
     }
 
     public func screenImages(
-        images _: [(imageData: Data, model: CatImageURLModel)]
+        imageDataWithModels _: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel] {
         if let error {
             throw error

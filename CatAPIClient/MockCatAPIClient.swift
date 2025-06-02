@@ -1,4 +1,4 @@
-@preconcurrency import CBModel
+import CBModel
 import Foundation
 
 public struct MockCatAPIClient: CatAPIClientProtocol {
