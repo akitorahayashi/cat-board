@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-public class CatImageURLEntity {
+public final class CatImageURLEntity: @unchecked Sendable {
     @Attribute(.unique) public var id: UUID
     public var url: String
     public var createdAt: Date

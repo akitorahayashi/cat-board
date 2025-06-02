@@ -1,10 +1,7 @@
-import CatAPIClient
 import CatImageLoader
-import CatImageScreener
 import CatImageURLRepository
 import CBModel
 import Kingfisher
-import SwiftData
 import SwiftUI
 
 @MainActor

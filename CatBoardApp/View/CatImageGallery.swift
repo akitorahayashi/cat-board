@@ -2,12 +2,9 @@ import CatAPIClient
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
-import CBModel
-import Kingfisher
 import SwiftData
 import SwiftUI
 import TieredGridLayout
-import UIKit
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
@@ -43,7 +40,7 @@ struct CatImageGallery: View {
                         scrollContent
                             .transition(.opacity)
 
-                        // 初期ロード時のローディング Indicator
+                        // 初期ロード時の ProgressView
                         if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
                             VStack {
                                 Spacer()
@@ -117,26 +114,24 @@ struct CatImageGallery: View {
 
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 0) {
-                Color.clear
-                    .frame(height: 0)
+            galleryGrid
 
-                galleryGrid
-            }
-
+            // 追加ロード中の ProgressView
             if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 16)
             }
         }
         .rotationEffect(.degrees(180))
+        // 上スクロールできるようにするために回転
+        // galleryGrid の中身の要素も回転させている
     }
 
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
-            ForEach(viewModel.imageURLsToShow.chunked(into: 10), id: \.self) { chunk in
+            ForEach(chunked(array: viewModel.imageURLsToShow, size: 10), id: \.self) { chunk in
                 TieredGridLayout {
                     ForEach(chunk, id: \.id) { image in
                         SquareGalleryImageAsync(url: URL(string: image.imageURL))
@@ -156,12 +151,10 @@ struct CatImageGallery: View {
         }
         .padding(2)
     }
-}
 
-private extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        stride(from: 0, to: count, by: size).map {
-            Array(self[$0 ..< Swift.min($0 + size, count)])
+    private func chunked<T>(array: [T], size: Int) -> [[T]] {
+        stride(from: 0, to: array.count, by: size).map { startIndex in
+            Array(array[startIndex ..< min(startIndex + size, array.count)])
         }
     }
 }
