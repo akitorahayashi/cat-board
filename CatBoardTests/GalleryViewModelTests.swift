@@ -88,7 +88,6 @@ final class GalleryViewModelTests: XCTestCase {
         // 初期画像を読み込む
         viewModel.loadInitialImages()
         try? await Task.sleep(nanoseconds: 1_000_000_000)
-        let initialCount = viewModel.imageURLsToShow.count
 
         // 最大画像数に達するまで追加取得
         for _ in 0 ..< (GalleryViewModel.maxImageCount / GalleryViewModel.batchDisplayCount) {
