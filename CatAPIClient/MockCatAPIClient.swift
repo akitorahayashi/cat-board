@@ -1,9 +1,7 @@
 import Foundation
 import CBModel
 
-@testable import CatAPIClient
-
-final class MockCatAPIClient: CatAPIClientProtocol {
+struct MockCatAPIClient: CatAPIClientProtocol {
     private let totalCount: Int
     private let error: Error?
 

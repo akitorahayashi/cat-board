@@ -2,6 +2,7 @@ import CatAPIClient
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
+import CatImagePrefetcher
 import SwiftData
 import SwiftUI
 import TieredGridLayout
@@ -17,15 +18,17 @@ struct CatImageGallery: View {
         let imageClient = CatAPIClient()
         let repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: imageClient)
         let screener = CatImageScreener()
-        let loader = CatImageLoader(
-            modelContainer: modelContainer,
+        let imageLoader = CatImageLoader()
+        let prefetcher = CatImagePrefetcher(
             repository: repository,
-            screener: screener,
-            imageClient: imageClient
+            imageLoader: imageLoader,
+            screener: screener
         )
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,
-            loader: loader
+            imageLoader: imageLoader,
+            screener: screener,
+            prefetcher: prefetcher
         ))
     }
 

@@ -2,6 +2,7 @@ import CatAPIClient
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
+import CatImagePrefetcher
 import CBModel
 import XCTest
 
