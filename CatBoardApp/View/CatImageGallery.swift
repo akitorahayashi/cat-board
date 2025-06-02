@@ -8,10 +8,10 @@ import TieredGridLayout
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
-
+    
     private let modelContainer: ModelContainer
     @StateObject private var viewModel: GalleryViewModel
-
+    
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         let imageClient = CatAPIClient()
@@ -28,20 +28,20 @@ struct CatImageGallery: View {
             loader: loader
         ))
     }
-
+    
     var body: some View {
         NavigationView {
             Group {
-                if viewModel.errorMessage != nil {
+                if viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty) {
                     errorContent
                         .transition(.opacity)
                 } else {
                     ZStack(alignment: .top) {
                         scrollContent
                             .transition(.opacity)
-
+                        
                         // 初期ロード時の ProgressView
-                        if viewModel.isLoading, viewModel.imageURLsToShow.isEmpty {
+                        if viewModel.isInitializing, viewModel.imageURLsToShow.isEmpty {
                             VStack {
                                 Spacer()
                                 ProgressView()
@@ -66,6 +66,7 @@ struct CatImageGallery: View {
                         action: {
                             withAnimation {
                                 viewModel.clearDisplayedImages()
+                                viewModel.loadInitialImages()
                             }
                         },
                         label: {
@@ -74,10 +75,11 @@ struct CatImageGallery: View {
                         }
                     )
                     .opacity(
-                        !viewModel.isLoading && viewModel.imageURLsToShow.count >= Self
+                        !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow.count >= Self
                             .minImageCountForRefresh ? 1 : 0
                     )
-                    .animation(.easeOut(duration: 0.3), value: viewModel.isLoading)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)
                     .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
                 }
             }
@@ -87,7 +89,7 @@ struct CatImageGallery: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
-
+    
     private var errorContent: some View {
         VStack(spacing: 16) {
             Text("エラーが発生しました")
@@ -97,10 +99,11 @@ struct CatImageGallery: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-
+            
             Button(action: {
                 withAnimation {
                     viewModel.clearDisplayedImages()
+                    viewModel.loadInitialImages()
                 }
             }) {
                 Image(systemName: "arrow.clockwise")
@@ -111,13 +114,13 @@ struct CatImageGallery: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
+    
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             galleryGrid
-
+            
             // 追加ロード中の ProgressView
-            if viewModel.isLoading, !viewModel.imageURLsToShow.isEmpty {
+            if viewModel.isAdditionalFetching, !viewModel.imageURLsToShow.isEmpty {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
                     .padding(.bottom, 16)
@@ -127,11 +130,11 @@ struct CatImageGallery: View {
         // 上スクロールできるようにするために回転
         // galleryGrid の中身の要素も回転させている
     }
-
+    
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
-            ForEach(chunked(array: viewModel.imageURLsToShow, size: 10), id: \.self) { chunk in
+            ForEach(viewModel.imageURLsToShow.chunked(into: 10), id: \.self) { chunk in
                 TieredGridLayout {
                     ForEach(chunk, id: \.id) { image in
                         SquareGalleryImageAsync(url: URL(string: image.imageURL))
@@ -151,10 +154,12 @@ struct CatImageGallery: View {
         }
         .padding(2)
     }
+}
 
-    private func chunked<T>(array: [T], size: Int) -> [[T]] {
-        stride(from: 0, to: array.count, by: size).map { startIndex in
-            Array(array[startIndex ..< min(startIndex + size, array.count)])
+private extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, count)])
         }
     }
 }

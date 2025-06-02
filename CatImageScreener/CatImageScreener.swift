@@ -41,10 +41,9 @@ public actor CatImageScreener: CatImageScreenerProtocol {
 
         do {
             let screener = try await getScreener()
-
-            let currentScreener = await self.screener
+            
             // スクリーナーがnilの場合は全ての画像を安全として返す
-            guard let currentScreener else {
+            guard let screener else {
                 print("スクリーナーの初期化に失敗したため、全ての画像を安全として返します")
                 return imageDataWithModels.map(\.model)
             }
@@ -53,7 +52,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
             let probabilityThreshold = Self.screeningProbabilityThreshold
             let enableLogging = Self.enableLogging
 
-            let screeningResults = try await currentScreener.screen(
+            let screeningResults = try await screener.screen(
                 imageDataList: imageDataList,
                 probabilityThreshold: probabilityThreshold,
                 enableLogging: enableLogging

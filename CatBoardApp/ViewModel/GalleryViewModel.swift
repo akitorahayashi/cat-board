@@ -8,7 +8,8 @@ import SwiftUI
 final class GalleryViewModel: ObservableObject {
     @Published var imageURLsToShow: [CatImageURLModel] = []
     @Published var errorMessage: String?
-    @Published var isLoading: Bool = false
+    @Published var isInitializing: Bool = false
+    @Published var isAdditionalFetching: Bool = false
 
     private let repository: CatImageURLRepositoryProtocol
     private let loader: CatImageLoaderProtocol
@@ -48,31 +49,32 @@ final class GalleryViewModel: ObservableObject {
         if imageURLsToShow.isEmpty {
             let startTime = Date()
             print("初期画像の読み込み開始: 現在0枚 → 目標\(Self.targetInitialDisplayCount)枚")
-            isLoading = true
+            isInitializing = true
+            print("koko")
             Task {
                 do {
                     self.imageURLsToShow = try await fetchImages(imageCount: Self.targetInitialDisplayCount)
                     let endTime = Date()
                     let timeInterval = endTime.timeIntervalSince(startTime)
                     print("初期画像の読み込み完了: \(String(format: "%.2f", timeInterval))秒")
-                    self.isLoading = false
+                    self.isInitializing = false
                     await loader.startPrefetchingIfNeeded()
                 } catch let error as NSError {
                     print("loadInitialImages でエラーが発生: \(error.localizedDescription)")
                     self.errorMessage = error.localizedDescription
                     self.imageURLsToShow = []
-                    self.isLoading = false
+                    self.isInitializing = false
                 }
             }
         }
     }
 
     func fetchAdditionalImages() async {
-        guard !isLoading else {
+        guard !isAdditionalFetching && !isInitializing else {
             print("既にローディング中のため、スキップします")
             return
         }
-        isLoading = true
+        isAdditionalFetching = true
         errorMessage = nil
 
         do {
@@ -83,6 +85,7 @@ final class GalleryViewModel: ObservableObject {
             if imageURLsToShow.count > Self.maxImageCount {
                 print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
                 clearDisplayedImages()
+                loadInitialImages()
                 return
             }
 
@@ -92,21 +95,20 @@ final class GalleryViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
 
-        isLoading = false
+        isAdditionalFetching = false
     }
 
     func clearDisplayedImages() {
         print("画像のクリアを開始")
-        // 全ての画像をクリア
-        withAnimation(.easeInOut(duration: 0.3)) {
-            imageURLsToShow = []
-            errorMessage = nil
-        }
+        
+        // 配列を空にする
+        imageURLsToShow.removeAll()
+        errorMessage = nil
 
         // Kingfisherのメモリキャッシュをクリア
         KingfisherManager.shared.cache.clearMemoryCache()
-
-        // 初期化処理を実行
-        loadInitialImages()
+        
+        // Kingfisherのディスクキャッシュをクリア
+        KingfisherManager.shared.cache.clearDiskCache()
     }
 }
