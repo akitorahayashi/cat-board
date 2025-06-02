@@ -13,6 +13,7 @@ final class GalleryViewModelTests: XCTestCase {
     var mockLoader: MockCatImageLoader!
     var mockRepository: MockCatImageURLRepository!
     var mockScreener: MockCatImageScreener!
+    var mockPrefetcher: MockCatImagePrefetcher!
 
     override func setUp() {
         super.setUp()
@@ -24,20 +25,21 @@ final class GalleryViewModelTests: XCTestCase {
         mockLoader = nil
         mockRepository = nil
         mockScreener = nil
+        mockPrefetcher = nil
         super.tearDown()
     }
 
     private func setupViewModel(
-        mockImages: [CatImageURLModel] = TestResources.createMockCatImageURLModels(count: 10),
         error: Error? = nil
     ) {
-        mockScreener = MockCatImageScreener(mockImages: mockImages, error: error)
+        mockScreener = MockCatImageScreener(error: error)
         mockLoader = MockCatImageLoader(screener: mockScreener)
-        viewModel = GalleryViewModel(repository: mockRepository, loader: mockLoader)
-    }
-
-    private func waitForAsyncOperation() async {
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        mockPrefetcher = MockCatImagePrefetcher()
+        viewModel = GalleryViewModel(
+            repository: mockRepository,
+            loader: mockLoader,
+            prefetcher: mockPrefetcher
+        )
     }
 
     /// 初期画像の読み込みが正しく行われることを確認する
@@ -50,7 +52,7 @@ final class GalleryViewModelTests: XCTestCase {
         viewModel.loadInitialImages()
         XCTAssertTrue(viewModel.isInitializing)
 
-        await waitForAsyncOperation()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
 
         XCTAssertFalse(viewModel.isInitializing)
         XCTAssertEqual(viewModel.imageURLsToShow.count, GalleryViewModel.targetInitialDisplayCount)
@@ -58,10 +60,10 @@ final class GalleryViewModelTests: XCTestCase {
 
     /// 追加の画像が正しく取得されることを確認する
     func testFetchAdditionalImages() async {
-        setupViewModel(mockImages: TestResources.createMockCatImageURLModels(count: 20))
+        setupViewModel()
 
         viewModel.loadInitialImages()
-        await waitForAsyncOperation()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
         let initialCount = viewModel.imageURLsToShow.count
 
         await viewModel.fetchAdditionalImages()
@@ -85,7 +87,7 @@ final class GalleryViewModelTests: XCTestCase {
         setupViewModel()
 
         viewModel.loadInitialImages()
-        await waitForAsyncOperation()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
         XCTAssertFalse(viewModel.imageURLsToShow.isEmpty)
 
         viewModel.clearDisplayedImages()
@@ -96,14 +98,11 @@ final class GalleryViewModelTests: XCTestCase {
 
     /// 最大画像数（300枚）に達した場合、画像をクリアして再読み込みすることを確認する
     func testMaxImageCountReached() async {
-        setupViewModel(
-            mockImages: TestResources
-                .createMockCatImageURLModels(count: GalleryViewModel.maxImageCount + 10)
-        )
+        setupViewModel()
 
         // 初期画像を読み込む
         viewModel.loadInitialImages()
-        await waitForAsyncOperation()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
         let initialCount = viewModel.imageURLsToShow.count
 
         // 最大画像数に達するまで追加取得
@@ -122,10 +121,10 @@ final class GalleryViewModelTests: XCTestCase {
 
     /// スクリーニング後の画像が正しく表示されることを確認する
     func testLoadImagesWithScreening() async {
-        setupViewModel(mockImages: TestResources.createMockCatImageURLModels(count: 5))
+        setupViewModel()
 
         viewModel.loadInitialImages()
-        await waitForAsyncOperation()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
 
         XCTAssertEqual(viewModel.imageURLsToShow.count, GalleryViewModel.targetInitialDisplayCount)
         XCTAssertFalse(viewModel.isInitializing)
@@ -134,11 +133,10 @@ final class GalleryViewModelTests: XCTestCase {
     /// スクリーニングでエラーが発生した場合の動作を確認する
     func testLoadImagesWithScreeningError() async {
         let error = NSError(domain: "test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Screening failed"])
-        let mockImages = TestResources.createMockCatImageURLModels(count: 5)
-        setupViewModel(mockImages: mockImages, error: error)
+        setupViewModel(error: error)
 
         viewModel.loadInitialImages()
-        await waitForAsyncOperation()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
 
         // エラーが発生した場合、エラーメッセージが設定され、画像が空になることを確認
         XCTAssertTrue(viewModel.imageURLsToShow.isEmpty)
