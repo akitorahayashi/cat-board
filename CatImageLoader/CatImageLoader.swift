@@ -86,7 +86,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
     // MARK: - Private Methods
 
     private func loadImageData(from models: [CatImageURLModel]) async throws -> [(imageData: Data, model: CatImageURLModel)] {
-        print("画像のロードを開始します: \(models.count)枚")
         var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
 
         for (index, item) in models.enumerated() {
@@ -110,7 +109,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
 
                 if let imageData = result.image.jpegData(compressionQuality: 0.8) {
                     loadedImages.append((imageData: imageData, model: item))
-                    print("画像のロードが完了しました: \(index + 1)/\(models.count)枚")
                 }
             } catch let error as NSError {
                 if error.domain == NSURLErrorDomain, error.code == NSURLErrorNotConnectedToInternet {
@@ -121,7 +119,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 continue
             }
         }
-        print("画像のロードが完了しました: \(loadedImages.count)枚")
         return loadedImages
     }
 

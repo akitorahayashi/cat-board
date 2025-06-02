@@ -37,30 +37,29 @@ public actor CatImageScreener: CatImageScreenerProtocol {
     public nonisolated func screenImages(
         imageDataWithModels: [(imageData: Data, model: CatImageURLModel)]
     ) async throws -> [CatImageURLModel] {
-        print("スクリーニング開始: \(imageDataWithModels.count)枚")
         guard !imageDataWithModels.isEmpty else { return [] }
 
         do {
-            print("スクリーナーの取得を開始")
             let screener = try await getScreener()
-            print("スクリーナーの取得完了: \(screener != nil ? "成功" : "失敗")")
 
+            let currentScreener = await self.screener
             // スクリーナーがnilの場合は全ての画像を安全として返す
-            guard let screener else {
+            guard let currentScreener else {
                 print("スクリーナーの初期化に失敗したため、全ての画像を安全として返します")
                 return imageDataWithModels.map(\.model)
             }
 
-            print("スクリーニング処理を開始")
-            let screeningResults = try await screener.screen(
-                imageDataList: imageDataWithModels.map(\.imageData),
-                probabilityThreshold: Self.screeningProbabilityThreshold,
-                enableLogging: Self.enableLogging
+            let imageDataList = imageDataWithModels.map(\.imageData)
+            let probabilityThreshold = Self.screeningProbabilityThreshold
+            let enableLogging = Self.enableLogging
+
+            let screeningResults = try await currentScreener.screen(
+                imageDataList: imageDataList,
+                probabilityThreshold: probabilityThreshold,
+                enableLogging: enableLogging
             )
-            print("スクリーニング処理が完了")
 
             if !Self.isScreeningEnabled {
-                print("スクリーニング終了: スクリーニング無効のため全ての画像を通過")
                 return imageDataWithModels.map(\.model)
             }
 
@@ -76,7 +75,6 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                     print("スクリーニング結果: \(imageDataWithModels.count)枚中\(results.count)枚が危険と判定")
                     print(screeningResults.generateDetailedReport())
                 }
-                print("スクリーニング終了: 危険と判定された\(results.count)枚を返却")
                 return results
             } else {
                 // 通常モードの場合、safeResultsを使用
@@ -87,7 +85,6 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                     print("スクリーニング結果: \(imageDataWithModels.count)枚中\(results.count)枚が安全と判定")
                     print(screeningResults.generateDetailedReport())
                 }
-                print("スクリーニング終了: 安全と判定された\(results.count)枚を返却")
                 return results
             }
         } catch let error as NSError {
@@ -96,8 +93,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
             if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
                 print("原因: \(underlying.localizedDescription)")
             }
-            // エラーが発生した場合も全ての画像を安全として返す
-            print("スクリーニング終了: エラー発生のため全ての画像を安全として返却")
+            // エラーが発生した場合、全ての画像を安全として返す
             return imageDataWithModels.map(\.model)
         }
     }
