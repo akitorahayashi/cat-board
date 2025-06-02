@@ -46,11 +46,15 @@ final class GalleryViewModel: ObservableObject {
 
     func loadInitialImages() {
         if imageURLsToShow.isEmpty {
+            let startTime = Date()
             print("初期画像の読み込み開始: 現在0枚 → 目標\(Self.targetInitialDisplayCount)枚")
             isLoading = true
             Task {
                 do {
                     self.imageURLsToShow = try await fetchImages(imageCount: Self.targetInitialDisplayCount)
+                    let endTime = Date()
+                    let timeInterval = endTime.timeIntervalSince(startTime)
+                    print("初期画像の読み込み完了: \(String(format: "%.2f", timeInterval))秒")
                     self.isLoading = false
                     await loader.startPrefetchingIfNeeded()
                 } catch let error as NSError {
