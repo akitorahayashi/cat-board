@@ -85,8 +85,9 @@ final class GalleryViewModel: ObservableObject {
 
             // 必要な枚数に達していない場合、追加で取得
             if result.count < requiredImageCount {
+                let currentCount = result.count
                 await MainActor.run {
-                    print("追加取得が必要: 現在\(result.count)枚 → 目標\(requiredImageCount)枚のため、次のバッチを取得します")
+                    print("追加取得が必要: 現在\(currentCount)枚 → 目標\(requiredImageCount)枚のため、次のバッチを取得します")
                 }
             }
         }
