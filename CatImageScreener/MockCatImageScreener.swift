@@ -1,4 +1,3 @@
-import CatImageScreener
 import CBModel
 import Foundation
 
@@ -23,7 +22,7 @@ public actor MockCatImageScreener: CatImageScreenerProtocol {
 
         // ランダムに指定された確率で画像を返す
         return imageDataWithModels.compactMap { model in
-            Float.random(in: 0...1) < screeningProbability ? model.model : nil
+            Float.random(in: 0 ... 1) < screeningProbability ? model.model : nil
         }
     }
 }

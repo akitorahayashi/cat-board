@@ -56,7 +56,6 @@ public actor CatImagePrefetcher {
 
         // 前回のタスクをキャンセル
         prefetchTask?.cancel()
-        await prefetchTask?.value // キャンセル完了を待機
 
         isPrefetching = true
         prefetchTask = Task { [self] in
@@ -73,11 +72,10 @@ public actor CatImagePrefetcher {
             let remainingCount = Self.targetPrefetchCount - currentCount
             print("プリフェッチ開始: 現在\(currentCount)枚 → 目標\(Self.targetPrefetchCount)枚 (残り\(remainingCount)枚)")
 
-            var totalFetched = 0
-            var totalScreened = 0
+            var attempts = 0
 
             while prefetchedImages.count < Self.targetPrefetchCount,
-                  totalFetched < Self.maxFetchAttempts * Self.prefetchBatchCount
+                  attempts < Self.maxFetchAttempts
             {
                 if Task.isCancelled {
                     print("プリフェッチがキャンセルされました")
@@ -94,8 +92,7 @@ public actor CatImagePrefetcher {
                 let screenedModels = try await screener.screenImages(imageDataWithModels: loadedImages)
 
                 // 4. ログ情報を集計
-                totalFetched += Self.prefetchBatchCount
-                totalScreened += screenedModels.count
+                attempts += 1
                 prefetchedImages += screenedModels
 
                 // 5. ログ出力

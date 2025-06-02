@@ -85,23 +85,18 @@ public actor MockCatImageURLRepository: CatImageURLRepositoryProtocol {
 
         refillTask = Task { [self] in
             do {
-                if loadedImageURLs.count > loadedURLThreshold { return }
+                while loadedImageURLs.count <= loadedURLThreshold {
+                    let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
+                    print(
+                        "loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)"
+                    )
 
-                let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
-                print(
-                    "loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)"
-                )
-
-                let fetched = try await apiClient.fetchImageURLs(
-                    totalCount: neededToLoad,
-                    batchSize: apiFetchBatchSize
-                )
-                loadedImageURLs += fetched
-                print("APIからloadedImageURLsへ補充: \(fetched.count)枚追加 → 現在\(loadedImageURLs.count)枚")
-
-                if loadedImageURLs.count <= loadedURLThreshold {
-                    print("loadedImageURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
-                    startBackgroundURLRefillLoadedURLs()
+                    let fetched = try await apiClient.fetchImageURLs(
+                        totalCount: neededToLoad,
+                        batchSize: apiFetchBatchSize
+                    )
+                    loadedImageURLs += fetched
+                    print("APIからloadedImageURLsへ補充: \(fetched.count)枚追加 → 現在\(loadedImageURLs.count)枚")
                 }
             } catch {
                 print("loadedImageURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
