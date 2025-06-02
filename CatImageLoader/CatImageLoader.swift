@@ -114,7 +114,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                             r.timeoutInterval = 10
                             return r
                         }),
-                        .diskCacheExpiration(.expired),
                     ]
                 )
 

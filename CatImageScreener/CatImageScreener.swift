@@ -39,6 +39,11 @@ public actor CatImageScreener: CatImageScreenerProtocol {
     ) async throws -> [CatImageURLModel] {
         guard !imageDataWithModels.isEmpty else { return [] }
 
+        // スクリーニングが無効な場合は早期リターン
+        if !Self.isScreeningEnabled {
+            return imageDataWithModels.map(\.model)
+        }
+
         do {
             let screener = try await getScreener()
 
@@ -57,10 +62,6 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                 probabilityThreshold: probabilityThreshold,
                 enableLogging: enableLogging
             )
-
-            if !Self.isScreeningEnabled {
-                return imageDataWithModels.map(\.model)
-            }
 
             // スクリーニング結果から元のモデルを取得するために、モデルの配列を準備
             let models = imageDataWithModels.map(\.model)

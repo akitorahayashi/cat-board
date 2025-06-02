@@ -96,6 +96,7 @@ final class GalleryViewModel: ObservableObject {
                 print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
                 clearDisplayedImages()
                 loadInitialImages()
+                isAdditionalFetching = false
                 return
             }
 
