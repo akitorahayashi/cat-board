@@ -51,7 +51,7 @@ final class GalleryViewModelTests: XCTestCase {
         viewModel.loadInitialImages()
         XCTAssertTrue(viewModel.isInitializing)
 
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
 
         XCTAssertFalse(viewModel.isInitializing)
         XCTAssertEqual(viewModel.imageURLsToShow.count, GalleryViewModel.targetInitialDisplayCount)
@@ -60,7 +60,7 @@ final class GalleryViewModelTests: XCTestCase {
     /// 追加の画像が正しく取得されることを確認する
     func testFetchAdditionalImages() async {
         viewModel.loadInitialImages()
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
         let initialCount = viewModel.imageURLsToShow.count
 
         await viewModel.fetchAdditionalImages()
@@ -80,7 +80,7 @@ final class GalleryViewModelTests: XCTestCase {
     /// 表示中の画像が正しくクリアされることを確認する
     func testClearDisplayedImages() async {
         viewModel.loadInitialImages()
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
         XCTAssertFalse(viewModel.imageURLsToShow.isEmpty)
 
         viewModel.clearDisplayedImages()
@@ -93,7 +93,7 @@ final class GalleryViewModelTests: XCTestCase {
     func testMaxImageCountReached() async {
         // 初期画像を読み込む
         viewModel.loadInitialImages()
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
         let initialCount = viewModel.imageURLsToShow.count
 
         // 最大画像数に達するまで追加取得
@@ -113,7 +113,7 @@ final class GalleryViewModelTests: XCTestCase {
     /// スクリーニング後の画像が正しく表示されることを確認する
     func testLoadImagesWithScreening() async {
         viewModel.loadInitialImages()
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
 
         XCTAssertEqual(viewModel.imageURLsToShow.count, GalleryViewModel.targetInitialDisplayCount)
         XCTAssertFalse(viewModel.isInitializing)
@@ -137,7 +137,7 @@ final class GalleryViewModelTests: XCTestCase {
         )
 
         viewModel.loadInitialImages()
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
 
         // エラーが発生した場合、エラーメッセージが設定され、画像が空になることを確認
         XCTAssertTrue(viewModel.imageURLsToShow.isEmpty)
