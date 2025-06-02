@@ -73,6 +73,7 @@ public actor CatImagePrefetcher {
             print("プリフェッチ開始: 現在\(currentCount)枚 → 目標\(Self.targetPrefetchCount)枚 (残り\(remainingCount)枚)")
 
             var attempts = 0
+            var totalFetched = 0
 
             while prefetchedImages.count < Self.targetPrefetchCount,
                   attempts < Self.maxFetchAttempts
@@ -93,6 +94,7 @@ public actor CatImagePrefetcher {
 
                 // 4. ログ情報を集計
                 attempts += 1
+                totalFetched += models.count
                 prefetchedImages += screenedModels
 
                 // 5. ログ出力
@@ -102,6 +104,7 @@ public actor CatImagePrefetcher {
             }
         } catch {
             print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
+            isPrefetching = false
         }
     }
 }

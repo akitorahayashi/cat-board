@@ -20,7 +20,7 @@ final class GalleryViewModelTests: XCTestCase {
         super.setUp()
         mockRepository = MockCatImageURLRepository(apiClient: MockCatAPIClient())
         mockScreener = MockCatImageScreener()
-        mockLoader = MockCatImageLoader(screener: mockScreener)
+        mockLoader = MockCatImageLoader()
         prefetcher = CatImagePrefetcher(
             repository: mockRepository,
             imageLoader: mockLoader,
@@ -123,7 +123,7 @@ final class GalleryViewModelTests: XCTestCase {
     func testLoadImagesWithScreeningError() async {
         let error = NSError(domain: "test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Screening failed"])
         mockScreener = MockCatImageScreener(error: error)
-        mockLoader = MockCatImageLoader(screener: mockScreener)
+        mockLoader = MockCatImageLoader()
         prefetcher = CatImagePrefetcher(
             repository: mockRepository,
             imageLoader: mockLoader,

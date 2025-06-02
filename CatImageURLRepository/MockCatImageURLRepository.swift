@@ -57,10 +57,10 @@ public actor MockCatImageURLRepository: CatImageURLRepositoryProtocol {
     }
 
     private func getImageURLsFromLoadedURLs(count: Int) async throws -> [CatImageURLModel] {
-        let count = min(count, loadedImageURLs.count)
-        let provided = Array(loadedImageURLs.prefix(count))
-        loadedImageURLs = Array(loadedImageURLs.dropFirst(count))
-        print("loadedImageURLsから提供: \(count)枚提供（残り\(loadedImageURLs.count)枚）")
+        let actualCount = min(count, loadedImageURLs.count)
+        let provided = Array(loadedImageURLs.prefix(actualCount))
+        loadedImageURLs = Array(loadedImageURLs.dropFirst(actualCount))
+        print("loadedImageURLsから提供: \(actualCount)枚提供（残り\(loadedImageURLs.count)枚）")
         return provided
     }
 

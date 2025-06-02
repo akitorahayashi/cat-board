@@ -4,8 +4,6 @@ import CBModel
 import Foundation
 
 public struct MockCatImageLoader: CatImageLoaderProtocol {
-    private let screener: CatImageScreenerProtocol?
-
     public var testImageURL: URL {
         let currentFileURL = URL(fileURLWithPath: #filePath)
         return currentFileURL
@@ -14,9 +12,7 @@ public struct MockCatImageLoader: CatImageLoaderProtocol {
             .appendingPathComponent("cat__I3nlhPtP.jpg")
     }
 
-    public init(screener: CatImageScreenerProtocol? = nil) {
-        self.screener = screener
-    }
+    public init() {}
 
     public func loadImageData(from models: [CatImageURLModel]) async throws -> [(
         imageData: Data,

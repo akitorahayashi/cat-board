@@ -38,46 +38,63 @@ final class GalleryViewModel: ObservableObject {
     }
 
     private func fetchImages(requiredImageCount: Int) async throws -> [CatImageURLModel] {
-        let prefetchedCount = await prefetcher.getPrefetchedCount()
-        if prefetchedCount >= requiredImageCount {
-            let images = await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
-            print(
-                "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
-            )
-            return images
-        } else {
-            print("プリフェッチが不足しているため直接取得を開始: \(requiredImageCount)枚)")
+        try await Task.detached {
+            let prefetchedCount = await self.prefetcher.getPrefetchedCount()
+            if prefetchedCount >= requiredImageCount {
+                let images = await self.prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
+                await MainActor.run {
+                    print(
+                        "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
+                    )
+                }
+                return images
+            } else {
+                await MainActor.run {
+                    print("プリフェッチが不足しているため直接取得を開始: \(requiredImageCount)枚)")
+                }
 
-            var result: [CatImageURLModel] = []
+                var result: [CatImageURLModel] = []
+                let maxRetry = 5  // 最大リトライ回数
 
-            while result.count < requiredImageCount {
-                // 1. 画像URLの取得
-                let models = try await repository.getNextImageURLs(count: Self.batchDisplayCount)
+                for _ in 0..<maxRetry where result.count < requiredImageCount {
+                    // 1. 画像URLの取得
+                    let models = try await self.repository.getNextImageURLs(count: Self.batchDisplayCount)
+                    
+                    if models.isEmpty {
+                        throw NSError(domain: "GalleryViewModel",
+                                    code: -2,
+                                    userInfo: [NSLocalizedDescriptionKey: "URL repository exhausted"])
+                    }
 
-                // 2. 1枚ずつ処理
-                for model in models {
-                    if result.count >= requiredImageCount { break }
+                    // 2. 1枚ずつ処理
+                    for model in models {
+                        if result.count >= requiredImageCount { break }
 
-                    // 2.1 画像のダウンロード
-                    let loadedImages = try await imageLoader.loadImageData(from: [model])
+                        // 2.1 画像のダウンロード
+                        let loadedImages = try await self.imageLoader.loadImageData(from: [model])
 
-                    // 2.2 スクリーニングの実行
-                    let screenedModels = try await screener.screenImages(imageDataWithModels: loadedImages)
+                        // 2.2 スクリーニングの実行
+                        let screenedModels = try await self.screener.screenImages(imageDataWithModels: loadedImages)
 
-                    if let screenedModel = screenedModels.first {
-                        result.append(screenedModel)
+                        if let screenedModel = screenedModels.first {
+                            result.append(screenedModel)
+                        }
+                    }
+
+                    // 必要な枚数に達していない場合、追加で取得
+                    if result.count < requiredImageCount {
+                        await MainActor.run {
+                            print("追加取得が必要: 現在\(result.count)枚 → 目標\(requiredImageCount)枚のため、次のバッチを取得します")
+                        }
                     }
                 }
 
-                // 必要な枚数に達していない場合、追加で取得
-                if result.count < requiredImageCount {
-                    print("追加取得が必要: 現在\(result.count)枚 → 目標\(requiredImageCount)枚のため、次のバッチを取得します")
+                await MainActor.run {
+                    print("画像直接取得完了: \(result.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
                 }
+                return result
             }
-
-            print("画像直接取得完了: \(result.count)枚追加 → 現在\(imageURLsToShow.count)枚表示中")
-            return result
-        }
+        }.value
     }
 
     func loadInitialImages() {
@@ -89,7 +106,7 @@ final class GalleryViewModel: ObservableObject {
             Task {
                 do {
                     let numberOfBatches = 6
-                    // 5個ずつ6回に分けて取得
+                    // targetInitialDisplayCount / numberOfBatches
                     for i in 0 ..< numberOfBatches {
                         let newImages = try await fetchImages(
                             requiredImageCount: Self

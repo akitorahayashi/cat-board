@@ -41,6 +41,7 @@ targets:
       - target: CatImageLoader
       - target: CatImageScreener
       - target: CatImagePrefetcher
+      - target: CatAPIClient
       - package: TieredGridLayout
         product: TieredGridLayout
       - package: Kingfisher
