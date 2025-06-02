@@ -17,7 +17,7 @@ final class GalleryViewModel: ObservableObject {
     // 画像取得関連
     static let maxImageCount = 300
     static let targetInitialDisplayCount = 30
-    static let batchDisplayCount = 10
+    static let batchDisplayCount = 5
 
     // MARK: - Initialization
 
@@ -50,13 +50,23 @@ final class GalleryViewModel: ObservableObject {
             let startTime = Date()
             print("初期画像の読み込み開始: 現在0枚 → 目標\(Self.targetInitialDisplayCount)枚")
             isInitializing = true
-            print("koko")
+            
             Task {
                 do {
-                    self.imageURLsToShow = try await fetchImages(imageCount: Self.targetInitialDisplayCount)
-                    let endTime = Date()
-                    let timeInterval = endTime.timeIntervalSince(startTime)
-                    print("初期画像の読み込み完了: \(String(format: "%.2f", timeInterval))秒")
+                    // 5個ずつ6回に分けて取得
+                    for i in 0..<6 {
+                        let newImages = try await fetchImages(imageCount: Self.batchDisplayCount)
+                        self.imageURLsToShow += newImages
+                        print("バッチ\(i + 1)完了: \(newImages.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
+                        
+                        // 最初のバッチ完了時に時間を記録
+                        if i == 0 {
+                            let endTime = Date()
+                            let timeInterval = endTime.timeIntervalSince(startTime)
+                            print("初期画像の読み込み完了: \(String(format: "%.2f", timeInterval))秒")
+                        }
+                    }
+                    
                     self.isInitializing = false
                     await loader.startPrefetchingIfNeeded()
                 } catch let error as NSError {
