@@ -17,7 +17,7 @@ final class CatImageURLRepositoryTests: XCTestCase {
         modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
 
         // モックデータの設定
-        mockAPIClient = MockCatAPIClient(totalCount: 10)
+        mockAPIClient = MockCatAPIClient()
         repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: mockAPIClient)
     }
 
@@ -58,7 +58,7 @@ final class CatImageURLRepositoryTests: XCTestCase {
         XCTAssertEqual(firstResult.count, 3, "最初の取得で全キャッシュを使用")
 
         // 新しい画像URLを設定
-        mockAPIClient = MockCatAPIClient(totalCount: 5)
+        mockAPIClient = MockCatAPIClient()
         repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: mockAPIClient)
 
         // キャッシュが空の状態で取得
@@ -76,7 +76,7 @@ final class CatImageURLRepositoryTests: XCTestCase {
         XCTAssertEqual(firstResult.count, 2, "最初の取得でキャッシュを減らす")
 
         // 新しい画像URLを設定
-        mockAPIClient = MockCatAPIClient(totalCount: 5)
+        mockAPIClient = MockCatAPIClient()
         repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: mockAPIClient)
 
         // 残り1つのキャッシュを使用

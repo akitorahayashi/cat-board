@@ -88,9 +88,10 @@ final class GalleryViewModel: ObservableObject {
 
             Task {
                 do {
+                    let numberOfBatches = 6
                     // 5個ずつ6回に分けて取得
-                    for i in 0 ..< 6 {
-                        let newImages = try await fetchImages(requiredImageCount: Self.batchDisplayCount)
+                    for i in 0 ..< numberOfBatches {
+                        let newImages = try await fetchImages(requiredImageCount: Self.targetInitialDisplayCount / numberOfBatches)
                         self.imageURLsToShow += newImages
                         print("バッチ\(i + 1)完了: \(newImages.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
 

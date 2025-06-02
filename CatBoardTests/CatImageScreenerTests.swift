@@ -1,6 +1,8 @@
+import CatImageScreener
+import ScaryCatScreeningKit
+import CatAPIClient
+import CatImageLoader
 import XCTest
-@testable import CatImageScreener
-@testable import ScaryCatScreeningKit
 
 final class CatImageScreenerTests: XCTestCase {
     var screener: CatImageScreener!
@@ -37,7 +39,7 @@ final class CatImageScreenerTests: XCTestCase {
     func testProcessImageWithMockLoader() async throws {
         let mockLoader = MockCatImageLoader()
         // urlを取得するが、ロードせず、Dataが使われる
-        let mockAPIClient = MockCatAPIClient(totalCount: 2)
+        let mockAPIClient = MockCatAPIClient()
         
         let testModels = try await mockAPIClient.fetchImageURLs(totalCount: 2, batchSize: 2)
         let loadedImages = try await mockLoader.loadImageData(from: testModels)

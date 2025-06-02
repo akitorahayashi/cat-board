@@ -11,7 +11,7 @@ public struct MockCatImageLoader: CatImageLoaderProtocol {
         return currentFileURL
             .deletingLastPathComponent() // CatImageLoader
             .appendingPathComponent("SampleImage")
-            .appendingPathComponent("MTU1MDA0NA.jpg")
+            .appendingPathComponent("cat__I3nlhPtP.jpg")
     }
 
     public init(screener: CatImageScreenerProtocol? = nil) {
