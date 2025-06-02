@@ -48,10 +48,10 @@ final class GalleryViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.imageURLsToShow.isEmpty)
 
         viewModel.loadInitialImages()
-        
+
         // 画像の読み込みが完了するまで待機
         var attempts = 0
-        while viewModel.imageURLsToShow.count < GalleryViewModel.targetInitialDisplayCount && attempts < 50 {
+        while viewModel.imageURLsToShow.count < GalleryViewModel.targetInitialDisplayCount, attempts < 50 {
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒待機
             attempts += 1
         }
@@ -76,17 +76,17 @@ final class GalleryViewModelTests: XCTestCase {
         // 初期画像を読み込む
         viewModel.loadInitialImages()
         try? await Task.sleep(nanoseconds: 1_000_000_000)
-        
+
         // 最初の追加取得を開始
         let initialCount = viewModel.imageURLsToShow.count
         let firstFetch = Task { await viewModel.fetchAdditionalImages() }
-        
+
         // 追加取得中に別の追加取得を試みる
         await viewModel.fetchAdditionalImages()
-        
+
         // 最初の追加取得が完了するのを待つ
         await firstFetch.value
-        
+
         // 追加取得が1回だけ行われたことを確認
         XCTAssertEqual(viewModel.imageURLsToShow.count, initialCount + GalleryViewModel.batchDisplayCount)
     }

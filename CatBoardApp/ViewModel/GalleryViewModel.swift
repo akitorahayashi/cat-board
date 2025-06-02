@@ -38,9 +38,9 @@ final class GalleryViewModel: ObservableObject {
 
     private func fetchImages(requiredImageCount: Int) async throws -> [CatImageURLModel] {
         // 1. まずプリフェッチで足りるかチェック
-        let prefetchedCount = await self.prefetcher.getPrefetchedCount()
+        let prefetchedCount = await prefetcher.getPrefetchedCount()
         if prefetchedCount >= requiredImageCount {
-            let images = await self.prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
+            let images = await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
             await MainActor.run {
                 print(
                     "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
@@ -55,15 +55,17 @@ final class GalleryViewModel: ObservableObject {
         }
 
         var result: [CatImageURLModel] = []
-        let maxRetry = 5  // 最大リトライ回数
+        let maxRetry = 5 // 最大リトライ回数
 
-        for _ in 0..<maxRetry where result.count < requiredImageCount {
+        for _ in 0 ..< maxRetry where result.count < requiredImageCount {
             // 2.1 画像URLの取得
             let models = try await self.repository.getNextImageURLs(count: Self.batchDisplayCount)
             if models.isEmpty {
-                throw NSError(domain: "GalleryViewModel",
-                              code: -2,
-                              userInfo: [NSLocalizedDescriptionKey: "URL repository exhausted"])
+                throw NSError(
+                    domain: "GalleryViewModel",
+                    code: -2,
+                    userInfo: [NSLocalizedDescriptionKey: "URL repository exhausted"]
+                )
             }
 
             // 2.2 1枚ずつ処理
@@ -138,7 +140,7 @@ final class GalleryViewModel: ObservableObject {
     }
 
     func fetchAdditionalImages() async {
-        guard !self.isAdditionalFetching, !self.isInitializing else {
+        guard !isAdditionalFetching, !isInitializing else {
             print("既にローディング中のため、スキップします")
             return
         }
