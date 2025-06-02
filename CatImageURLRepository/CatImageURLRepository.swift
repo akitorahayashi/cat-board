@@ -15,7 +15,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     private let maxStoredURLCount = 300
     private let storedURLThreshold = 100
     private let apiFetchBatchSize = 10
-
+    
     public init(modelContainer: ModelContainer, apiClient: CatAPIClientProtocol) {
         self.modelContainer = modelContainer
         self.apiClient = apiClient

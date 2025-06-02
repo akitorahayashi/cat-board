@@ -2,25 +2,28 @@ import CatImageScreener
 import CBModel
 import Foundation
 
-public final class MockCatImageScreener: CatImageScreenerProtocol {
-    private let mockImages: [CatImageURLModel]
+public actor MockCatImageScreener: CatImageScreenerProtocol {
     private let error: Error?
+    private let screeningProbability: Float
 
-    public init(mockImages: [CatImageURLModel] = [], error: Error? = nil) {
-        self.mockImages = mockImages
+    public init(
+        error: Error? = nil,
+        screeningProbability: Float = 0.5
+    ) {
         self.error = error
+        self.screeningProbability = screeningProbability
     }
 
-    public func screenImages(imageDataWithModels: [(imageData: Data, model: CatImageURLModel)]) async throws
-        -> [CatImageURLModel]
-    {
+    public func screenImages(
+        imageDataWithModels: [(imageData: Data, model: CatImageURLModel)]
+    ) async throws -> [CatImageURLModel] {
         if let error {
             throw error
         }
-        
-        // ランダムに1/2の確率で画像を返す
+
+        // ランダムに指定された確率で画像を返す
         return imageDataWithModels.compactMap { model in
-            Bool.random() ? model.model : nil
+            Float.random(in: 0...1) < screeningProbability ? model.model : nil
         }
     }
 }

@@ -35,19 +35,19 @@ final class CatImagePrefetcherTests: XCTestCase {
     }
 
     /// 初期状態ではプリフェッチされた画像が0枚であることを確認
-    func testGetPrefetchedCount_初期状態は0() async {
+    func testInitialPrefetchedCount() async {
         let count = await prefetcher.getPrefetchedCount()
         XCTAssertEqual(count, 0)
     }
 
     /// 初期状態では画像を取得できないことを確認
-    func testGetPrefetchedImages_初期状態は空配列() async {
+    func testInitialPrefetchedImages() async {
         let images = await prefetcher.getPrefetchedImages(imageCount: 5)
         XCTAssertTrue(images.isEmpty)
     }
 
     /// プリフェッチを実行すると画像が取得できることを確認
-    func testStartPrefetchingIfNeeded_プリフェッチが実行される() async {
+    func testStartPrefetching() async {
         let testImageURLs = [
             CatImageURLModel(imageURL: "https://example.com/image1.jpg"),
             CatImageURLModel(imageURL: "https://example.com/image2.jpg"),
@@ -66,7 +66,7 @@ final class CatImagePrefetcherTests: XCTestCase {
     }
 
     /// 指定した枚数分の画像を取得できることを確認
-    func testGetPrefetchedImages_指定した枚数分取得できる() async {
+    func testGetRequestedImageCount() async {
         let testImageURLs = [
             CatImageURLModel(imageURL: "https://example.com/image1.jpg"),
             CatImageURLModel(imageURL: "https://example.com/image2.jpg"),
@@ -89,7 +89,7 @@ final class CatImagePrefetcherTests: XCTestCase {
     }
 
     /// プリフェッチの重複実行を防止できることを確認
-    func testStartPrefetchingIfNeeded_重複実行は無視される() async {
+    func testIgnoreDuplicatePrefetching() async {
         let testImageURLs = [
             CatImageURLModel(imageURL: "https://example.com/image1.jpg"),
             CatImageURLModel(imageURL: "https://example.com/image2.jpg"),
@@ -109,7 +109,7 @@ final class CatImagePrefetcherTests: XCTestCase {
     }
 
     /// エラー発生時も安全に処理できることを確認
-    func testStartPrefetchingIfNeeded_エラー発生時も安全に処理される() async {
+    func testHandlePrefetchingError() async {
         mockRepository = MockCatImageURLRepository(error: NSError(domain: "test", code: -1))
         prefetcher = CatImagePrefetcher(
             repository: mockRepository,

@@ -14,7 +14,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
         screener = nil
     }
 
-    private func getScreener() async throws -> ScaryCatScreener? {
+    public func getScreener() async throws -> ScaryCatScreener? {
         if let screener {
             return screener
         } else {

@@ -4,7 +4,7 @@ import UIKit
 public struct CatAPIClient: CatAPIClientProtocol {
     public init() {}
 
-    public func fetchImageURLs(totalCount: Int, batchSize: Int) async throws -> [CatImageURLModel] {
+    public func fetchImageURLs(totalCount: Int, batchSize: Int = 10) async throws -> [CatImageURLModel] {
         var result: [CatImageURLModel] = []
         var pagesRetrieved = 0
 

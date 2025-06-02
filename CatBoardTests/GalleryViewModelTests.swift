@@ -2,10 +2,11 @@ import CatAPIClient
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
+import CatImagePrefetcher
+import CBModel
 import XCTest
 
 @testable import CatBoardApp
-import CBModel
 
 @MainActor
 final class GalleryViewModelTests: XCTestCase {
@@ -13,7 +14,7 @@ final class GalleryViewModelTests: XCTestCase {
     var mockLoader: MockCatImageLoader!
     var mockRepository: MockCatImageURLRepository!
     var mockScreener: MockCatImageScreener!
-    var mockPrefetcher: MockCatImagePrefetcher!
+    var prefetcher: CatImagePrefetcher!
 
     override func setUp() {
         super.setUp()
@@ -25,7 +26,7 @@ final class GalleryViewModelTests: XCTestCase {
         mockLoader = nil
         mockRepository = nil
         mockScreener = nil
-        mockPrefetcher = nil
+        prefetcher = nil
         super.tearDown()
     }
 
@@ -34,11 +35,16 @@ final class GalleryViewModelTests: XCTestCase {
     ) {
         mockScreener = MockCatImageScreener(error: error)
         mockLoader = MockCatImageLoader(screener: mockScreener)
-        mockPrefetcher = MockCatImagePrefetcher()
+        prefetcher = CatImagePrefetcher(
+            repository: mockRepository,
+            imageLoader: mockLoader,
+            screener: mockScreener
+        )
         viewModel = GalleryViewModel(
             repository: mockRepository,
-            loader: mockLoader,
-            prefetcher: mockPrefetcher
+            imageLoader: mockLoader,
+            screener: mockScreener,
+            prefetcher: prefetcher
         )
     }
 
