@@ -1,7 +1,8 @@
+import CatImageScreener
 import CBModel
 import Foundation
 
-public struct MockCatImageScreener: CatImageScreenerProtocol {
+public final class MockCatImageScreener: CatImageScreenerProtocol {
     private let mockImages: [CatImageURLModel]
     private let error: Error?
 
@@ -10,9 +11,9 @@ public struct MockCatImageScreener: CatImageScreenerProtocol {
         self.error = error
     }
 
-    public func screenImages(
-        imageDataWithModels _: [(imageData: Data, model: CatImageURLModel)]
-    ) async throws -> [CatImageURLModel] {
+    public func screenImages(imageDataWithModels _: [(imageData: Data, model: CatImageURLModel)]) async throws
+        -> [CatImageURLModel]
+    {
         if let error {
             throw error
         }

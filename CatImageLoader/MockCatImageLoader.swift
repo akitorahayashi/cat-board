@@ -4,31 +4,43 @@ import CBModel
 import Foundation
 
 public struct MockCatImageLoader: CatImageLoaderProtocol {
-    public var loadImagesWithScreeningResult: [CatImageURLModel] = []
-    public var loadImagesWithScreeningError: Error?
-    public var prefetchedImages: [CatImageURLModel] = []
-    public var prefetchedCount: Int = 0
+    private let screener: CatImageScreenerProtocol?
 
-    public init() {}
+    public var testImageURL: URL {
+        let currentFileURL = URL(fileURLWithPath: #filePath)
+        return currentFileURL
+            .deletingLastPathComponent() // CatImageLoader
+            .appendingPathComponent("SampleImage")
+            .appendingPathComponent("MTU1MDA0NA.jpg")
+    }
 
-    public func loadImagesWithScreening(count: Int) async throws -> [CatImageURLModel] {
-        if let error = loadImagesWithScreeningError {
-            throw error
+    public init(screener: CatImageScreenerProtocol? = nil) {
+        self.screener = screener
+    }
+
+    public func loadImageData(from models: [CatImageURLModel]) async throws -> [(
+        imageData: Data,
+        model: CatImageURLModel
+    )] {
+        var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
+        loadedImages.reserveCapacity(models.count)
+
+        for (index, model) in models.enumerated() {
+            do {
+                guard let imageData = try? Data(contentsOf: testImageURL) else {
+                    throw NSError(
+                        domain: "MockCatImageLoader",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Sample image not found"]
+                    )
+                }
+                loadedImages.append((imageData: imageData, model: model))
+            } catch {
+                print("画像のダウンロードに失敗 [\(index + 1)/\(models.count)]: \(error.localizedDescription)")
+                continue
+            }
         }
-        let result = Array(loadImagesWithScreeningResult.prefix(count))
-        print("MockCatImageLoader: 要求数\(count)枚に対して\(result.count)枚を返却")
-        return result
-    }
 
-    public func getPrefetchedCount() async -> Int {
-        prefetchedCount
-    }
-
-    public func getPrefetchedImages(imageCount: Int) async -> [CatImageURLModel] {
-        Array(prefetchedImages.prefix(imageCount))
-    }
-
-    public func startPrefetchingIfNeeded() async {
-        // プリフェッチは無効化
+        return loadedImages
     }
 }

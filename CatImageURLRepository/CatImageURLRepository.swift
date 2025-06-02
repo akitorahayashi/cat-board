@@ -4,10 +4,11 @@ import Foundation
 import SwiftData
 
 public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
-    private var loadedImageURLs: [CatImageURLModel] = []
-    private var refillTask: Task<Void, Never>?
     private let modelContainer: ModelContainer
     private let apiClient: CatAPIClientProtocol
+
+    private var loadedImageURLs: [CatImageURLModel] = []
+    private var refillTask: Task<Void, Never>?
 
     private let maxLoadedURLCount = 300
     private let loadedURLThreshold = 100
