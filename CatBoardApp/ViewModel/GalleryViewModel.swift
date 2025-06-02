@@ -16,7 +16,7 @@ final class GalleryViewModel: ObservableObject {
     private let repository: CatImageURLRepositoryProtocol
     private let imageLoader: CatImageLoaderProtocol
     private let screener: CatImageScreenerProtocol
-    private let prefetcher: CatImagePrefetcherProtocol
+    private let prefetcher: CatImagePrefetcher
 
     // 画像取得関連
     static let maxImageCount = 300
@@ -29,7 +29,7 @@ final class GalleryViewModel: ObservableObject {
         repository: CatImageURLRepositoryProtocol,
         imageLoader: CatImageLoaderProtocol,
         screener: CatImageScreenerProtocol,
-        prefetcher: CatImagePrefetcherProtocol
+        prefetcher: CatImagePrefetcher
     ) {
         self.repository = repository
         self.imageLoader = imageLoader

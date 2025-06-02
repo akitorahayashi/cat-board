@@ -11,12 +11,16 @@ public final class MockCatImageScreener: CatImageScreenerProtocol {
         self.error = error
     }
 
-    public func screenImages(imageDataWithModels _: [(imageData: Data, model: CatImageURLModel)]) async throws
+    public func screenImages(imageDataWithModels: [(imageData: Data, model: CatImageURLModel)]) async throws
         -> [CatImageURLModel]
     {
         if let error {
             throw error
         }
-        return mockImages
+        
+        // ランダムに1/2の確率で画像を返す
+        return imageDataWithModels.compactMap { model in
+            Bool.random() ? model.model : nil
+        }
     }
 }
