@@ -12,7 +12,7 @@ configs:
 
 settings:
   base:
-    SWIFT_VERSION: 5.9
+    SWIFT_VERSION: 6.0
     MARKETING_VERSION: 1.0
     CURRENT_PROJECT_VERSION: 1
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
@@ -20,7 +20,7 @@ settings:
 packages:
   ScaryCatScreeningKit:
     url: https://github.com/atrh95/scary-cat-screening-kit
-    from: "3.1.2"
+    from: "3.1.3"
     exact: true
   TieredGridLayout:
     url: https://github.com/atrh95/tiered-grid-layout

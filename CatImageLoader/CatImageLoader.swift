@@ -121,6 +121,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 continue
             }
         }
+        print("画像のロードが完了しました: \(loadedImages.count)枚")
         return loadedImages
     }
 
@@ -140,14 +141,14 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                     break
                 }
 
-                // 1. URL取得・画像ダウンロード
+                // 1. 画像のURLを取得・ダウンロード
                 let urls = try await repository.getNextImageURLs(count: Self.prefetchBatchCount)
                 let loadedImages = try await loadImageData(from: urls)
 
-                // 2. スクリーニング実行
+                // 2. スクリーニングの実行
                 let screenedModels = try await screener.screenImages(imageDataWithModels: loadedImages)
 
-                // 3. 集計
+                // 3. ログ情報を集計
                 totalFetched += Self.prefetchBatchCount
                 totalScreened += screenedModels.count
                 prefetchedImages += screenedModels

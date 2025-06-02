@@ -2,6 +2,6 @@ import CatAPIClient
 import CBModel
 import Foundation
 
-public protocol CatImageURLRepositoryProtocol {
+public protocol CatImageURLRepositoryProtocol: Sendable {
     func getNextImageURLs(count: Int) async throws -> [CatImageURLModel]
 }
