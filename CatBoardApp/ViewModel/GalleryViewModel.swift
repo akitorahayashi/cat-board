@@ -156,7 +156,7 @@ final class GalleryViewModel: ObservableObject {
                 if self.imageURLsToShow.count > Self.maxImageCount {
                     print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
                     self.clearDisplayedImages()
-                    Task { await self.loadInitialImages() }
+                    Task { self.loadInitialImages() }
                     self.isAdditionalFetching = false
                     return
                 }

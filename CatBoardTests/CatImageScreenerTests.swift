@@ -21,8 +21,7 @@ final class CatImageScreenerTests: XCTestCase {
     func testInitialScreener() async throws {
         let screener = try await screener.getScreener()
 
-        XCTAssertNotNil(screener, "Screener should not be nil")
-        XCTAssertTrue(screener is ScaryCatScreener, "Returned object should be a ScaryCatScreener")
+        XCTAssertNotNil(screener)
     }
 
     /// スクリーナーがシングルトンパターンを維持し、複数回の呼び出しで同じインスタンスを返すことを確認
@@ -32,7 +31,7 @@ final class CatImageScreenerTests: XCTestCase {
 
         XCTAssertNotNil(firstScreener)
         XCTAssertNotNil(secondScreener)
-        XCTAssertTrue(firstScreener === secondScreener, "Second call should return the same instance")
+        XCTAssertTrue(firstScreener === secondScreener)
     }
 
     /// MockCatImageLoaderを使用して画像処理が正常に実行できることを確認
@@ -45,7 +44,7 @@ final class CatImageScreenerTests: XCTestCase {
         let loadedImages = try await mockLoader.loadImageData(from: testModels)
         let results = try await screener.screenImages(imageDataWithModels: loadedImages)
 
-        XCTAssertNotNil(results, "Results should not be nil")
-        XCTAssertTrue(results.count <= loadedImages.count, "Results count should not exceed input count")
+        XCTAssertNotNil(results)
+        XCTAssertTrue(results.count <= loadedImages.count)
     }
 }

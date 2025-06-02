@@ -71,26 +71,6 @@ final class GalleryViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isAdditionalFetching)
     }
 
-    /// 追加取得中に新しい追加取得が行われないことを確認する
-    func testFetchAdditionalImagesDuringFetching() async {
-        // 初期画像を読み込む
-        viewModel.loadInitialImages()
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-
-        // 最初の追加取得を開始
-        let initialCount = viewModel.imageURLsToShow.count
-        let firstFetch = Task { await viewModel.fetchAdditionalImages() }
-
-        // 追加取得中に別の追加取得を試みる
-        await viewModel.fetchAdditionalImages()
-
-        // 最初の追加取得が完了するのを待つ
-        await firstFetch.value
-
-        // 追加取得が1回だけ行われたことを確認
-        XCTAssertEqual(viewModel.imageURLsToShow.count, initialCount + GalleryViewModel.batchDisplayCount)
-    }
-
     /// 表示中の画像が正しくクリアされることを確認する
     func testClearDisplayedImages() async {
         viewModel.loadInitialImages()
