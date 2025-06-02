@@ -8,10 +8,10 @@ import TieredGridLayout
 
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
-    
+
     private let modelContainer: ModelContainer
     @StateObject private var viewModel: GalleryViewModel
-    
+
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         let imageClient = CatAPIClient()
@@ -28,7 +28,7 @@ struct CatImageGallery: View {
             loader: loader
         ))
     }
-    
+
     var body: some View {
         NavigationView {
             Group {
@@ -39,7 +39,7 @@ struct CatImageGallery: View {
                     ZStack(alignment: .top) {
                         scrollContent
                             .transition(.opacity)
-                        
+
                         // 初期ロード時の ProgressView
                         if viewModel.isInitializing, viewModel.imageURLsToShow.isEmpty {
                             VStack {
@@ -75,7 +75,8 @@ struct CatImageGallery: View {
                         }
                     )
                     .opacity(
-                        !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow.count >= Self
+                        !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
+                            .count >= Self
                             .minImageCountForRefresh ? 1 : 0
                     )
                     .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
@@ -89,7 +90,7 @@ struct CatImageGallery: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
-    
+
     private var errorContent: some View {
         VStack(spacing: 16) {
             Text("エラーが発生しました")
@@ -99,7 +100,7 @@ struct CatImageGallery: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-            
+
             Button(action: {
                 withAnimation {
                     viewModel.clearDisplayedImages()
@@ -114,11 +115,11 @@ struct CatImageGallery: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var scrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             galleryGrid
-            
+
             // 追加ロード中の ProgressView
             if viewModel.isAdditionalFetching, !viewModel.imageURLsToShow.isEmpty {
                 ProgressView()
@@ -130,7 +131,7 @@ struct CatImageGallery: View {
         // 上スクロールできるようにするために回転
         // galleryGrid の中身の要素も回転させている
     }
-    
+
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {

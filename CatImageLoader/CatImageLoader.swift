@@ -30,10 +30,10 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         self.repository = repository
         self.imageClient = imageClient
         self.screener = screener
-        
+
         // Kingfisherのキャッシュ設定
         let diskCache = KingfisherManager.shared.cache.diskStorage
-        
+
         // ディスクキャッシュの制限: 500MB
         diskCache.config.sizeLimit = 500 * 1024 * 1024
         diskCache.config.expiration = .days(3) // 3日間保持
@@ -92,9 +92,12 @@ public actor CatImageLoader: CatImageLoaderProtocol {
 
     // MARK: - Private Methods
 
-    private func loadImageData(from models: [CatImageURLModel]) async throws -> [(imageData: Data, model: CatImageURLModel)] {
+    private func loadImageData(from models: [CatImageURLModel]) async throws -> [(
+        imageData: Data,
+        model: CatImageURLModel
+    )] {
         var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
-        loadedImages.reserveCapacity(models.count) 
+        loadedImages.reserveCapacity(models.count)
 
         for (index, item) in models.enumerated() {
             guard let url = URL(string: item.imageURL) else {
@@ -162,7 +165,8 @@ public actor CatImageLoader: CatImageLoaderProtocol {
 
                 // 4. ログ出力
                 print(
-                    "プリフェッチ進捗: \(loadedImages.count)枚中\(screenedModels.count)枚通過 (現在\(prefetchedImages.count)枚)")
+                    "プリフェッチ進捗: \(loadedImages.count)枚中\(screenedModels.count)枚通過 (現在\(prefetchedImages.count)枚)"
+                )
             }
         } catch {
             print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
