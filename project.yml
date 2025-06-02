@@ -37,10 +37,11 @@ targets:
       - path: CatBoardApp
     dependencies:
       - target: CBModel
-      - target: CatAPIClient
       - target: CatImageURLRepository
       - target: CatImageLoader
       - target: CatImageScreener
+      - target: CatImagePrefetcher
+      - target: CatAPIClient
       - package: TieredGridLayout
         product: TieredGridLayout
       - package: Kingfisher
@@ -129,7 +130,6 @@ targets:
       - path: CatImageLoader
     dependencies:
       - target: CBModel
-      - target: CatAPIClient
       - target: CatImageURLRepository
       - target: CatImageScreener
       - package: Kingfisher
@@ -157,6 +157,23 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         SKIP_INSTALL: "NO"
 
+  CatImagePrefetcher:
+    type: framework
+    platform: iOS
+    sources:
+      - path: CatImagePrefetcher
+    dependencies:
+      - target: CBModel
+      - target: CatImageLoader
+      - package: Kingfisher
+    settings:
+      base:
+        DEVELOPMENT_LANGUAGE: ja
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CatImagePrefetcher
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: "NO"
+
   CatBoardTests:
     type: bundle.unit-test
     platform: iOS
@@ -165,6 +182,10 @@ targets:
     dependencies:
       - target: CatBoardApp
       - target: CBModel
+      - target: CatImageScreener
+      - target: CatImageLoader
+      - target: CatAPIClient
+      - target: CatImageURLRepository
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardTests
