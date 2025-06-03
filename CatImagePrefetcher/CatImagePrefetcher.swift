@@ -80,7 +80,6 @@ public actor CatImagePrefetcher {
         print("プリフェッチ開始: 現在\(currentCount)枚 → 目標\(Self.targetPrefetchCount)枚 (残り\(remainingCount)枚)")
 
         var attempts = 0
-        var totalFetched = 0
 
         while try await getPrefetchedCount() < Self.targetPrefetchCount,
               attempts < Self.maxFetchAttempts
@@ -104,7 +103,6 @@ public actor CatImagePrefetcher {
 
             // 5. ログ情報を集計
             attempts += 1
-            totalFetched += models.count
 
             // 6. ログ出力
             try await print(
