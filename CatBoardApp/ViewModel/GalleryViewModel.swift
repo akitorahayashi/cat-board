@@ -97,9 +97,12 @@ final class GalleryViewModel: ObservableObject {
         numberOfBatches: Int,
         onBatchComplete: @escaping (Int, [CatImageURLModel]) -> Void
     ) async throws {
-        let imagesPerBatch = totalImageCount / numberOfBatches
+        let baseImagesPerBatch = totalImageCount / numberOfBatches
+        let remainder = totalImageCount % numberOfBatches
+
         for i in 0 ..< numberOfBatches {
-            let newImages = try await fetchImages(requiredImageCount: imagesPerBatch)
+            let imagesForThisBatch = baseImagesPerBatch + (i < remainder ? 1 : 0)
+            let newImages = try await fetchImages(requiredImageCount: imagesForThisBatch)
             onBatchComplete(i, newImages)
         }
     }
