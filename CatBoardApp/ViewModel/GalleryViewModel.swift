@@ -100,6 +100,18 @@ final class GalleryViewModel: ObservableObject {
         return finalResult
     }
 
+    private func fetchImagesInBatches(
+        totalImageCount: Int,
+        numberOfBatches: Int,
+        onBatchComplete: @escaping (Int, [CatImageURLModel]) -> Void
+    ) async throws {
+        let imagesPerBatch = totalImageCount / numberOfBatches
+        for i in 0 ..< numberOfBatches {
+            let newImages = try await fetchImages(requiredImageCount: imagesPerBatch)
+            onBatchComplete(i, newImages)
+        }
+    }
+
     func loadInitialImages() {
         if imageURLsToShow.isEmpty {
             let startTime = Date()
@@ -108,23 +120,20 @@ final class GalleryViewModel: ObservableObject {
             Task {
                 await MainActor.run { self.isInitializing = true }
                 do {
-                    let numberOfBatches = 6
-                    // targetInitialDisplayCount / numberOfBatches
-                    for i in 0 ..< numberOfBatches {
-                        let newImages = try await fetchImages(
-                            requiredImageCount: Self
-                                .targetInitialDisplayCount / numberOfBatches
-                        )
-                        await MainActor.run {
+                    try await fetchImagesInBatches(
+                        totalImageCount: Self.targetInitialDisplayCount,
+                        numberOfBatches: 6
+                    ) { batchIndex, newImages in
+                        Task { @MainActor in
                             self.imageURLsToShow += newImages
-                            print("バッチ\(i + 1)完了: \(newImages.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
-                        }
-
-                        // 最初のバッチ完了時に時間を記録
-                        if i == 0 {
-                            let endTime = Date()
-                            let timeInterval = endTime.timeIntervalSince(startTime)
-                            print("初期画像の読み込み完了: \(String(format: "%.2f", timeInterval))秒")
+                            print("バッチ\(batchIndex + 1)完了: \(newImages.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
+                            
+                            // 最初のバッチ完了時に時間を記録
+                            if batchIndex == 0 {
+                                let endTime = Date()
+                                let timeInterval = endTime.timeIntervalSince(startTime)
+                                print("初期画像の読み込み完了: \(String(format: "%.2f", timeInterval))秒")
+                            }
                         }
                     }
 
@@ -152,15 +161,21 @@ final class GalleryViewModel: ObservableObject {
         }
 
         do {
-            let newImages = try await fetchImages(requiredImageCount: Self.batchDisplayCount)
-            await MainActor.run {
-                self.imageURLsToShow += newImages
-                if self.imageURLsToShow.count > Self.maxImageCount {
-                    print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
-                    self.clearDisplayedImages()
-                    Task { self.loadInitialImages() }
-                    self.isAdditionalFetching = false
-                    return
+            try await fetchImagesInBatches(
+                totalImageCount: Self.batchDisplayCount,
+                numberOfBatches: 2
+            ) { batchIndex, newImages in
+                Task { @MainActor in
+                    self.imageURLsToShow += newImages
+                    print("バッチ\(batchIndex + 1)完了: \(newImages.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
+                    
+                    if self.imageURLsToShow.count > Self.maxImageCount {
+                        print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
+                        self.clearDisplayedImages()
+                        Task { self.loadInitialImages() }
+                        self.isAdditionalFetching = false
+                        return
+                    }
                 }
             }
         } catch {
