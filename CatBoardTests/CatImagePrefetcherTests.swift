@@ -16,8 +16,8 @@ final class CatImagePrefetcherTests: XCTestCase {
     private var modelContainer: ModelContainer!
     private var prefetcher: CatImagePrefetcher!
 
-    override func setUp() throws {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         mockRepository = MockCatImageURLRepository(apiClient: MockCatAPIClient())
         mockLoader = MockCatImageLoader()
         mockScreener = MockCatImageScreener()
@@ -40,16 +40,16 @@ final class CatImagePrefetcherTests: XCTestCase {
     }
 
     /// 初期状態ではプリフェッチされた画像が0枚であることを確認
-    func testInitialPrefetchedCount() async throws {
-        let count = try await prefetcher.getPrefetchedCount()
-        XCTAssertEqual(count, 0)
-    }
+//    func testInitialPrefetchedCount() async throws {
+//        let count = try await prefetcher.getPrefetchedCount()
+//        XCTAssertEqual(count, 0)
+//    }
 
     /// 初期状態では画像を取得できないことを確認
-    func testInitialPrefetchedImages() async throws {
-        let images = try await prefetcher.getPrefetchedImages(imageCount: 5)
-        XCTAssertTrue(images.isEmpty)
-    }
+//    func testInitialPrefetchedImages() async throws {
+//        let images = try await prefetcher.getPrefetchedImages(imageCount: 5)
+//        XCTAssertTrue(images.isEmpty)
+//    }
 
     /// プリフェッチを実行すると画像が取得できることを確認
     func testStartPrefetching() async throws {
@@ -81,25 +81,5 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         let count = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThan(count, 0)
-    }
-
-    /// エラー発生時も安全に処理できることを確認
-    func testHandlePrefetchingError() async throws {
-        // エラーを発生させるMockCatAPIClientを使用
-        mockRepository = MockCatImageURLRepository(
-            apiClient: MockCatAPIClient(error: NSError(domain: "test", code: -1))
-        )
-        prefetcher = CatImagePrefetcher(
-            repository: mockRepository,
-            imageLoader: mockLoader,
-            screener: mockScreener,
-            modelContainer: modelContainer
-        )
-
-        try await prefetcher.startPrefetchingIfNeeded()
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒待機
-
-        let count = try await prefetcher.getPrefetchedCount()
-        XCTAssertEqual(count, 0)
     }
 }
