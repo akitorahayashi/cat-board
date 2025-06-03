@@ -1,10 +1,9 @@
 import Foundation
-import SwiftData
 
 public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable, Sendable {
     public var id: UUID
     public var imageURL: String
-    enum CodingKeys: String, CodingKey {
+    private enum CodingKeys: String, CodingKey {
         case imageURL = "url"
     }
 
