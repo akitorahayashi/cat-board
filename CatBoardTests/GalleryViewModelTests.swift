@@ -18,11 +18,11 @@ final class GalleryViewModelTests: XCTestCase {
     var prefetcher: CatImagePrefetcher!
     var modelContainer: ModelContainer!
 
-    override func setUp() {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         mockRepository = MockCatImageURLRepository(apiClient: MockCatAPIClient())
         mockScreener = MockCatImageScreener()
-        modelContainer = try! ModelContainer(for: PrefetchedCatImageURL.self)
+        modelContainer = try ModelContainer(for: PrefetchedCatImageURL.self)
         mockLoader = MockCatImageLoader()
         prefetcher = CatImagePrefetcher(
             repository: mockRepository,

@@ -39,18 +39,6 @@ final class CatImagePrefetcherTests: XCTestCase {
         super.tearDown()
     }
 
-    /// 初期状態ではプリフェッチされた画像が0枚であることを確認
-//    func testInitialPrefetchedCount() async throws {
-//        let count = try await prefetcher.getPrefetchedCount()
-//        XCTAssertEqual(count, 0)
-//    }
-
-    /// 初期状態では画像を取得できないことを確認
-//    func testInitialPrefetchedImages() async throws {
-//        let images = try await prefetcher.getPrefetchedImages(imageCount: 5)
-//        XCTAssertTrue(images.isEmpty)
-//    }
-
     /// プリフェッチを実行すると画像が取得できることを確認
     func testStartPrefetching() async throws {
         try await prefetcher.startPrefetchingIfNeeded()

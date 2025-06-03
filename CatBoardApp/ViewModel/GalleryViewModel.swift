@@ -135,7 +135,7 @@ final class GalleryViewModel: ObservableObject {
                         self.imageURLsToShow = []
                     }
                 }
-                
+
                 // 処理完了後、必ずisInitializingをfalseに設定
                 await MainActor.run { self.isInitializing = false }
             }
