@@ -1,7 +1,7 @@
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
-import CBModel
+import CatURLImageModel
 import Kingfisher
 import SwiftUI
 

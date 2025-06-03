@@ -1,4 +1,4 @@
-import CBModel
+import CatURLImageModel
 import Kingfisher
 import SwiftUI
 
@@ -32,7 +32,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
             }
 
             do {
-                let result = try await KingfisherManager.shared.downloader.downloadImage(
+                let result = try await KingfisherManager.shared.retrieveImage(
                     with: url,
                     options: [
                         .requestModifier(AnyModifier { request in
@@ -40,6 +40,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                             r.timeoutInterval = 10
                             return r
                         }),
+                        .diskCacheExpiration(.days(3)),
                     ]
                 )
 

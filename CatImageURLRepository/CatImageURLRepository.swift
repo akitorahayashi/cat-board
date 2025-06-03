@@ -1,5 +1,5 @@
 import CatAPIClient
-import CBModel
+import CatURLImageModel
 import Foundation
 import SwiftData
 
@@ -156,7 +156,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     private func loadStoredURLsFromSwiftData(limit: Int? = nil) async throws -> [CatImageURLModel] {
         try await MainActor.run {
             let modelContext = modelContainer.mainContext
-            var descriptor = FetchDescriptor<CatImageURLEntity>(
+            var descriptor = FetchDescriptor<StoredCatImageURL>(
                 sortBy: [.init(\.createdAt, order: .forward)]
             )
 
@@ -189,7 +189,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
             let stored = try await MainActor.run {
                 let modelContext = modelContainer.mainContext
                 for url in urls {
-                    let entity = CatImageURLEntity(model: url)
+                    let entity = StoredCatImageURL(model: url)
                     modelContext.insert(entity)
                 }
                 try modelContext.save()
@@ -204,7 +204,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     private func fetchStoredURLCount() async throws -> Int {
         try await MainActor.run {
             let modelContext = modelContainer.mainContext
-            return try modelContext.fetchCount(FetchDescriptor<CatImageURLEntity>())
+            return try modelContext.fetchCount(FetchDescriptor<StoredCatImageURL>())
         }
     }
 }

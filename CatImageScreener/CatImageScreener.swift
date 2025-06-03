@@ -1,5 +1,4 @@
-import CBModel
-import CoreGraphics
+import CatURLImageModel
 import Foundation
 import ScaryCatScreeningKit
 

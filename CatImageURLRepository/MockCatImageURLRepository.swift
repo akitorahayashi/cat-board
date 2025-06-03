@@ -1,5 +1,5 @@
 import CatAPIClient
-import CBModel
+import CatURLImageModel
 import Foundation
 
 public actor MockCatImageURLRepository: CatImageURLRepositoryProtocol {

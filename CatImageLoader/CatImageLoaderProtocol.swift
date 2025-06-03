@@ -1,4 +1,4 @@
-import CBModel
+import CatURLImageModel
 import Foundation
 
 public protocol CatImageLoaderProtocol: Sendable {
