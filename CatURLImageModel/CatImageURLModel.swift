@@ -1,23 +1,34 @@
 import Foundation
+import SwiftData
 
 public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable, Sendable {
-    public var id = UUID()
+    public var id: UUID
     public var imageURL: String
-    public var isLoading: Bool = true
     enum CodingKeys: String, CodingKey {
         case imageURL = "url"
     }
 
-    public init(id: UUID = UUID(), imageURL: String, isLoading: Bool = true) {
-        self.id = id
+    public init(imageURL: String) {
+        self.id = UUID()
         self.imageURL = imageURL
-        self.isLoading = isLoading
     }
-}
-
-// SwiftData の CatImageEntity からの変換用
-public extension CatImageURLModel {
-    init(entity: StoredCatImageURL) {
+    
+    // StoredCatImageURL からの変換用
+    public init(entity: StoredCatImageURL) {
+        self.id = entity.id
         self.imageURL = entity.imageURL
+    }
+    
+    // PrefetchedCatImageURL からの変換用
+    public init(prefetched: PrefetchedCatImageURL) {
+        self.id = prefetched.id
+        self.imageURL = prefetched.imageURL
+    }
+    
+    // Decodable の実装
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID()
+        self.imageURL = try container.decode(String.self, forKey: .imageURL)
     }
 }

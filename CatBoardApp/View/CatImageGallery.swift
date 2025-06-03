@@ -22,7 +22,8 @@ struct CatImageGallery: View {
         let prefetcher = CatImagePrefetcher(
             repository: repository,
             imageLoader: imageLoader,
-            screener: screener
+            screener: screener,
+            modelContainer: modelContainer
         )
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,

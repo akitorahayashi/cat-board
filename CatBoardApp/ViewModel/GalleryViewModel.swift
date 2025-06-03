@@ -22,8 +22,6 @@ final class GalleryViewModel: ObservableObject {
     static let targetInitialDisplayCount = 30
     static let batchDisplayCount = 10
 
-    // MARK: - Initialization
-
     init(
         repository: CatImageURLRepositoryProtocol,
         imageLoader: CatImageLoaderProtocol,
@@ -38,13 +36,16 @@ final class GalleryViewModel: ObservableObject {
 
     private func fetchImages(requiredImageCount: Int) async throws -> [CatImageURLModel] {
         // 1. まずプリフェッチで足りるかチェック
-        let prefetchedCount = await prefetcher.getPrefetchedCount()
+        let prefetchedCount = try await prefetcher.getPrefetchedCount()
         if prefetchedCount >= requiredImageCount {
-            let images = await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
+            let images = try await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
             await MainActor.run {
                 print(
                     "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
                 )
+            }
+            Task {
+                try? await prefetcher.startPrefetchingIfNeeded()
             }
             return images
         }
@@ -92,10 +93,11 @@ final class GalleryViewModel: ObservableObject {
             }
         }
 
+        let finalResult = result
         await MainActor.run {
-            print("画像直接取得完了: \(result.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
+            print("画像直接取得完了: \(finalResult.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
         }
-        return result
+        return finalResult
     }
 
     func loadInitialImages() {
@@ -127,7 +129,6 @@ final class GalleryViewModel: ObservableObject {
                     }
 
                     await MainActor.run { self.isInitializing = false }
-                    await prefetcher.startPrefetchingIfNeeded()
                 } catch let error as NSError {
                     print("loadInitialImages でエラーが発生: \(error.localizedDescription)")
                     await MainActor.run {
@@ -162,8 +163,7 @@ final class GalleryViewModel: ObservableObject {
                     return
                 }
             }
-            await prefetcher.startPrefetchingIfNeeded()
-        } catch let error as NSError {
+        } catch {
             print("追加画像読み込みでエラーが発生: \(error.localizedDescription)")
             await MainActor.run {
                 self.errorMessage = error.localizedDescription

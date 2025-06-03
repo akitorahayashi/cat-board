@@ -153,27 +153,26 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
 
     // MARK: - Database Operations
 
+    @MainActor
     private func loadStoredURLsFromSwiftData(limit: Int? = nil) async throws -> [CatImageURLModel] {
-        try await MainActor.run {
-            let modelContext = modelContainer.mainContext
-            var descriptor = FetchDescriptor<StoredCatImageURL>(
-                sortBy: [.init(\.createdAt, order: .forward)]
-            )
+        let modelContext = modelContainer.mainContext
+        var descriptor = FetchDescriptor<StoredCatImageURL>(
+            sortBy: [.init(\.createdAt, order: .forward)]
+        )
 
-            let neededCount = limit ?? maxLoadedURLCount
-            descriptor.fetchLimit = neededCount
+        let neededCount = limit ?? maxLoadedURLCount
+        descriptor.fetchLimit = neededCount
 
-            let entities = try modelContext.fetch(descriptor)
-            let models = entities.map(CatImageURLModel.init(entity:))
+        let entities = try modelContext.fetch(descriptor)
+        let models = entities.map(CatImageURLModel.init(entity:))
 
-            for entity in entities {
-                modelContext.delete(entity)
-            }
-            try modelContext.save()
-
-            print("SwiftDataからloadedImageURLsへ移行: \(entities.count)件のURLを取得し、\(models.count)件を移行完了")
-            return models
+        for entity in entities {
+            modelContext.delete(entity)
         }
+        try modelContext.save()
+
+        print("SwiftDataからloadedImageURLsへ移行: \(entities.count)件のURLを取得し、\(models.count)件を移行完了")
+        return models
     }
 
     private func fetchAndStoreImageURLsFromAPIToSwiftData(
@@ -186,25 +185,27 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
             let urls = try await apiClient.fetchImageURLs(totalCount: imageCountPerFetch, batchSize: imageCountPerFetch)
 
             // データベース操作のみをMainActor.runで実行
-            let stored = try await MainActor.run {
-                let modelContext = modelContainer.mainContext
-                for url in urls {
-                    let entity = StoredCatImageURL(model: url)
-                    modelContext.insert(entity)
-                }
-                try modelContext.save()
-                return urls.count
-            }
+            let stored = try await storeImageURLsToSwiftData(urls)
             totalStored += stored
         }
         return totalStored
     }
 
-    // SwiftDataに保存されているURLの総数を取得する
-    private func fetchStoredURLCount() async throws -> Int {
-        try await MainActor.run {
-            let modelContext = modelContainer.mainContext
-            return try modelContext.fetchCount(FetchDescriptor<StoredCatImageURL>())
+    @MainActor
+    private func storeImageURLsToSwiftData(_ urls: [CatImageURLModel]) async throws -> Int {
+        let modelContext = modelContainer.mainContext
+        for url in urls {
+            let entity = StoredCatImageURL(model: url)
+            modelContext.insert(entity)
         }
+        try modelContext.save()
+        return urls.count
+    }
+
+    // SwiftDataに保存されているURLの総数を取得する
+    @MainActor
+    private func fetchStoredURLCount() async throws -> Int {
+        let modelContext = modelContainer.mainContext
+        return try modelContext.fetchCount(FetchDescriptor<StoredCatImageURL>())
     }
 }

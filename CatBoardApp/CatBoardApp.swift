@@ -8,7 +8,7 @@ struct CatBoardApp: App {
 
     init() {
         do {
-            let schema = Schema([StoredCatImageURL.self])
+            let schema = Schema([StoredCatImageURL.self, PrefetchedCatImageURL.self])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
