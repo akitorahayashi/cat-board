@@ -107,8 +107,8 @@ public actor CatImagePrefetcher {
             totalFetched += models.count
 
             // 6. ログ出力
-            print(
-                "プリフェッチ進捗: \(loadedImages.count)枚中\(screenedModels.count)枚通過 (現在\(try await getPrefetchedCount())枚)"
+            try await print(
+                "プリフェッチ進捗: \(loadedImages.count)枚中\(screenedModels.count)枚通過 (現在\(getPrefetchedCount())枚)"
             )
         }
     }
@@ -121,15 +121,15 @@ public actor CatImagePrefetcher {
                 sortBy: [.init(\.createdAt, order: .forward)]
             )
             descriptor.fetchLimit = limit
-            
+
             let entities = try modelContext.fetch(descriptor)
             let models = entities.map { CatImageURLModel(prefetched: $0) }
-            
+
             for entity in entities {
                 modelContext.delete(entity)
             }
             try modelContext.save()
-            
+
             return models
         }
     }

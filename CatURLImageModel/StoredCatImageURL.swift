@@ -8,8 +8,8 @@ public final class StoredCatImageURL: @unchecked Sendable {
     public var createdAt: Date
 
     public init(model: CatImageURLModel) {
-        self.id = UUID()
-        self.imageURL = model.imageURL
-        self.createdAt = Date()
+        id = UUID()
+        imageURL = model.imageURL
+        createdAt = Date()
     }
 }
