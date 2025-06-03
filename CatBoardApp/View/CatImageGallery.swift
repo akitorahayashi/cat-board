@@ -124,8 +124,10 @@ struct CatImageGallery: View {
         ScrollView(.vertical, showsIndicators: false) {
             galleryGrid
 
-            // 追加ロード中の ProgressView
-            if viewModel.isAdditionalFetching, !viewModel.imageURLsToShow.isEmpty {
+            // ProgressView
+            if viewModel.isAdditionalFetching || viewModel.isInitializing,
+               !viewModel.imageURLsToShow.isEmpty
+            {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
                     .padding(.bottom, 16)
