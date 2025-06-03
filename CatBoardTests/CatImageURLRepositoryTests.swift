@@ -1,6 +1,6 @@
 import CatAPIClient
 import CatImageURLRepository
-import CBModel
+import CatURLImageModel
 import SwiftData
 import XCTest
 
@@ -12,7 +12,7 @@ final class CatImageURLRepositoryTests: XCTestCase {
 
     override func setUpWithError() throws {
         // テスト用のSwiftDataコンテナを作成
-        let schema = Schema([CatImageURLEntity.self])
+        let schema = Schema([StoredCatImageURL.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
 

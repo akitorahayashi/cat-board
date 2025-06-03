@@ -2,7 +2,7 @@ import CatImageLoader
 import CatImagePrefetcher
 import CatImageScreener
 import CatImageURLRepository
-import CBModel
+import CatURLImageModel
 import Kingfisher
 import SwiftUI
 
@@ -22,8 +22,6 @@ final class GalleryViewModel: ObservableObject {
     static let targetInitialDisplayCount = 30
     static let batchDisplayCount = 10
 
-    // MARK: - Initialization
-
     init(
         repository: CatImageURLRepositoryProtocol,
         imageLoader: CatImageLoaderProtocol,
@@ -38,20 +36,23 @@ final class GalleryViewModel: ObservableObject {
 
     private func fetchImages(requiredImageCount: Int) async throws -> [CatImageURLModel] {
         // 1. まずプリフェッチで足りるかチェック
-        let prefetchedCount = await prefetcher.getPrefetchedCount()
+        let prefetchedCount = try await prefetcher.getPrefetchedCount()
         if prefetchedCount >= requiredImageCount {
-            let images = await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
+            let images = try await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
             await MainActor.run {
                 print(
                     "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
                 )
+            }
+            Task {
+                try? await prefetcher.startPrefetchingIfNeeded()
             }
             return images
         }
 
         // 2. プリフェッチ不足時は直接取得を開始
         await MainActor.run {
-            print("プリフェッチが不足しているため直接取得を開始: \(requiredImageCount)枚)")
+            print("プリフェッチが不足しているため直接取得を開始: \(requiredImageCount)枚")
         }
 
         var result: [CatImageURLModel] = []
@@ -82,20 +83,25 @@ final class GalleryViewModel: ObservableObject {
                     result.append(screenedModel)
                 }
             }
-
-            // 必要な枚数に達していない場合、追加で取得
-            if result.count < requiredImageCount {
-                let currentCount = result.count
-                await MainActor.run {
-                    print("追加取得が必要: 現在\(currentCount)枚 → 目標\(requiredImageCount)枚のため、次のバッチを取得します")
-                }
-            }
         }
 
+        let finalResult = result
         await MainActor.run {
-            print("画像直接取得完了: \(result.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
+            print("画像直接取得完了: \(finalResult.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
         }
-        return result
+        return finalResult
+    }
+
+    private func fetchImagesInBatches(
+        totalImageCount: Int,
+        numberOfBatches: Int,
+        onBatchComplete: @escaping (Int, [CatImageURLModel]) -> Void
+    ) async throws {
+        let imagesPerBatch = totalImageCount / numberOfBatches
+        for i in 0 ..< numberOfBatches {
+            let newImages = try await fetchImages(requiredImageCount: imagesPerBatch)
+            onBatchComplete(i, newImages)
+        }
     }
 
     func loadInitialImages() {
@@ -106,36 +112,32 @@ final class GalleryViewModel: ObservableObject {
             Task {
                 await MainActor.run { self.isInitializing = true }
                 do {
-                    let numberOfBatches = 6
-                    // targetInitialDisplayCount / numberOfBatches
-                    for i in 0 ..< numberOfBatches {
-                        let newImages = try await fetchImages(
-                            requiredImageCount: Self
-                                .targetInitialDisplayCount / numberOfBatches
-                        )
-                        await MainActor.run {
+                    try await fetchImagesInBatches(
+                        totalImageCount: Self.targetInitialDisplayCount,
+                        numberOfBatches: 6
+                    ) { batchIndex, newImages in
+                        Task { @MainActor in
                             self.imageURLsToShow += newImages
-                            print("バッチ\(i + 1)完了: \(newImages.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
-                        }
+                            print("バッチ\(batchIndex + 1)完了: \(newImages.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
 
-                        // 最初のバッチ完了時に時間を記録
-                        if i == 0 {
-                            let endTime = Date()
-                            let timeInterval = endTime.timeIntervalSince(startTime)
-                            print("初期画像の読み込み完了: \(String(format: "%.2f", timeInterval))秒")
+                            // 最初のバッチ完了時に時間を記録
+                            if batchIndex == 0 {
+                                let endTime = Date()
+                                let timeInterval = endTime.timeIntervalSince(startTime)
+                                print("初回バッチ完了: \(String(format: "%.2f", timeInterval))秒")
+                            }
                         }
                     }
-
-                    await MainActor.run { self.isInitializing = false }
-                    await prefetcher.startPrefetchingIfNeeded()
                 } catch let error as NSError {
                     print("loadInitialImages でエラーが発生: \(error.localizedDescription)")
                     await MainActor.run {
                         self.errorMessage = error.localizedDescription
                         self.imageURLsToShow = []
-                        self.isInitializing = false
                     }
                 }
+
+                // 処理完了後、必ずisInitializingをfalseに設定
+                await MainActor.run { self.isInitializing = false }
             }
         }
     }
@@ -151,19 +153,24 @@ final class GalleryViewModel: ObservableObject {
         }
 
         do {
-            let newImages = try await fetchImages(requiredImageCount: Self.batchDisplayCount)
-            await MainActor.run {
-                self.imageURLsToShow += newImages
-                if self.imageURLsToShow.count > Self.maxImageCount {
-                    print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
-                    self.clearDisplayedImages()
-                    Task { self.loadInitialImages() }
-                    self.isAdditionalFetching = false
-                    return
+            try await fetchImagesInBatches(
+                totalImageCount: Self.batchDisplayCount,
+                numberOfBatches: 2
+            ) { batchIndex, newImages in
+                Task { @MainActor in
+                    self.imageURLsToShow += newImages
+                    print("バッチ\(batchIndex + 1)完了: \(newImages.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
+
+                    if self.imageURLsToShow.count > Self.maxImageCount {
+                        print("最大表示枚数(\(Self.maxImageCount)枚)に到達したため、画像をクリアして再読み込みします")
+                        self.clearDisplayedImages()
+                        Task { self.loadInitialImages() }
+                        self.isAdditionalFetching = false
+                        return
+                    }
                 }
             }
-            await prefetcher.startPrefetchingIfNeeded()
-        } catch let error as NSError {
+        } catch {
             print("追加画像読み込みでエラーが発生: \(error.localizedDescription)")
             await MainActor.run {
                 self.errorMessage = error.localizedDescription

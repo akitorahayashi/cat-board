@@ -1,4 +1,4 @@
-import CBModel
+import CatURLImageModel
 import SwiftData
 import SwiftUI
 
@@ -8,7 +8,7 @@ struct CatBoardApp: App {
 
     init() {
         do {
-            let schema = Schema([CatImageURLEntity.self])
+            let schema = Schema([StoredCatImageURL.self, PrefetchedCatImageURL.self])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {

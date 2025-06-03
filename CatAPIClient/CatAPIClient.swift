@@ -1,4 +1,4 @@
-import CBModel
+import CatURLImageModel
 import UIKit
 
 public struct CatAPIClient: CatAPIClientProtocol {

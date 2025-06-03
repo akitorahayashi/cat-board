@@ -36,7 +36,7 @@ targets:
     sources:
       - path: CatBoardApp
     dependencies:
-      - target: CBModel
+      - target: CatURLImageModel
       - target: CatImageURLRepository
       - target: CatImageLoader
       - target: CatImageScreener
@@ -79,15 +79,15 @@ targets:
         UIRequiresFullScreen: false
         # Add other necessary plist keys
 
-  CBModel:
+  CatURLImageModel:
     type: framework
     platform: iOS
     sources:
-      - path: CBModel
+      - path: CatURLImageModel
     settings:
       base:
         DEVELOPMENT_LANGUAGE: ja
-        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CBModel
+        PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoard.CatURLImageModel
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
         SKIP_INSTALL: "NO"
@@ -98,7 +98,7 @@ targets:
     sources:
       - path: CatAPIClient
     dependencies:
-      - target: CBModel
+      - target: CatURLImageModel
     settings:
       base:
         DEVELOPMENT_LANGUAGE: ja
@@ -113,7 +113,7 @@ targets:
     sources:
       - path: CatImageURLRepository
     dependencies:
-      - target: CBModel
+      - target: CatURLImageModel
       - target: CatAPIClient
     settings:
       base:
@@ -129,7 +129,7 @@ targets:
     sources:
       - path: CatImageLoader
     dependencies:
-      - target: CBModel
+      - target: CatURLImageModel
       - target: CatImageURLRepository
       - target: CatImageScreener
       - package: Kingfisher
@@ -147,7 +147,7 @@ targets:
     sources:
       - path: CatImageScreener
     dependencies:
-      - target: CBModel
+      - target: CatURLImageModel
       - package: ScaryCatScreeningKit
     settings:
       base:
@@ -163,7 +163,7 @@ targets:
     sources:
       - path: CatImagePrefetcher
     dependencies:
-      - target: CBModel
+      - target: CatURLImageModel
       - target: CatImageLoader
       - package: Kingfisher
     settings:
@@ -181,7 +181,7 @@ targets:
       - path: CatBoardTests
     dependencies:
       - target: CatBoardApp
-      - target: CBModel
+      - target: CatURLImageModel
       - target: CatImageScreener
       - target: CatImageLoader
       - target: CatAPIClient

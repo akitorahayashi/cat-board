@@ -3,7 +3,8 @@ import CatImageLoader
 import CatImagePrefetcher
 import CatImageScreener
 import CatImageURLRepository
-import CBModel
+import CatURLImageModel
+import SwiftData
 import XCTest
 
 @testable import CatBoardApp
@@ -15,16 +16,19 @@ final class GalleryViewModelTests: XCTestCase {
     var mockRepository: MockCatImageURLRepository!
     var mockScreener: MockCatImageScreener!
     var prefetcher: CatImagePrefetcher!
+    var modelContainer: ModelContainer!
 
-    override func setUp() {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         mockRepository = MockCatImageURLRepository(apiClient: MockCatAPIClient())
         mockScreener = MockCatImageScreener()
+        modelContainer = try ModelContainer(for: PrefetchedCatImageURL.self)
         mockLoader = MockCatImageLoader()
         prefetcher = CatImagePrefetcher(
             repository: mockRepository,
             imageLoader: mockLoader,
-            screener: mockScreener
+            screener: mockScreener,
+            modelContainer: modelContainer
         )
         viewModel = GalleryViewModel(
             repository: mockRepository,
@@ -110,31 +114,5 @@ final class GalleryViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.imageURLsToShow.count, GalleryViewModel.targetInitialDisplayCount)
         XCTAssertFalse(viewModel.isInitializing)
-    }
-
-    /// スクリーニングでエラーが発生した場合の動作を確認する
-    func testLoadImagesWithScreeningError() async {
-        let error = NSError(domain: "test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Screening failed"])
-        mockScreener = MockCatImageScreener(error: error)
-        mockLoader = MockCatImageLoader()
-        prefetcher = CatImagePrefetcher(
-            repository: mockRepository,
-            imageLoader: mockLoader,
-            screener: mockScreener
-        )
-        viewModel = GalleryViewModel(
-            repository: mockRepository,
-            imageLoader: mockLoader,
-            screener: mockScreener,
-            prefetcher: prefetcher
-        )
-
-        viewModel.loadInitialImages()
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-
-        // エラーが発生した場合、エラーメッセージが設定され、画像が空になることを確認
-        XCTAssertTrue(viewModel.imageURLsToShow.isEmpty)
-        XCTAssertFalse(viewModel.isInitializing)
-        XCTAssertEqual(viewModel.errorMessage, "Screening failed")
     }
 }

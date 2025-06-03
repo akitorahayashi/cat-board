@@ -22,7 +22,8 @@ struct CatImageGallery: View {
         let prefetcher = CatImagePrefetcher(
             repository: repository,
             imageLoader: imageLoader,
-            screener: screener
+            screener: screener,
+            modelContainer: modelContainer
         )
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,
@@ -123,8 +124,10 @@ struct CatImageGallery: View {
         ScrollView(.vertical, showsIndicators: false) {
             galleryGrid
 
-            // 追加ロード中の ProgressView
-            if viewModel.isAdditionalFetching, !viewModel.imageURLsToShow.isEmpty {
+            // ProgressView
+            if viewModel.isAdditionalFetching || viewModel.isInitializing,
+               !viewModel.imageURLsToShow.isEmpty
+            {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
                     .padding(.bottom, 16)

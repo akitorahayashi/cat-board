@@ -1,6 +1,6 @@
 import CatAPIClient
 import CatImageScreener
-import CBModel
+import CatURLImageModel
 import Foundation
 
 public struct MockCatImageLoader: CatImageLoaderProtocol {
