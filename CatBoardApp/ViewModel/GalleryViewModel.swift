@@ -191,8 +191,5 @@ final class GalleryViewModel: ObservableObject {
 
         // Kingfisherのメモリキャッシュをクリア
         KingfisherManager.shared.cache.clearMemoryCache()
-
-        // Kingfisherのディスクキャッシュをクリア
-        KingfisherManager.shared.cache.clearDiskCache()
     }
 }
