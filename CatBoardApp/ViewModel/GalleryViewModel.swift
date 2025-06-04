@@ -44,9 +44,7 @@ final class GalleryViewModel: ObservableObject {
                     "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
                 )
             }
-            Task {
-                try? await prefetcher.startPrefetchingIfNeeded()
-            }
+            
             return images
         }
 
@@ -131,6 +129,15 @@ final class GalleryViewModel: ObservableObject {
                             }
                         }
                     }
+                    
+                    Task {
+                        do {
+                            try await prefetcher.startPrefetchingIfNeeded()
+                        } catch {
+                            print("プリフェッチ開始でエラーが発生: \(error.localizedDescription)")
+                        }
+                    }
+                    
                 } catch let error as NSError {
                     print("loadInitialImages でエラーが発生: \(error.localizedDescription)")
                     await MainActor.run {
@@ -156,6 +163,7 @@ final class GalleryViewModel: ObservableObject {
         }
 
         do {
+            
             try await fetchImagesInBatches(
                 totalImageCount: Self.batchDisplayCount,
                 numberOfBatches: 2
@@ -173,6 +181,15 @@ final class GalleryViewModel: ObservableObject {
                     }
                 }
             }
+            
+            Task {
+                do {
+                    try await prefetcher.startPrefetchingIfNeeded()
+                } catch {
+                    print("プリフェッチ開始でエラーが発生: \(error.localizedDescription)")
+                }
+            }
+            
         } catch {
             print("追加画像読み込みでエラーが発生: \(error.localizedDescription)")
             await MainActor.run {

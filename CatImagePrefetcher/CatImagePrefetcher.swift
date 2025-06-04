@@ -107,7 +107,7 @@ public actor CatImagePrefetcher {
             // 6. ログ出力
             try await print(
                 "プリフェッチ進捗: \(loadedImages.count)枚中\(screenedModels.count)枚通過 "
-                    + "(現在\(getPrefetchedCount())枚)"
+                    + "(現在\(try await getPrefetchedCount())枚)"
             )
         }
     }
