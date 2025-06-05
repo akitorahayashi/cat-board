@@ -96,11 +96,11 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         refillTask = Task { [weak self] in
             guard let self else { return }
             await self.performBackgroundURLRefill()
-            await self.clearRefillTask()
         }
     }
 
     private func performBackgroundURLRefill() async {
+        defer { clearRefillTask() }
         do {
             if loadedImageURLs.count > loadedURLThreshold { return }
 
