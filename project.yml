@@ -20,7 +20,7 @@ settings:
 packages:
   ScaryCatScreeningKit:
     url: https://github.com/atrh95/scary-cat-screening-kit
-    from: "3.2.0"
+    from: "3.3.1"
   TieredGridLayout:
     url: https://github.com/atrh95/tiered-grid-layout
     from: "1.2.0"
