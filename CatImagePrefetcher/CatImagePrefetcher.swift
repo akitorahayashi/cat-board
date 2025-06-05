@@ -62,13 +62,15 @@ public actor CatImagePrefetcher {
         prefetchTask?.cancel()
 
         isPrefetching = true
-        prefetchTask = Task { [self] in
+        prefetchTask = Task { [weak self] in
+            guard let self else { return }
             do {
-                try await prefetchImages()
+                try await self.prefetchImages()
             } catch {
                 print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
             }
-            isPrefetching = false
+            self.isPrefetching = false
+            self.prefetchTask = nil
         }
     }
 
