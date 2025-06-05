@@ -63,23 +63,23 @@ public actor CatImagePrefetcher {
 
         isPrefetching = true
         prefetchTask = Task { [weak self] in
-            await self?.performPrefetchFlow()
+            guard let self else { return }
+
+            do {
+                try await prefetchImages()
+            } catch {
+                print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
+            }
+
+            await resetPrefetchingState()
         }
     }
 
     // MARK: - Private Methods
 
-    private func performPrefetchFlow() async {
-        defer {
-            self.isPrefetching = false
-            self.prefetchTask = nil
-        }
-
-        do {
-            try await prefetchImages()
-        } catch {
-            print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
-        }
+    private func resetPrefetchingState() {
+        isPrefetching = false
+        prefetchTask = nil
     }
 
     private func prefetchImages() async throws {
