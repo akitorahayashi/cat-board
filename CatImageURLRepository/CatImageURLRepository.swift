@@ -149,7 +149,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
 
             if loadedImageURLs.count <= loadedURLThreshold {
                 print("loadedImageURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
-                await startBackgroundURLRefillLoadedURLs()
+                startBackgroundURLRefillLoadedURLs()
             }
         } catch {
             print("loadedImageURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
