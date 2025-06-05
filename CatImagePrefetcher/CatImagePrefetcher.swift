@@ -62,17 +62,25 @@ public actor CatImagePrefetcher {
         prefetchTask?.cancel()
 
         isPrefetching = true
-        prefetchTask = Task { [self] in
-            do {
-                try await prefetchImages()
-            } catch {
-                print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
-            }
-            isPrefetching = false
+        prefetchTask = Task { [weak self] in
+            await self?.performPrefetchFlow()
         }
     }
 
     // MARK: - Private Methods
+
+    private func performPrefetchFlow() async {
+        defer {
+            self.isPrefetching = false
+            self.prefetchTask = nil
+        }
+
+        do {
+            try await prefetchImages()
+        } catch {
+            print("プリフェッチ中にエラーが発生: \(error.localizedDescription)")
+        }
+    }
 
     private func prefetchImages() async throws {
         let currentCount = try await getPrefetchedCount()
@@ -105,7 +113,7 @@ public actor CatImagePrefetcher {
             attempts += 1
 
             // 6. ログ出力
-            try await print(
+            print(
                 "プリフェッチ進捗: \(loadedImages.count)枚中\(screenedModels.count)枚通過 "
                     + "(現在\(try await getPrefetchedCount())枚)"
             )

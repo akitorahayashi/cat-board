@@ -11,7 +11,9 @@ struct SquareGalleryImageAsync: View {
 
             KFImage(source: url.map { .network($0) })
                 .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 200, height: 200)))
-                .cacheMemoryOnly()
+                .memoryCacheExpiration(.minutes(1))
+                .diskCacheExpiration(.expired)
+                .cacheOriginalImage(false)
                 .placeholder {
                     Color(.secondarySystemBackground)
                         .frame(width: size, height: size)

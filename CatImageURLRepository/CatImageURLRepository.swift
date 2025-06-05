@@ -93,62 +93,71 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
             return
         }
 
-        refillTask = Task { [self] in
-            do {
-                if loadedImageURLs.count > loadedURLThreshold { return }
-
-                let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
-                print(
-                    "loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)"
-                )
-
-                // まずデータベースから読み込める分を読み込む
-                let storedURLs = try await loadStoredURLsFromSwiftData(limit: neededToLoad)
-                if !storedURLs.isEmpty {
-                    loadedImageURLs += storedURLs
-                    print("loadedImageURLs補充完了: \(storedURLs.count)枚追加 → 現在\(loadedImageURLs.count)枚")
-                }
-
-                // まだ必要な分があればAPIから取得
-                if loadedImageURLs.count < maxLoadedURLCount {
-                    let remainingToLoad = maxLoadedURLCount - loadedImageURLs.count
-                    let fetched = try await apiClient.fetchImageURLs(
-                        totalCount: remainingToLoad,
-                        batchSize: apiFetchBatchSize
-                    )
-                    loadedImageURLs += fetched
-                    print("APIからloadedImageURLsへ補充: \(fetched.count)枚追加 → 現在\(loadedImageURLs.count)枚")
-                }
-
-                // データベースの補充
-                var currentStored = try await fetchStoredURLCount()
-                if currentStored <= storedURLThreshold {
-                    print("SwiftData URL補充開始: 現在\(currentStored)件 → 目標\(maxStoredURLCount)件")
-                    while currentStored < maxStoredURLCount {
-                        let remaining = maxStoredURLCount - currentStored
-                        let times = Int(ceil(Double(remaining) / Double(apiFetchBatchSize)))
-                        let newlyStored = try await fetchAndStoreImageURLsFromAPIToSwiftData(
-                            imageCountPerFetch: apiFetchBatchSize,
-                            timesOfFetch: times
-                        )
-                        if newlyStored == 0 { break }
-                        currentStored += newlyStored
-                    }
-                    print("SwiftData URL補充完了: \(currentStored)件")
-                } else {
-                    print("SwiftData URL補充不要: 現在\(currentStored)件(閾値\(storedURLThreshold)件)")
-                }
-                print("キャッシュ更新完了: loadedImageURLs=\(loadedImageURLs.count)枚, SwiftData=\(currentStored)件")
-
-                if loadedImageURLs.count <= loadedURLThreshold {
-                    print("loadedImageURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
-                    startBackgroundURLRefillLoadedURLs()
-                }
-            } catch {
-                print("loadedImageURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
-            }
-            refillTask = nil
+        refillTask = Task { [weak self] in
+            guard let self else { return }
+            await self.performBackgroundURLRefill()
         }
+    }
+
+    private func performBackgroundURLRefill() async {
+        defer { clearRefillTask() }
+        do {
+            if loadedImageURLs.count > loadedURLThreshold { return }
+
+            let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
+            print(
+                "loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)"
+            )
+
+            // まずデータベースから読み込める分を読み込む
+            let storedURLs = try await loadStoredURLsFromSwiftData(limit: neededToLoad)
+            if !storedURLs.isEmpty {
+                loadedImageURLs += storedURLs
+                print("loadedImageURLs補充完了: \(storedURLs.count)枚追加 → 現在\(loadedImageURLs.count)枚")
+            }
+
+            // まだ必要な分があればAPIから取得
+            if loadedImageURLs.count < maxLoadedURLCount {
+                let remainingToLoad = maxLoadedURLCount - loadedImageURLs.count
+                let fetched = try await apiClient.fetchImageURLs(
+                    totalCount: remainingToLoad,
+                    batchSize: apiFetchBatchSize
+                )
+                loadedImageURLs += fetched
+                print("APIからloadedImageURLsへ補充: \(fetched.count)枚追加 → 現在\(loadedImageURLs.count)枚")
+            }
+
+            // データベースの補充
+            var currentStored = try await fetchStoredURLCount()
+            if currentStored <= storedURLThreshold {
+                print("SwiftData URL補充開始: 現在\(currentStored)件 → 目標\(maxStoredURLCount)件")
+                while currentStored < maxStoredURLCount {
+                    let remaining = maxStoredURLCount - currentStored
+                    let times = Int(ceil(Double(remaining) / Double(apiFetchBatchSize)))
+                    let newlyStored = try await fetchAndStoreImageURLsFromAPIToSwiftData(
+                        imageCountPerFetch: apiFetchBatchSize,
+                        timesOfFetch: times
+                    )
+                    if newlyStored == 0 { break }
+                    currentStored += newlyStored
+                }
+                print("SwiftData URL補充完了: \(currentStored)件")
+            } else {
+                print("SwiftData URL補充不要: 現在\(currentStored)件(閾値\(storedURLThreshold)件)")
+            }
+            print("キャッシュ更新完了: loadedImageURLs=\(loadedImageURLs.count)枚, SwiftData=\(currentStored)件")
+
+            if loadedImageURLs.count <= loadedURLThreshold {
+                print("loadedImageURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
+                startBackgroundURLRefillLoadedURLs()
+            }
+        } catch {
+            print("loadedImageURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
+        }
+    }
+
+    private func clearRefillTask() {
+        refillTask = nil
     }
 
     // MARK: - Database Operations

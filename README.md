@@ -65,7 +65,7 @@ LazyVStackとTieredGridLayoutを用いて、メモリ使用量を最適化しな
 actor、MainActorを活用した並行処理の実装により、Badアクセスエラーを完全に排除しました。各コンポーネント（CatImagePrefetcher、CatImageURLRepository、CatImageLoader、CatImageScreener）はactorとして実装され、データ競合を防止しながら効率的な並列処理を実現します。UIの更新やSwiftDataの操作はMainActorで明示的に制御され、予測可能な状態管理を実現しています。
 
 ### 3. マルチレイヤーキャッシュシステム
-Kingfisher、SwiftDataを活用したキャッシュシステムを実装。メモリキャッシュ、ディスクキャッシュ（500MBに制限、3日間有効）、SwiftDataによる取得したURL、プリフェッチしたURLの永続化を組み合わせ、より速い表示を実現します。
+Kingfisher、SwiftDataを活用したキャッシュシステムを実装。メモリキャッシュ（200MBに制限）、ディスクキャッシュ（500MBに制限、3日間有効）、SwiftDataによる取得したURL、プリフェッチしたURLの永続化を組み合わせ、より速い表示を実現します。プリフェッチ時は `.memoryCacheExpiration(.hours(1))` と `.diskCacheExpiration(.days(7))`、表示時は `.memoryCacheExpiration(.minutes(1))` と `.diskCacheExpiration(.expired)` を使い、表示後は短期でキャッシュを解放します。
 
 ### 4. 画像URLの自動管理
 CatImageURLRepositoryが画像URLの在庫を監視し、表示可能なURLが一定枚数未満になった時点で自動的にCatAPIClientを通じて新しい画像URLを取得します。この補充処理はバックグラウンドで非同期実行され、効率的な補充を実現します。取得したURLはSwiftDataを通じて永続化され、次回起動時にも即座に利用可能な状態を維持します。

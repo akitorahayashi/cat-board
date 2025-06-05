@@ -7,6 +7,10 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         // Kingfisherのキャッシュ設定
         let diskCache = KingfisherManager.shared.cache.diskStorage
 
+        // メモリキャッシュの制限: 200MB
+        let memoryCache = KingfisherManager.shared.cache.memoryStorage
+        memoryCache.config.totalCostLimit = 200 * 1024 * 1024
+
         // ディスクキャッシュの制限: 500MB
         diskCache.config.sizeLimit = 500 * 1024 * 1024
         diskCache.config.expiration = .days(3) // 3日間保持
