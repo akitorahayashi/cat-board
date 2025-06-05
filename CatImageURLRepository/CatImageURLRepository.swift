@@ -16,6 +16,8 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     private let storedURLThreshold = 100
     private let apiFetchBatchSize = 10
 
+    private var isRefilling = false
+
     public init(modelContainer: ModelContainer, apiClient: CatAPIClientProtocol) {
         self.modelContainer = modelContainer
         self.apiClient = apiClient
@@ -41,7 +43,14 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
                 print(
                     "loadedImageURLs補充開始: 現在\(loadedImageURLs.count)枚 → 目標\(maxLoadedURLCount)枚(\(neededToLoad)枚追加予定)"
                 )
-                startBackgroundURLRefillLoadedURLs()
+
+                Task {
+                    do {
+                        try await startBackgroundURLRefillLoadedURLs()
+                    } catch {
+                        print("LoadedURLsの補充でエラーが発生: \(error.localizedDescription)")
+                    }
+                }
             }
 
             return provided
@@ -56,7 +65,13 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
             batchSize: apiFetchBatchSize
         )
         // 3. 補充を開始
-        startBackgroundURLRefillLoadedURLs()
+        Task {
+            do {
+                try await startBackgroundURLRefillLoadedURLs()
+            } catch {
+                print("LoadedURLsの補充でエラーが発生: \(error.localizedDescription)")
+            }
+        }
 
         print(
             "URL供給完了: loadedImageURLsから\(available.count)枚 + APIから\(remaining.count)枚 = 合計\(available.count + remaining.count)枚"
@@ -86,21 +101,33 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         }
     }
 
-    private func startBackgroundURLRefillLoadedURLs() {
-        guard refillTask == nil else { return }
-        guard loadedImageURLs.count <= loadedURLThreshold else {
-            print("loadedImageURLs補充不要: 現在\(loadedImageURLs.count)枚(閾値\(loadedURLThreshold)枚)")
-            return
-        }
+    public func startBackgroundURLRefillLoadedURLs() async throws {
+        guard !isRefilling else { return }
+        guard loadedImageURLs.count < maxLoadedURLCount else { return }
 
+        // 前回のタスクをキャンセル
+        refillTask?.cancel()
+
+        isRefilling = true
         refillTask = Task { [weak self] in
             guard let self else { return }
-            await self.performBackgroundURLRefill()
+
+            do {
+                try await refillLoadedURLs()
+            } catch {
+                print("URL補充中にエラーが発生: \(error.localizedDescription)")
+            }
+
+            await resetRefillingState()
         }
     }
 
-    private func performBackgroundURLRefill() async {
-        defer { clearRefillTask() }
+    private func resetRefillingState() {
+        isRefilling = false
+        refillTask = nil
+    }
+
+    private func refillLoadedURLs() async throws {
         do {
             if loadedImageURLs.count > loadedURLThreshold { return }
 
@@ -149,15 +176,17 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
 
             if loadedImageURLs.count <= loadedURLThreshold {
                 print("loadedImageURLsが閾値を下回っているため、追加の補充を開始: 現在\(loadedImageURLs.count)枚")
-                startBackgroundURLRefillLoadedURLs()
+                Task {
+                    do {
+                        try await startBackgroundURLRefillLoadedURLs()
+                    } catch {
+                        print("LoadedURLsの補充でエラーが発生: \(error.localizedDescription)")
+                    }
+                }
             }
         } catch {
             print("loadedImageURLsのバックグラウンド補充に失敗: \(error.localizedDescription)")
         }
-    }
-
-    private func clearRefillTask() {
-        refillTask = nil
     }
 
     // MARK: - Database Operations
