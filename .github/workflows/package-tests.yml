@@ -21,7 +21,5 @@ jobs:
         with:
           swift-version: '5.9'
           
-      - name: Build and Test Package
-        run: |
-          swift build
-          swift test 
+      - name: Run Tests
+        run: swift test 
