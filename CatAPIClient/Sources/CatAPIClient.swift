@@ -1,5 +1,5 @@
+import Foundation
 import CatURLImageModel
-import UIKit
 
 public struct CatAPIClient: CatAPIClientProtocol {
     public init() {}

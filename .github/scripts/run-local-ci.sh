@@ -201,7 +201,13 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
 
   # Unitテストを実行
   if [ "$run_unit_tests" = true ]; then
-    echo "Running Unit Tests..."
+    # Swift Package Managerのテストを実行
+    step "Running Swift Package Manager Tests"
+    echo "Running SPM tests..."
+    swift test || fail "Swift Package Manager tests failed"
+    success "Swift Package Manager tests completed successfully"
+
+    echo "Running Xcode Unit Tests..."
     set -o pipefail && xcodebuild test-without-building \
       -project "$PROJECT_FILE" \
       -scheme "$UNIT_TEST_SCHEME" \

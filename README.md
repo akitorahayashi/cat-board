@@ -11,9 +11,8 @@ Cat BoardのアーキテクチャはXcodegenによるマルチモジュール構
 ### 設計の特徴
 
 - **マルチモジュール構成**
-  - Xcodegen によるマルチモジュール構成
-  - 疎結合
-  - 依存関係の明確化
+  - Xcodegen での xcodeproj の管理
+  - SwiftPM でのモジュールの管理
 
 - **Swift Concurrency**
   - `async/await`による非同期処理の制御

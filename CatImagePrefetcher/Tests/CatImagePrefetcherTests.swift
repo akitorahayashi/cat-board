@@ -7,8 +7,6 @@ import CatURLImageModel
 import SwiftData
 import XCTest
 
-@testable import CatBoardApp
-
 final class CatImagePrefetcherTests: XCTestCase {
     private var mockRepository: MockCatImageURLRepository!
     private var mockLoader: MockCatImageLoader!
