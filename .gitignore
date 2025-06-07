@@ -19,6 +19,8 @@ build/
 
 # Swift Package Manager
 .build/
+Package.resolved
+.swiftpm/
 
 # macOSシステムファイル
 .DS_Store

@@ -1,6 +1,19 @@
+import Foundation
 import CatURLImageModel
 import Kingfisher
-import SwiftUI
+
+#if os(iOS)
+private func toJPEGData(_ image: KFCrossPlatformImage, _ quality: CGFloat) -> Data? {
+    image.jpegData(compressionQuality: quality)
+}
+#elseif os(macOS)
+import AppKit
+private func toJPEGData(_ image: KFCrossPlatformImage, _ quality: CGFloat) -> Data? {
+    guard let tiffData = image.tiffRepresentation,
+          let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
+    return bitmap.representation(using: .jpeg, properties: [.compressionFactor: quality])
+}
+#endif
 
 public actor CatImageLoader: CatImageLoaderProtocol {
     public init() {
@@ -49,7 +62,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                 )
 
                 autoreleasepool {
-                    if let imageData = result.image.jpegData(compressionQuality: 0.8) {
+                    if let imageData = toJPEGData(result.image, 0.8) {
                         loadedImages.append((imageData: imageData, model: item))
                     }
                 }

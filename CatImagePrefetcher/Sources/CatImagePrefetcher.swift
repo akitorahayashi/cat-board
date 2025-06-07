@@ -4,7 +4,6 @@ import CatImageURLRepository
 import CatURLImageModel
 import Kingfisher
 import SwiftData
-import SwiftUI
 
 public actor CatImagePrefetcher {
     private let repository: CatImageURLRepositoryProtocol
