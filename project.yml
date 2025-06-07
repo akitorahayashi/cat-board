@@ -40,6 +40,7 @@ targets:
       - package: TieredGridLayout
         product: TieredGridLayout
       - package: Kingfisher
+        product: Kingfisher
     settings:
       base:
         DEVELOPMENT_LANGUAGE: ja

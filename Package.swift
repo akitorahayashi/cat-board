@@ -24,7 +24,7 @@ let package = Package(
         .library(name: "CatImagePrefetcher", targets: ["CatImagePrefetcher"])
     ],
     dependencies: [
-        .package(url: "https://github.com/atrh95/scary-cat-screening-kit", exact: "3.3.5"),
+        .package(url: "https://github.com/atrh95/scary-cat-screening-kit", exact: "3.3.6"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.3.2")
     ],
     targets: [
