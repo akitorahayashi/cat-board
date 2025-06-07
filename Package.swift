@@ -58,7 +58,7 @@ let package = Package(
                 "CatImageScreener",
                 .product(name: "Kingfisher", package: "Kingfisher")
             ],
-            path: "CatImageLoader",
+            path: "CatImageLoader/Sources",
             resources: [
                 .process("SampleImage")
             ]
