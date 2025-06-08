@@ -113,10 +113,10 @@ final class CatImagePrefetcherTests: XCTestCase {
         _ = try await task1.value
         _ = try await task2.value
 
-        // 重複実行が防止されるため、1回分の処理時間で十分（目標枚数の1.5倍）
+        // 重複実行が防止されるため、1回分の処理時間で十分（目標枚数の2倍）
         let waitTime = await UInt64(
             mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 1.5)) *
+                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 2.0)) *
                 1_000_000_000
         )
         try await Task.sleep(nanoseconds: waitTime)
@@ -173,7 +173,7 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         let waitTime1 = await UInt64(
             mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 1.5)) *
+                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 5.0)) *
                 1_000_000_000
         )
         try await Task.sleep(nanoseconds: waitTime1)
@@ -192,7 +192,7 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         let waitTime2 = await UInt64(
             mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 1.5)) *
+                .calculateTotalLoadingTime(for: CatImagePrefetcher.targetPrefetchCount * 5) *
                 1_000_000_000
         )
         try await Task.sleep(nanoseconds: waitTime2)
@@ -213,7 +213,7 @@ final class CatImagePrefetcherTests: XCTestCase {
         try await prefetcher.startPrefetchingIfNeeded()
         let waitTime = await UInt64(
             mockLoader
-                .calculateTotalLoadingTime(for: CatImagePrefetcher.targetPrefetchCount * 2) * 1_000_000_000
+                .calculateTotalLoadingTime(for: CatImagePrefetcher.targetPrefetchCount * 5) * 1_000_000_000
         )
         try await Task.sleep(nanoseconds: waitTime)
         let endTime = Date()
