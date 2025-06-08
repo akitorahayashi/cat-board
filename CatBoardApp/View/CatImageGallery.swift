@@ -10,21 +10,14 @@ import TieredGridLayout
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
 
-    private let modelContainer: ModelContainer
     @StateObject private var viewModel: GalleryViewModel
 
-    init(modelContainer: ModelContainer) {
-        self.modelContainer = modelContainer
-        let imageClient = CatAPIClient()
-        let repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: imageClient)
-        let screener = CatImageScreener()
-        let imageLoader = CatImageLoader()
-        let prefetcher = CatImagePrefetcher(
-            repository: repository,
-            imageLoader: imageLoader,
-            screener: screener,
-            modelContainer: modelContainer
-        )
+    init(
+        repository: CatImageURLRepositoryProtocol,
+        imageLoader: CatImageLoaderProtocol,
+        screener: CatImageScreenerProtocol,
+        prefetcher: CatImagePrefetcherProtocol
+    ) {
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,
             imageLoader: imageLoader,
@@ -78,10 +71,10 @@ struct CatImageGallery: View {
                                 .foregroundColor(.primary)
                         }
                     )
+                    .accessibilityIdentifier("refreshButton")
                     .opacity(
                         !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
-                            .count >= Self
-                            .minImageCountForRefresh ? 1 : 0
+                            .count >= Self.minImageCountForRefresh ? 1 : 0
                     )
                     .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
                     .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)
@@ -99,6 +92,7 @@ struct CatImageGallery: View {
         VStack(spacing: 16) {
             Text("エラーが発生しました")
                 .font(.headline)
+                .accessibilityIdentifier("errorTitle")
             Text(viewModel.errorMessage ?? "")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -115,6 +109,7 @@ struct CatImageGallery: View {
                     .font(.title2)
                     .foregroundColor(.blue)
             }
+            .accessibilityIdentifier("retryButton")
             .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -141,13 +136,18 @@ struct CatImageGallery: View {
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
-            ForEach(viewModel.imageURLsToShow.chunked(into: 10), id: \.self) { chunk in
+            ForEach(
+                Array(viewModel.imageURLsToShow.chunked(into: 10).enumerated()),
+                id: \.offset
+            ) { chunkIndex, chunk in
                 TieredGridLayout {
-                    ForEach(chunk, id: \.id) { image in
+                    ForEach(Array(chunk.enumerated()), id: \.element.id) { index, image in
+                        let globalIndex = chunkIndex * 10 + index
                         SquareGalleryImageAsync(url: URL(string: image.imageURL))
                             .padding(2)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                             .rotationEffect(.degrees(180))
+                            .accessibilityIdentifier("galleryImage_\(globalIndex)")
                             .onAppear {
                                 if image.id == viewModel.imageURLsToShow.last?.id {
                                     Task {

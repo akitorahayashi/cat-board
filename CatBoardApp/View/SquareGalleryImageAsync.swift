@@ -9,25 +9,34 @@ struct SquareGalleryImageAsync: View {
         GeometryReader { geo in
             let size = geo.size.width
 
-            KFImage(source: url.map { .network($0) })
-                .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 200, height: 200)))
-                .memoryCacheExpiration(.seconds(3600))
-                .diskCacheExpiration(.expired)
-                .cacheOriginalImage(false)
-                .placeholder {
-                    Color(.secondarySystemBackground)
-                        .frame(width: size, height: size)
+            Group {
+                // UIテスト時は固定の画像を使用
+                if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+                    Image("cat_1be")
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    KFImage(source: url.map { .network($0) })
+                        .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 200, height: 200)))
+                        .memoryCacheExpiration(.seconds(3600))
+                        .diskCacheExpiration(.expired)
+                        .cacheOriginalImage(false)
+                        .placeholder {
+                            Color(.secondarySystemBackground)
+                                .frame(width: size, height: size)
+                        }
+                        .fade(duration: 0.3)
+                        .resizable()
+                        .scaledToFill()
                 }
-                .fade(duration: 0.3)
-                .resizable()
-                .scaledToFill()
-                .frame(width: size, height: size)
-                .clipped()
-                .cornerRadius(cornerRadius)
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(Color(.systemBackground).opacity(0.3), lineWidth: 2)
-                )
+            }
+            .frame(width: size, height: size)
+            .clipped()
+            .cornerRadius(cornerRadius)
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(Color(.systemBackground).opacity(0.3), lineWidth: 2)
+            )
         }
     }
 }

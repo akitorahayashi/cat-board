@@ -11,12 +11,6 @@ set -euo pipefail
 
 # === Configuration ===
 OUTPUT_DIR="ci-outputs"
-TEST_RESULTS_DIR="$OUTPUT_DIR/test-results"
-TEST_DERIVED_DATA_DIR="$TEST_RESULTS_DIR/DerivedData"
-PRODUCTION_DIR="$OUTPUT_DIR/production"
-ARCHIVE_DIR="$PRODUCTION_DIR/archives"
-PRODUCTION_DERIVED_DATA_DIR="$ARCHIVE_DIR/DerivedData"
-EXPORT_DIR="$PRODUCTION_DIR/Export"
 PROJECT_FILE="CatBoardApp.xcodeproj"
 APP_SCHEME="CatBoardApp"
 UNIT_TEST_SCHEME="CatBoardTests"
@@ -111,17 +105,16 @@ if [ "$skip_build_for_testing" = false ] || [ "$run_archive" = true ]; then
   echo "Removing old $OUTPUT_DIR directory if it exists..."
   rm -rf "$OUTPUT_DIR"
   echo "Creating directories..."
-  mkdir -p "$TEST_RESULTS_DIR/unit" "$TEST_RESULTS_DIR/ui" "$TEST_DERIVED_DATA_DIR" \
-           "$ARCHIVE_DIR" "$PRODUCTION_DERIVED_DATA_DIR" "$EXPORT_DIR"
+  mkdir -p "$OUTPUT_DIR/test-results" "$OUTPUT_DIR/test-results/DerivedData" "$OUTPUT_DIR/production" "$OUTPUT_DIR/production/archives"
   success "Directories created under $OUTPUT_DIR."
 else
   step "Skipping cleanup and directory creation (reusing existing build outputs)"
   # ビルドせずにテストを実行する場合、テストに必要なディレクトリが存在することを確認
   if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
-      if [ ! -d "$TEST_DERIVED_DATA_DIR" ]; then
-          fail "Cannot run tests without building: DerivedData directory not found at $TEST_DERIVED_DATA_DIR. Run a full build first."
+      if [ ! -d "$OUTPUT_DIR/test-results/DerivedData" ]; then
+          fail "Cannot run tests without building: DerivedData directory not found at $OUTPUT_DIR/test-results/DerivedData. Run a full build first."
       fi
-      mkdir -p "$TEST_RESULTS_DIR/unit" "$TEST_RESULTS_DIR/ui"
+      mkdir -p "$OUTPUT_DIR/test-results/unit" "$OUTPUT_DIR/test-results/ui"
       success "Required test directories exist or created."
   fi
 fi
@@ -185,7 +178,7 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       -project "$PROJECT_FILE" \
       -scheme "$APP_SCHEME" \
       -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-      -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
+      -derivedDataPath "$OUTPUT_DIR/test-results/DerivedData" \
       -configuration Debug \
       -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
@@ -193,8 +186,8 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
     success "Build for testing completed."
   else
       echo "Skipping build for testing as requested (--test-without-building)."
-      if [ ! -d "$TEST_DERIVED_DATA_DIR/Build/Intermediates.noindex/XCBuildData" ]; then
-         fail "Cannot skip build: No existing build artifacts found in $TEST_DERIVED_DATA_DIR. Run a full build first."
+      if [ ! -d "$OUTPUT_DIR/test-results/DerivedData/Build/Intermediates.noindex/XCBuildData" ]; then
+         fail "Cannot skip build: No existing build artifacts found in $OUTPUT_DIR/test-results/DerivedData. Run a full build first."
       fi
       success "Using existing build artifacts."
   fi
@@ -212,18 +205,18 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       -project "$PROJECT_FILE" \
       -scheme "$UNIT_TEST_SCHEME" \
       -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-      -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
+      -derivedDataPath "$OUTPUT_DIR/test-results/DerivedData" \
       -enableCodeCoverage NO \
-      -resultBundlePath "$TEST_RESULTS_DIR/unit/TestResults.xcresult" \
+      -resultBundlePath "$OUTPUT_DIR/test-results/unit/TestResults.xcresult" \
       CODE_SIGNING_ALLOWED=NO \
-    | xcbeautify --report junit --report-path "$TEST_RESULTS_DIR/unit/junit.xml"
+    | xcbeautify
 
     # Unitテスト結果バンドルの存在を確認
     echo "Verifying unit test results bundle..."
-    if [ ! -d "$TEST_RESULTS_DIR/unit/TestResults.xcresult" ]; then
-      fail "Unit test result bundle not found at $TEST_RESULTS_DIR/unit/TestResults.xcresult"
+    if [ ! -d "$OUTPUT_DIR/test-results/unit/TestResults.xcresult" ]; then
+      fail "Unit test result bundle not found at $OUTPUT_DIR/test-results/unit/TestResults.xcresult"
     fi
-    success "Unit test result bundle found at $TEST_RESULTS_DIR/unit/TestResults.xcresult"
+    success "Unit test result bundle found at $OUTPUT_DIR/test-results/unit/TestResults.xcresult"
   fi
 
   # UIテストを実行
@@ -233,27 +226,24 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
       -project "$PROJECT_FILE" \
       -scheme "$UI_TEST_SCHEME" \
       -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-      -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
+      -derivedDataPath "$OUTPUT_DIR/test-results/DerivedData" \
       -enableCodeCoverage NO \
-      -resultBundlePath "$TEST_RESULTS_DIR/ui/TestResults.xcresult" \
+      -resultBundlePath "$OUTPUT_DIR/test-results/ui/TestResults.xcresult" \
       CODE_SIGNING_ALLOWED=NO \
-    | xcbeautify --report junit --report-path "$TEST_RESULTS_DIR/ui/junit.xml"
+    | xcbeautify
 
     # UIテスト結果バンドルの存在を確認
     echo "Verifying UI test results bundle..."
-    if [ ! -d "$TEST_RESULTS_DIR/ui/TestResults.xcresult" ]; then
-      fail "UI test result bundle not found at $TEST_RESULTS_DIR/ui/TestResults.xcresult"
+    if [ ! -d "$OUTPUT_DIR/test-results/ui/TestResults.xcresult" ]; then
+      fail "UI test result bundle not found at $OUTPUT_DIR/test-results/ui/TestResults.xcresult"
     fi
-    success "UI test result bundle found at $TEST_RESULTS_DIR/ui/TestResults.xcresult"
+    success "UI test result bundle found at $OUTPUT_DIR/test-results/ui/TestResults.xcresult"
   fi
 fi
 
 # --- Build for Production (Archive) ---
 if [ "$run_archive" = true ]; then
   step "Building for Production (Unsigned)"
-
-  ARCHIVE_PATH="$ARCHIVE_DIR/CatBoard.xcarchive"
-  ARCHIVE_APP_PATH="$ARCHIVE_PATH/Products/Applications/$APP_SCHEME.app"
 
   # アーカイブビルド
   echo "Building archive..."
@@ -262,8 +252,8 @@ if [ "$run_archive" = true ]; then
     -scheme "$APP_SCHEME" \
     -configuration Release \
     -destination "generic/platform=iOS Simulator" \
-    -archivePath "$ARCHIVE_PATH" \
-    -derivedDataPath "$PRODUCTION_DERIVED_DATA_DIR" \
+    -archivePath "$OUTPUT_DIR/production/archives/CatBoard.xcarchive" \
+    -derivedDataPath "$OUTPUT_DIR/production/DerivedData" \
     -skipMacroValidation \
     CODE_SIGNING_ALLOWED=NO \
     archive \
@@ -272,10 +262,11 @@ if [ "$run_archive" = true ]; then
 
   # アーカイブ内容を検証
   echo "Verifying archive contents..."
+  ARCHIVE_PATH="$OUTPUT_DIR/production/archives/CatBoard.xcarchive"
+  ARCHIVE_APP_PATH="$ARCHIVE_PATH/Products/Applications/$APP_SCHEME.app"
   if [ ! -d "$ARCHIVE_APP_PATH" ]; then
     echo "Error: '$APP_SCHEME.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
-    echo "--- Listing Archive Contents (on error) ---"
-    ls -lR "$ARCHIVE_PATH" || echo "Archive directory not found or empty."
+    echo "Archive directory: $ARCHIVE_PATH"
     fail "Archive verification failed."
   fi
   success "Archive content verified."
