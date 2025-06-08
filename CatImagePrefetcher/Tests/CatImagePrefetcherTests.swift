@@ -143,10 +143,10 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         try await prefetcher.startPrefetchingIfNeeded()
 
-        // 期待時間を計算（目標枚数の1.5倍）
+        // 期待時間を計算（CIを考慮し、目標枚数の3.0倍に増加）
         let waitTime = await UInt64(
             mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 1.5)) *
+                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 3.0)) *
                 1_000_000_000
         )
         try await Task.sleep(nanoseconds: waitTime)

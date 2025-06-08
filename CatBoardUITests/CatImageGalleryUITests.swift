@@ -32,7 +32,7 @@ final class CatImageGalleryUITests: XCTestCase {
 
     func testRefreshButton() async throws {
         app.launch()
-        try await Task.sleep(nanoseconds: 20_000_000)
+        try await Task.sleep(nanoseconds: 1_000_000_000)
 
         let refreshButton = app.buttons["refreshButton"]
         XCTAssertTrue(refreshButton.waitForExistence(timeout: 0.05))
@@ -41,7 +41,7 @@ final class CatImageGalleryUITests: XCTestCase {
         XCTAssertTrue(firstImage.waitForExistence(timeout: 0.02))
 
         refreshButton.tap()
-        try await Task.sleep(nanoseconds: 20_000_000)
+        try await Task.sleep(nanoseconds: 1_000_000_000)
 
         let refreshExists = firstImage.waitForExistence(timeout: 0.02)
         XCTAssertTrue(refreshExists)
@@ -65,7 +65,7 @@ final class CatImageGalleryUITests: XCTestCase {
         XCTAssertTrue(retryExists)
 
         retryButton.tap()
-        try await Task.sleep(nanoseconds: 20_000_000)
+        try await Task.sleep(nanoseconds: 1_000_000_000)
 
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.waitForExistence(timeout: 0.05))

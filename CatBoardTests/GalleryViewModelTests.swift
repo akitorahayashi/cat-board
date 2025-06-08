@@ -69,8 +69,8 @@ final class GalleryViewModelTests: XCTestCase {
         await mockScreener.setIsScreeningEnabled(false)
 
         viewModel.loadInitialImages()
-        // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 2秒 (CIの実行時間を考慮)
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 4秒 (CIの実行時間を考慮)
+        try? await Task.sleep(nanoseconds: 4_000_000_000)
         let initialCount = viewModel.imageURLsToShow.count
 
         await viewModel.fetchAdditionalImages()
@@ -119,9 +119,12 @@ final class GalleryViewModelTests: XCTestCase {
         await mockScreener.setIsScreeningEnabled(true)
 
         viewModel.loadInitialImages()
+        // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 5秒 (CIの実行時間を考慮)
+        try? await Task.sleep(nanoseconds: 5_000_000_000)
+        let initialCount = viewModel.imageURLsToShow.count
 
-        // スクリーニング有効時は目標枚数の約2倍処理: 60枚 × 0.01秒 = 0.6秒 + バッファ = 2秒 (CIの実行時間を考慮)
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        // スクリーニング有効時は目標枚数の約2倍処理: 60枚 × 0.01秒 = 0.6秒 + バッファ = 10秒 (CIの実行時間を考慮)
+        try? await Task.sleep(nanoseconds: 10_000_000_000)
 
         let finalCount = viewModel.imageURLsToShow.count
 

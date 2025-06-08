@@ -39,61 +39,42 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         imageData: Data,
         model: CatImageURLModel
     )] {
-        // 並行処理で画像をロード
-        let results = await withTaskGroup(of: (imageData: Data, model: CatImageURLModel)?.self) { group in
-            for (index, item) in models.enumerated() {
-                group.addTask {
-                    guard let url = URL(string: item.imageURL) else {
-                        print("無効なURL: \(item.imageURL)")
-                        return nil
-                    }
+        var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
+        loadedImages.reserveCapacity(models.count)
 
-                    do {
-                        let result = try await KingfisherManager.shared.retrieveImage(
-                            with: url,
-                            options: [
-                                .requestModifier(AnyModifier { request in
-                                    var r = request
-                                    r.timeoutInterval = 10
-                                    return r
-                                }),
-                                .diskCacheExpiration(.days(3)),
-                            ]
-                        )
+        for (index, item) in models.enumerated() {
+            guard let url = URL(string: item.imageURL) else {
+                print("無効なURL: \(item.imageURL)")
+                continue
+            }
 
-                        return autoreleasepool {
-                            if let imageData = toJPEGData(result.image, 0.8) {
-                                return (imageData: imageData, model: item)
-                            }
-                            return nil
-                        }
-                    } catch let error as NSError {
-                        if error.domain == NSURLErrorDomain, error.code == NSURLErrorNotConnectedToInternet {
-                            // ネットワークエラーは上位に伝播させる必要があるが、
-                            // TaskGroup内では個別のタスクのエラーは収集できないため、
-                            // ここでは警告のみ出力し、nilを返す
-                            print("ネットワークエラー [\(index + 1)/\(models.count)]: (\(item.imageURL))")
-                        } else {
-                            let errorType = error.domain == NSURLErrorDomain ? "ネットワーク" : "その他"
-                            print("画像のダウンロードに失敗 [\(index + 1)/\(models.count)]: \(errorType)エラー (\(item.imageURL))")
-                        }
-                        return nil
+            do {
+                let result = try await KingfisherManager.shared.retrieveImage(
+                    with: url,
+                    options: [
+                        .requestModifier(AnyModifier { request in
+                            var r = request
+                            r.timeoutInterval = 10
+                            return r
+                        }),
+                        .diskCacheExpiration(.days(3)),
+                    ]
+                )
+
+                autoreleasepool {
+                    if let imageData = toJPEGData(result.image, 0.8) {
+                        loadedImages.append((imageData: imageData, model: item))
                     }
                 }
-            }
-            
-            var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
-            loadedImages.reserveCapacity(models.count)
-            
-            for await result in group {
-                if let result = result {
-                    loadedImages.append(result)
+            } catch let error as NSError {
+                if error.domain == NSURLErrorDomain, error.code == NSURLErrorNotConnectedToInternet {
+                    throw error
                 }
+                let errorType = error.domain == NSURLErrorDomain ? "ネットワーク" : "その他"
+                print("画像のダウンロードに失敗 [\(index + 1)/\(models.count)]: \(errorType)エラー (\(item.imageURL))")
+                continue
             }
-            
-            return loadedImages
         }
-        
-        return results
+        return loadedImages
     }
 }
