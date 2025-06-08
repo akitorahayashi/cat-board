@@ -41,14 +41,14 @@ final class GalleryViewModelTests: XCTestCase {
         mockRepository = nil
         mockScreener = nil
         mockPrefetcher = nil
-        
+
         super.tearDown()
     }
 
     func testLoadInitialImages() async {
         await mockLoader.setLoadingTimeInSeconds(0.01)
         await mockScreener.setIsScreeningEnabled(false)
-        
+
         XCTAssertTrue(viewModel.imageURLsToShow.isEmpty)
 
         viewModel.loadInitialImages()
@@ -67,7 +67,7 @@ final class GalleryViewModelTests: XCTestCase {
     func testFetchAdditionalImages() async {
         await mockLoader.setLoadingTimeInSeconds(0.01)
         await mockScreener.setIsScreeningEnabled(false)
-        
+
         viewModel.loadInitialImages()
         // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 0.5秒
         try? await Task.sleep(nanoseconds: 500_000_000)
@@ -82,7 +82,7 @@ final class GalleryViewModelTests: XCTestCase {
     func testClearDisplayedImages() async {
         await mockLoader.setLoadingTimeInSeconds(0.01)
         await mockScreener.setIsScreeningEnabled(false)
-        
+
         viewModel.loadInitialImages()
         // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 0.5秒
         try? await Task.sleep(nanoseconds: 500_000_000)
@@ -97,7 +97,7 @@ final class GalleryViewModelTests: XCTestCase {
     func testMaxImageCountReached() async {
         await mockLoader.setLoadingTimeInSeconds(0.01)
         await mockScreener.setIsScreeningEnabled(false)
-        
+
         viewModel.loadInitialImages()
         // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 0.5秒
         try? await Task.sleep(nanoseconds: 500_000_000)
@@ -113,38 +113,38 @@ final class GalleryViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isAdditionalFetching)
         XCTAssertLessThanOrEqual(viewModel.imageURLsToShow.count, GalleryViewModel.maxImageCount)
     }
-    
+
     func testScreeningInInitialImages() async throws {
         await mockLoader.setLoadingTimeInSeconds(0.01)
         await mockScreener.setIsScreeningEnabled(true)
-        
+
         viewModel.loadInitialImages()
-        
+
         // スクリーニング有効時は目標枚数の約2倍処理: 60枚 × 0.01秒 = 0.6秒 + バッファ = 1秒
         try? await Task.sleep(nanoseconds: 1_000_000_000)
-        
+
         let finalCount = viewModel.imageURLsToShow.count
-        
+
         // スクリーニングにより、目標枚数以下になる可能性がある
         XCTAssertLessThanOrEqual(finalCount, GalleryViewModel.targetInitialDisplayCount)
         XCTAssertFalse(viewModel.isInitializing)
     }
-    
+
     func testScreeningInAdditionalImages() async throws {
         await mockLoader.setLoadingTimeInSeconds(0.01)
         await mockScreener.setIsScreeningEnabled(true)
-        
+
         viewModel.loadInitialImages()
-        
+
         // 初期読み込み完了まで待機: 60枚 × 0.01秒 = 0.6秒 + バッファ = 1秒
         try? await Task.sleep(nanoseconds: 1_000_000_000)
-        
+
         let initialCount = viewModel.imageURLsToShow.count
-        
+
         await viewModel.fetchAdditionalImages()
-        
+
         let addedCount = viewModel.imageURLsToShow.count - initialCount
-        
+
         // スクリーニングにより、追加画像数が目標以下になる
         XCTAssertLessThanOrEqual(addedCount, GalleryViewModel.batchDisplayCount)
         XCTAssertFalse(viewModel.isAdditionalFetching)

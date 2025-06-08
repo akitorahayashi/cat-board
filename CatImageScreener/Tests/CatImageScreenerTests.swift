@@ -19,16 +19,10 @@ final class CatImageScreenerTests: XCTestCase {
 
     /// スクリーナーが正しく初期化され、ScaryCatScreenerインスタンスを返すことを確認
     func testInitialScreener() async throws {
-        let screener = try await screener.getScreener()
-        XCTAssertNotNil(screener)
-    }
-
-    /// スクリーナーがシングルトンパターンを維持し、複数回の呼び出しで同じインスタンスを返すことを確認
-    func testScreenerSingleton() async throws {
         let firstScreener = try await screener.getScreener()
-        let secondScreener = try await screener.getScreener()
-
         XCTAssertNotNil(firstScreener)
+
+        let secondScreener = try await screener.getScreener()
         XCTAssertNotNil(secondScreener)
         XCTAssertTrue(firstScreener === secondScreener)
     }

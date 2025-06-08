@@ -21,11 +21,11 @@ public actor NoopCatImagePrefetcher: CatImagePrefetcherProtocol {
     }
 
     public func getPrefetchedCount() async throws -> Int {
-        return 0
+        0
     }
 
-    public func getPrefetchedImages(imageCount: Int) async throws -> [CatImageURLModel] {
-        return []
+    public func getPrefetchedImages(imageCount _: Int) async throws -> [CatImageURLModel] {
+        []
     }
 
     public func startPrefetchingIfNeeded() async throws {}

@@ -3,16 +3,13 @@ import Foundation
 
 public actor MockCatImageScreener: CatImageScreenerProtocol {
     private let error: Error?
-    private let screeningProbability: Float
 
     public var isScreeningEnabled: Bool = true
 
     public init(
-        error: Error? = nil,
-        screeningProbability: Float = 0.5
+        error: Error? = nil
     ) {
         self.error = error
-        self.screeningProbability = screeningProbability
     }
 
     public func setIsScreeningEnabled(_ enabled: Bool) {
@@ -31,9 +28,9 @@ public actor MockCatImageScreener: CatImageScreenerProtocol {
             return imageDataWithModels.map(\.model)
         }
 
-        // ランダムに指定された確率で画像を返す
+        // 完全にランダムで50%の確率で画像を返す
         return imageDataWithModels.compactMap { model in
-            Float.random(in: 0 ... 1) < screeningProbability ? model.model : nil
+            Bool.random() ? model.model : nil
         }
     }
 }
