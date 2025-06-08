@@ -136,7 +136,10 @@ struct CatImageGallery: View {
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
-            ForEach(Array(viewModel.imageURLsToShow.chunked(into: 10).enumerated()), id: \.offset) { chunkIndex, chunk in
+            ForEach(
+                Array(viewModel.imageURLsToShow.chunked(into: 10).enumerated()),
+                id: \.offset
+            ) { chunkIndex, chunk in
                 TieredGridLayout {
                     ForEach(Array(chunk.enumerated()), id: \.element.id) { index, image in
                         let globalIndex = chunkIndex * 10 + index

@@ -20,10 +20,10 @@ final class CatImageGalleryUITests: XCTestCase {
 
     func testInitialDisplay() async throws {
         app.launch()
-        
+
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.exists)
-        
+
         let firstImage = app.images["galleryImage_0"]
         XCTAssertTrue(firstImage.waitForExistence(timeout: 0.02))
     }
@@ -33,19 +33,19 @@ final class CatImageGalleryUITests: XCTestCase {
     func testRefreshButton() async throws {
         app.launch()
         try await Task.sleep(nanoseconds: 20_000_000)
-        
+
         let refreshButton = app.buttons["refreshButton"]
         XCTAssertTrue(refreshButton.waitForExistence(timeout: 0.05))
-        
+
         let firstImage = app.images["galleryImage_0"]
         XCTAssertTrue(firstImage.waitForExistence(timeout: 0.02))
-        
+
         refreshButton.tap()
         try await Task.sleep(nanoseconds: 20_000_000)
-        
+
         let refreshExists = firstImage.waitForExistence(timeout: 0.02)
         XCTAssertTrue(refreshExists)
-        
+
         let errorTitle = app.staticTexts["errorTitle"]
         let errorExists = errorTitle.exists
         XCTAssertFalse(errorExists)
@@ -56,20 +56,20 @@ final class CatImageGalleryUITests: XCTestCase {
     func testErrorStateDisplayAndRetry() async throws {
         app.launchArguments.append("--simulate-error")
         app.launch()
-        
+
         let errorTitle = app.staticTexts["errorTitle"]
         XCTAssertTrue(errorTitle.waitForExistence(timeout: 0.02))
-        
+
         let retryButton = app.buttons["retryButton"]
         let retryExists = retryButton.exists
         XCTAssertTrue(retryExists)
-        
+
         retryButton.tap()
         try await Task.sleep(nanoseconds: 20_000_000)
-        
+
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.waitForExistence(timeout: 0.05))
-        
+
         let firstImage = app.images["galleryImage_0"]
         XCTAssertTrue(firstImage.waitForExistence(timeout: 0.02))
     }
@@ -78,20 +78,26 @@ final class CatImageGalleryUITests: XCTestCase {
 
     func testAdditionalFetch() async throws {
         app.launch()
-        
+
         let scrollView = app.scrollViews.firstMatch
         let scrollExists = scrollView.exists
         XCTAssertTrue(scrollExists)
-        
+
         let firstImage = app.images["galleryImage_0"]
         let firstExists = firstImage.waitForExistence(timeout: 0.02)
         XCTAssertTrue(firstExists)
-        
+
         func getMaxImageIndex() -> Int {
             let allImages = app.images.allElementsBoundByIndex
-            let regex = try! NSRegularExpression(pattern: "galleryImage_(\\d+)")
+            let regex: NSRegularExpression
+            do {
+                regex = try NSRegularExpression(pattern: "galleryImage_(\\d+)")
+            } catch {
+                XCTFail("正規表現の作成に失敗しました: \(error)")
+                return -1
+            }
             var maxIndex = -1
-            
+
             for image in allImages {
                 let identifier = image.identifier
                 if let match = regex.firstMatch(in: identifier, range: NSRange(location: 0, length: identifier.count)) {
@@ -104,15 +110,15 @@ final class CatImageGalleryUITests: XCTestCase {
             }
             return maxIndex
         }
-        
+
         let initialMaxIndex = getMaxImageIndex()
         XCTAssertGreaterThan(initialMaxIndex, -1)
-        
-        for _ in 0..<5 {
+
+        for _ in 0 ..< 5 {
             scrollView.swipeDown(velocity: XCUIGestureVelocity.fast)
         }
-        
+
         let finalMaxIndex = getMaxImageIndex()
         XCTAssertGreaterThanOrEqual(finalMaxIndex + 1, 30)
     }
-} 
+}

@@ -26,11 +26,11 @@ struct CatBoardApp: App {
                 let mockAPIClient = MockCatAPIClient()
                 screener = MockCatImageScreener()
                 let mockImageLoader = MockCatImageLoader()
-                
+
                 imageLoader = mockImageLoader
                 let mockRepository = MockCatImageURLRepository(apiClient: mockAPIClient)
                 repository = mockRepository
-                
+
                 // エラーシミュレーション引数がある場合はエラーを設定
                 if ProcessInfo.processInfo.arguments.contains("--simulate-error") {
                     Task {
@@ -41,7 +41,7 @@ struct CatBoardApp: App {
                         ))
                     }
                 }
-                
+
                 prefetcher = NoopCatImagePrefetcher(
                     repository: repository,
                     imageLoader: imageLoader,

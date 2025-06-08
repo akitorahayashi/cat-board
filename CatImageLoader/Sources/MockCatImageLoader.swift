@@ -36,16 +36,16 @@ public actor MockCatImageLoader: CatImageLoaderProtocol {
         model: CatImageURLModel
     )] {
         print("MockCatImageLoader.loadImageData が呼ばれました: \(models.count)枚")
-        
+
         // エラーが設定されている場合は投げてからクリア
         if let error = errorToThrow {
             print("MockCatImageLoader: エラーを投げます - \(error.localizedDescription)")
             errorToThrow = nil
             throw error
         }
-        
+
         print("MockCatImageLoader: 正常処理を開始します")
-        
+
         var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
         loadedImages.reserveCapacity(models.count)
 
@@ -54,7 +54,7 @@ public actor MockCatImageLoader: CatImageLoaderProtocol {
             if loadingTimePerOneImageInSeconds > 0 {
                 try await Task.sleep(nanoseconds: UInt64(loadingTimePerOneImageInSeconds * 1_000_000_000))
             }
-            
+
             do {
                 guard let imageData = try? Data(contentsOf: testImageURL) else {
                     throw NSError(

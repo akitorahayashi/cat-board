@@ -4,7 +4,6 @@ import SwiftUI
 struct SquareGalleryImageAsync: View {
     let url: URL?
     private let cornerRadius: CGFloat = 8
-    @State private var isAppeared = false
 
     var body: some View {
         GeometryReader { geo in
@@ -26,18 +25,13 @@ struct SquareGalleryImageAsync: View {
                             Color(.secondarySystemBackground)
                                 .frame(width: size, height: size)
                         }
+                        .fade(duration: 0.3)
                         .resizable()
                         .scaledToFill()
                 }
             }
             .frame(width: size, height: size)
             .clipped()
-            .opacity(isAppeared ? 1 : 0)
-            .scaleEffect(isAppeared ? 1 : 0.95)
-            .animation(.easeOut(duration: 0.3), value: isAppeared)
-            .onAppear {
-                isAppeared = true
-            }
             .cornerRadius(cornerRadius)
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
