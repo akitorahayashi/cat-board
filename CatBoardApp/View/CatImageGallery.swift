@@ -10,21 +10,14 @@ import TieredGridLayout
 struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
 
-    private let modelContainer: ModelContainer
     @StateObject private var viewModel: GalleryViewModel
-
-    init(modelContainer: ModelContainer) {
-        self.modelContainer = modelContainer
-        let imageClient = CatAPIClient()
-        let repository = CatImageURLRepository(modelContainer: modelContainer, apiClient: imageClient)
-        let screener = CatImageScreener()
-        let imageLoader = CatImageLoader()
-        let prefetcher = CatImagePrefetcher(
-            repository: repository,
-            imageLoader: imageLoader,
-            screener: screener,
-            modelContainer: modelContainer
-        )
+    
+    init(
+        repository: CatImageURLRepositoryProtocol,
+        imageLoader: CatImageLoaderProtocol,
+        screener: CatImageScreenerProtocol,
+        prefetcher: CatImagePrefetcher
+    ) {
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,
             imageLoader: imageLoader,
@@ -80,8 +73,7 @@ struct CatImageGallery: View {
                     )
                     .opacity(
                         !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
-                            .count >= Self
-                            .minImageCountForRefresh ? 1 : 0
+                            .count >= Self.minImageCountForRefresh ? 1 : 0
                     )
                     .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
                     .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)

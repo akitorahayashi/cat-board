@@ -34,77 +34,7 @@ final class GalleryViewModel: ObservableObject {
         self.prefetcher = prefetcher
     }
 
-    private func fetchImages(requiredImageCount: Int) async throws -> [CatImageURLModel] {
-        // 1. まずプリフェッチで足りるかチェック
-        let prefetchedCount = try await prefetcher.getPrefetchedCount()
-        if prefetchedCount >= requiredImageCount {
-            let images = try await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
-            await MainActor.run {
-                print(
-                    "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
-                )
-            }
-
-            return images
-        }
-
-        // 2. プリフェッチ不足時は直接取得を開始
-        await MainActor.run {
-            print("プリフェッチが不足しているため直接取得を開始: \(requiredImageCount)枚")
-        }
-
-        var result: [CatImageURLModel] = []
-        let maxRetry = 5 // 最大リトライ回数
-
-        for _ in 0 ..< maxRetry where result.count < requiredImageCount {
-            // 2.1 画像URLの取得
-            let models = try await self.repository.getNextImageURLs(count: Self.batchDisplayCount)
-            if models.isEmpty {
-                throw NSError(
-                    domain: "GalleryViewModel",
-                    code: -2,
-                    userInfo: [NSLocalizedDescriptionKey: "URL repository exhausted"]
-                )
-            }
-
-            // 2.2 1枚ずつ処理
-            for model in models {
-                if result.count >= requiredImageCount { break }
-
-                // 2.2.1 画像のダウンロード
-                let loadedImages = try await self.imageLoader.loadImageData(from: [model])
-
-                // 2.2.2 スクリーニングの実行
-                let screenedModels = try await self.screener.screenImages(imageDataWithModels: loadedImages)
-
-                if let screenedModel = screenedModels.first {
-                    result.append(screenedModel)
-                }
-            }
-        }
-
-        let finalResult = result
-        await MainActor.run {
-            print("画像直接取得完了: \(finalResult.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
-        }
-        return finalResult
-    }
-
-    private func fetchImagesInBatches(
-        totalImageCount: Int,
-        numberOfBatches: Int,
-        onBatchComplete: @escaping (Int, [CatImageURLModel]) -> Void
-    ) async throws {
-        let baseImagesPerBatch = totalImageCount / numberOfBatches
-        let remainder = totalImageCount % numberOfBatches
-
-        for i in 0 ..< numberOfBatches {
-            let imagesForThisBatch = baseImagesPerBatch + (i < remainder ? 1 : 0)
-            let newImages = try await fetchImages(requiredImageCount: imagesForThisBatch)
-            onBatchComplete(i, newImages)
-        }
-    }
-
+    // 初期表示、またはViewを初期化した後に呼ぶ
     func loadInitialImages() {
         if imageURLsToShow.isEmpty {
             let startTime = Date()
@@ -152,6 +82,7 @@ final class GalleryViewModel: ObservableObject {
         }
     }
 
+    // 追加取得
     func fetchAdditionalImages() async {
         guard !isAdditionalFetching, !isInitializing else {
             print("既にローディング中のため、スキップします")
@@ -208,4 +139,79 @@ final class GalleryViewModel: ObservableObject {
         // Kingfisherのメモリキャッシュをクリア
         KingfisherManager.shared.cache.clearMemoryCache()
     }
+
+    // MARK: - Private Methods
+
+    // private func fetchImages を batch に分けて実行する
+    private func fetchImagesInBatches(
+        totalImageCount: Int,
+        numberOfBatches: Int,
+        onBatchComplete: @escaping (Int, [CatImageURLModel]) -> Void
+    ) async throws {
+        let baseImagesPerBatch = totalImageCount / numberOfBatches
+        let remainder = totalImageCount % numberOfBatches
+
+        for i in 0 ..< numberOfBatches {
+            let imagesForThisBatch = baseImagesPerBatch + (i < remainder ? 1 : 0)
+            let newImages = try await fetchImages(requiredImageCount: imagesForThisBatch)
+            onBatchComplete(i, newImages)
+        }
+    }
+
+    private func fetchImages(requiredImageCount: Int) async throws -> [CatImageURLModel] {
+        // 1. プリフェッチで足りるかチェック
+        let prefetchedCount = try await prefetcher.getPrefetchedCount()
+        if prefetchedCount >= requiredImageCount {
+            let images = try await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
+            await MainActor.run {
+                print(
+                    "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
+                )
+            }
+
+            return images
+        }
+
+        // 2. プリフェッチ不足時は直接取得を開始
+        await MainActor.run {
+            print("プリフェッチが不足しているため直接取得を開始: \(requiredImageCount)枚")
+        }
+
+        var result: [CatImageURLModel] = []
+        let maxRetry = 5 // 最大リトライ回数
+
+        for _ in 0 ..< maxRetry where result.count < requiredImageCount {
+            // 2.1 画像URLの取得
+            let models = try await self.repository.getNextImageURLs(count: Self.batchDisplayCount)
+            if models.isEmpty {
+                throw NSError(
+                    domain: "GalleryViewModel",
+                    code: -2,
+                    userInfo: [NSLocalizedDescriptionKey: "URL repository exhausted"]
+                )
+            }
+
+            // 2.2 1枚ずつ処理
+            for model in models {
+                if result.count >= requiredImageCount { break }
+
+                // 2.2.1 画像のダウンロード
+                let loadedImages = try await self.imageLoader.loadImageData(from: [model])
+
+                // 2.2.2 スクリーニングの実行
+                let screenedModels = try await self.screener.screenImages(imageDataWithModels: loadedImages)
+
+                if let screenedModel = screenedModels.first {
+                    result.append(screenedModel)
+                }
+            }
+        }
+
+        let finalResult = result
+        await MainActor.run {
+            print("画像直接取得完了: \(finalResult.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中")
+        }
+        return finalResult
+    }
+
 }

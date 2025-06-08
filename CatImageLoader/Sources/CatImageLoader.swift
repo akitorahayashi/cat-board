@@ -33,8 +33,6 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         KingfisherManager.shared.cache.clearMemoryCache()
     }
 
-    // MARK: - Public Methods
-
     public func loadImageData(from models: [CatImageURLModel]) async throws -> [(
         imageData: Data,
         model: CatImageURLModel

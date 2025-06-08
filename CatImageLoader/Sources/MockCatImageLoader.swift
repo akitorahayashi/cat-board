@@ -7,7 +7,7 @@ public struct MockCatImageLoader: CatImageLoaderProtocol {
     public var testImageURL: URL {
         let currentFileURL = URL(fileURLWithPath: #filePath)
         return currentFileURL
-            .deletingLastPathComponent() // CatImageLoader
+            .deletingLastPathComponent()
             .appendingPathComponent("SampleImage")
             .appendingPathComponent("cat__I3nlhPtP.jpg")
     }
