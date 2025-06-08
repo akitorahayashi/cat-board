@@ -13,7 +13,7 @@ struct CatBoardApp: App {
     let repository: CatImageURLRepositoryProtocol
     let imageLoader: CatImageLoaderProtocol
     let screener: CatImageScreenerProtocol
-    let prefetcher: CatImagePrefetcher
+    let prefetcher: CatImagePrefetcherProtocol
 
     init() {
         // UIテスト実行時はモック依存関係を使用
@@ -24,14 +24,28 @@ struct CatBoardApp: App {
                 modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
 
                 let mockAPIClient = MockCatAPIClient()
-                screener = MockCatImageScreener(screeningProbability: 1.0)
-                imageLoader = MockCatImageLoader()
-                repository = MockCatImageURLRepository(apiClient: mockAPIClient)
-                prefetcher = CatImagePrefetcher(
+                screener = MockCatImageScreener()
+                let mockImageLoader = MockCatImageLoader()
+                
+                imageLoader = mockImageLoader
+                let mockRepository = MockCatImageURLRepository(apiClient: mockAPIClient)
+                repository = mockRepository
+                
+                // エラーシミュレーション引数がある場合はエラーを設定
+                if ProcessInfo.processInfo.arguments.contains("--simulate-error") {
+                    Task {
+                        await mockImageLoader.setError(NSError(
+                            domain: "MockCatImageLoader",
+                            code: -1,
+                            userInfo: [NSLocalizedDescriptionKey: "テスト用の画像読み込みエラーです"]
+                        ))
+                    }
+                }
+                
+                prefetcher = NoopCatImagePrefetcher(
                     repository: repository,
                     imageLoader: imageLoader,
-                    screener: screener,
-                    modelContainer: modelContainer
+                    screener: screener
                 )
             } catch {
                 fatalError("テスト用の依存関係を初期化できませんでした: \(error)")

@@ -71,6 +71,7 @@ struct CatImageGallery: View {
                                 .foregroundColor(.primary)
                         }
                     )
+                    .accessibilityIdentifier("refreshButton")
                     .opacity(
                         !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
                             .count >= Self.minImageCountForRefresh ? 1 : 0
@@ -91,6 +92,7 @@ struct CatImageGallery: View {
         VStack(spacing: 16) {
             Text("エラーが発生しました")
                 .font(.headline)
+                .accessibilityIdentifier("errorTitle")
             Text(viewModel.errorMessage ?? "")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -107,6 +109,7 @@ struct CatImageGallery: View {
                     .font(.title2)
                     .foregroundColor(.blue)
             }
+            .accessibilityIdentifier("retryButton")
             .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -133,13 +136,15 @@ struct CatImageGallery: View {
     @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
-            ForEach(viewModel.imageURLsToShow.chunked(into: 10), id: \.self) { chunk in
+            ForEach(Array(viewModel.imageURLsToShow.chunked(into: 10).enumerated()), id: \.offset) { chunkIndex, chunk in
                 TieredGridLayout {
-                    ForEach(chunk, id: \.id) { image in
+                    ForEach(Array(chunk.enumerated()), id: \.element.id) { index, image in
+                        let globalIndex = chunkIndex * 10 + index
                         SquareGalleryImageAsync(url: URL(string: image.imageURL))
                             .padding(2)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                             .rotationEffect(.degrees(180))
+                            .accessibilityIdentifier("galleryImage_\(globalIndex)")
                             .onAppear {
                                 if image.id == viewModel.imageURLsToShow.last?.id {
                                     Task {
