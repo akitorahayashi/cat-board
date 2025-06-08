@@ -5,7 +5,7 @@ let package = Package(
     name: "CatBoard",
     platforms: [
         .iOS(.v17),
-        .macOS(.v14)
+        .macOS(.v14),
     ],
     products: [
         .library(name: "CatBoard", targets: [
@@ -14,18 +14,18 @@ let package = Package(
             "CatImageURLRepository",
             "CatImageLoader",
             "CatImageScreener",
-            "CatImagePrefetcher"
+            "CatImagePrefetcher",
         ]),
         .library(name: "CatURLImageModel", targets: ["CatURLImageModel"]),
         .library(name: "CatAPIClient", targets: ["CatAPIClient"]),
         .library(name: "CatImageURLRepository", targets: ["CatImageURLRepository"]),
         .library(name: "CatImageLoader", targets: ["CatImageLoader"]),
         .library(name: "CatImageScreener", targets: ["CatImageScreener"]),
-        .library(name: "CatImagePrefetcher", targets: ["CatImagePrefetcher"])
+        .library(name: "CatImagePrefetcher", targets: ["CatImagePrefetcher"]),
     ],
     dependencies: [
         .package(url: "https://github.com/atrh95/scary-cat-screening-kit", exact: "3.3.6"),
-        .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.3.2")
+        .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.3.2"),
     ],
     targets: [
         .target(
@@ -46,7 +46,7 @@ let package = Package(
             name: "CatImageScreener",
             dependencies: [
                 "CatURLImageModel",
-                .product(name: "ScaryCatScreeningKit", package: "scary-cat-screening-kit")
+                .product(name: "ScaryCatScreeningKit", package: "scary-cat-screening-kit"),
             ],
             path: "CatImageScreener/Sources"
         ),
@@ -56,11 +56,11 @@ let package = Package(
                 "CatURLImageModel",
                 "CatImageURLRepository",
                 "CatImageScreener",
-                .product(name: "Kingfisher", package: "Kingfisher")
+                .product(name: "Kingfisher", package: "Kingfisher"),
             ],
             path: "CatImageLoader/Sources",
             resources: [
-                .process("SampleImage")
+                .process("SampleImage"),
             ]
         ),
         .target(
@@ -68,7 +68,7 @@ let package = Package(
             dependencies: [
                 "CatURLImageModel",
                 "CatImageLoader",
-                .product(name: "Kingfisher", package: "Kingfisher")
+                .product(name: "Kingfisher", package: "Kingfisher"),
             ],
             path: "CatImagePrefetcher/Sources"
         ),
@@ -87,6 +87,6 @@ let package = Package(
             name: "CatImageURLRepositoryTests",
             dependencies: ["CatImageURLRepository"],
             path: "CatImageURLRepository/Tests"
-        )
+        ),
     ]
-) 
+)

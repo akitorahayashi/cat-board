@@ -20,7 +20,6 @@ final class CatImageScreenerTests: XCTestCase {
     /// スクリーナーが正しく初期化され、ScaryCatScreenerインスタンスを返すことを確認
     func testInitialScreener() async throws {
         let screener = try await screener.getScreener()
-
         XCTAssertNotNil(screener)
     }
 
@@ -37,7 +36,6 @@ final class CatImageScreenerTests: XCTestCase {
     /// MockCatImageLoaderを使用して画像処理が正常に実行できることを確認
     func testProcessImageWithMockLoader() async throws {
         let mockLoader = MockCatImageLoader()
-        // urlを取得するが、ロードせず、Dataが使われる
         let mockAPIClient = MockCatAPIClient()
 
         let testModels = try await mockAPIClient.fetchImageURLs(totalCount: 2, batchSize: 2)

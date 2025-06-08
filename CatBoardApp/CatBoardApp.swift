@@ -1,11 +1,11 @@
+import CatAPIClient
+import CatImageLoader
+import CatImagePrefetcher
+import CatImageScreener
+import CatImageURLRepository
 import CatURLImageModel
 import SwiftData
 import SwiftUI
-import CatAPIClient
-import CatImageLoader
-import CatImageScreener
-import CatImageURLRepository
-import CatImagePrefetcher
 
 @main
 struct CatBoardApp: App {
@@ -22,7 +22,7 @@ struct CatBoardApp: App {
                 let schema = Schema([StoredCatImageURL.self, PrefetchedCatImageURL.self])
                 let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
                 modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-                
+
                 let mockAPIClient = MockCatAPIClient()
                 screener = MockCatImageScreener(screeningProbability: 1.0)
                 imageLoader = MockCatImageLoader()
@@ -42,7 +42,7 @@ struct CatBoardApp: App {
                 let schema = Schema([StoredCatImageURL.self, PrefetchedCatImageURL.self])
                 let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
                 modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-                
+
                 let imageClient = CatAPIClient()
                 screener = CatImageScreener()
                 imageLoader = CatImageLoader()

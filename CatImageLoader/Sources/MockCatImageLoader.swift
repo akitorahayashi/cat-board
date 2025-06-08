@@ -3,7 +3,9 @@ import CatImageScreener
 import CatURLImageModel
 import Foundation
 
-public struct MockCatImageLoader: CatImageLoaderProtocol {
+public actor MockCatImageLoader: CatImageLoaderProtocol {
+    public var loadingTimeInSeconds: Double = 0.01
+
     public var testImageURL: URL {
         let currentFileURL = URL(fileURLWithPath: #filePath)
         return currentFileURL
@@ -14,10 +16,19 @@ public struct MockCatImageLoader: CatImageLoaderProtocol {
 
     public init() {}
 
+    public func setLoadingTimeInSeconds(_ time: Double) {
+        loadingTimeInSeconds = time
+    }
+
     public func loadImageData(from models: [CatImageURLModel]) async throws -> [(
         imageData: Data,
         model: CatImageURLModel
     )] {
+        // ローディング時間のシミュレーション
+        if loadingTimeInSeconds > 0 {
+            try await Task.sleep(nanoseconds: UInt64(loadingTimeInSeconds * 1_000_000_000))
+        }
+
         var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
         loadedImages.reserveCapacity(models.count)
 

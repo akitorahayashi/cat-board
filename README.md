@@ -79,31 +79,49 @@ CatImageURLRepositoryが画像URLの在庫を監視し、表示可能なURLが�
   
 ## Unit Tests
 
-- **GalleryViewModelTests**
-  - 外部依存（ネットワーク、Screener）の分離
-  - 画像表示の状態管理の検証
-  - 初期画像の読み込みの検証
-  - 追加画像の読み込みの検証
-  - 最大画像数の制限の検証
+### **GalleryViewModelTests**
+外部依存（ネットワーク、API、Screener）を分離したMockを使用し、ViewModelのコア機能を検証：
 
-- **CatImagePrefetcherTests**
-  - プリフェッチの自動実行
-    - プリフェッチ開始時に画像が取得できることの検証
-    - 指定した枚数の画像を取得できることの検証
-    - プリフェッチタスクの重複した実行の防止の検証
+- **基本機能テスト**
+  - `testLoadInitialImages` - 初期画像読み込み（30枚の正常表示とローディング状態管理）
+  - `testFetchAdditionalImages` - 追加画像取得（10枚ずつの段階的読み込み）
+  - `testClearDisplayedImages` - 画像クリア（メモリ解放とエラー状態のリセット）
 
-- **CatImageURLRepositoryTests**
-  - APIからの画像URL取得
-    - 要求した枚数の画像URLが取得できることの検証
-  - キャッシュの制御
-    - キャッシュから要求した枚数の画像URLを取得できることの検証
-    - キャッシュに保存した画像URLが後で取り出した時に変わっていないことの検証
-    - キャッシュが空の時に自動的にAPIから新しい画像URLを取得できることの検証
-    - キャッシュの残数が少なくなった時に自動的に新しい画像URLを補充できることの検証
-  - エラーハンドリング
-    - APIエラー時の適切なエラー処理の検証
-    - 自動補充をした時のAPIエラー処理の検証
+- **境界値・制限テスト**
+  - `testMaxImageCountReached` - 最大枚数制限（300枚到達時の自動クリア・再読み込み）
 
-- **CatImageScreenerTests**
-  - スクリーナーの初期化とシングルトンパターンの検証
-  - 画像処理の統合テスト（MockImageLoaderを使用した正常実行の検証）
+- **状態管理テスト**
+  - `testLoadingStateTransitions` - ローディング状態遷移（`isInitializing`フラグの適切な制御）
+  - `testConcurrentAdditionalFetching` - 並行処理制御（重複リクエストの防止）
+
+- **エッジケーステスト**
+  - `testMultipleInitializationAndExistingImages` - 複数回初期化と既存画像時の処理
+  - `testInterruptionDuringInitialization` - 初期化中の割り込み処理（追加取得・クリア操作）
+
+### **CatImagePrefetcherTests**
+プリフェッチ機能の自動実行とSwiftDataとの連携を検証：
+
+- **プリフェッチの自動実行**
+  - プリフェッチ開始時に画像が取得できることの検証
+  - 指定した枚数の画像を取得できることの検証
+  - プリフェッチタスクの重複した実行の防止の検証
+
+### **CatImageURLRepositoryTests**
+画像URLの自動管理とキャッシュシステムを検証：
+
+- **APIからの画像URL取得**
+  - 要求した枚数の画像URLが取得できることの検証
+- **キャッシュの制御**
+  - キャッシュから要求した枚数の画像URLを取得できることの検証
+  - キャッシュに保存した画像URLが後で取り出した時に変わっていないことの検証
+  - キャッシュが空の時に自動的にAPIから新しい画像URLを取得できることの検証
+  - キャッシュの残数が少なくなった時に自動的に新しい画像URLを補充できることの検証
+- **エラーハンドリング**
+  - APIエラー時の適切なエラー処理の検証
+  - 自動補充をした時のAPIエラー処理の検証
+
+### **CatImageScreenerTests**
+機械学習ベースの画像スクリーニング機能を検証：
+
+- **スクリーナーの初期化とシングルトンパターンの検証**
+- **画像処理の統合テスト（MockImageLoaderを使用した正常実行の検証）**

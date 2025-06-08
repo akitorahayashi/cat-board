@@ -11,12 +11,12 @@ struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
 
     @StateObject private var viewModel: GalleryViewModel
-    
+
     init(
         repository: CatImageURLRepositoryProtocol,
         imageLoader: CatImageLoaderProtocol,
         screener: CatImageScreenerProtocol,
-        prefetcher: CatImagePrefetcher
+        prefetcher: CatImagePrefetcherProtocol
     ) {
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,

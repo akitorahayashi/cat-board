@@ -1,18 +1,20 @@
-import Foundation
 import CatURLImageModel
+import Foundation
 import Kingfisher
 
 #if os(iOS)
-private func toJPEGData(_ image: KFCrossPlatformImage, _ quality: CGFloat) -> Data? {
-    image.jpegData(compressionQuality: quality)
-}
+    private func toJPEGData(_ image: KFCrossPlatformImage, _ quality: CGFloat) -> Data? {
+        image.jpegData(compressionQuality: quality)
+    }
+
 #elseif os(macOS)
-import AppKit
-private func toJPEGData(_ image: KFCrossPlatformImage, _ quality: CGFloat) -> Data? {
-    guard let tiffData = image.tiffRepresentation,
-          let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
-    return bitmap.representation(using: .jpeg, properties: [.compressionFactor: quality])
-}
+    import AppKit
+
+    private func toJPEGData(_ image: KFCrossPlatformImage, _ quality: CGFloat) -> Data? {
+        guard let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
+        return bitmap.representation(using: .jpeg, properties: [.compressionFactor: quality])
+    }
 #endif
 
 public actor CatImageLoader: CatImageLoaderProtocol {
