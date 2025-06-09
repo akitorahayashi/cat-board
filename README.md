@@ -1,3 +1,4 @@
+![Icon-App-60x60@3x](https://github.com/user-attachments/assets/f6822898-f8c6-43c7-a476-9de7eddbfd3d)
 ## プロジェクト概要
 
 Cat Board は、大量の猫の画像を効率的に処理して表示するための iOS アプリケーションです。
