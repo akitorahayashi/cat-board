@@ -12,7 +12,7 @@ struct SquareGalleryImageAsync: View {
             Group {
                 // UIテスト時は固定の画像を使用
                 if ProcessInfo.processInfo.arguments.contains("--uitesting") {
-                    Image("cat_1be")
+                    Image("SampleUITestImage")
                         .resizable()
                         .scaledToFill()
                 } else {

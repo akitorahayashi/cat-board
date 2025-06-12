@@ -12,7 +12,7 @@ public actor MockCatImageLoader: CatImageLoaderProtocol {
         return currentFileURL
             .deletingLastPathComponent()
             .appendingPathComponent("SampleImage")
-            .appendingPathComponent("cat_1be.jpg")
+            .appendingPathComponent("SampleImage.jpg")
     }
 
     public init() {}
