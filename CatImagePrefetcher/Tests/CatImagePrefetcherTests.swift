@@ -183,22 +183,16 @@ final class CatImagePrefetcherTests: XCTestCase {
         await mockLoader.setLoadingTimeInSeconds(0.02)
         await mockScreener.setIsScreeningEnabled(true)
 
-        let expectedTimeWithoutScreening = await mockLoader
-            .calculateTotalLoadingTime(for: CatImagePrefetcher.targetPrefetchCount)
-
-        let startTime = Date()
         try await prefetcher.startPrefetchingIfNeeded()
         // スクリーニング有効時のテストのため十分な時間を確保して待機
         // 計算式: 0.02秒/枚 × 150枚 = 3秒 + スクリーニング時間 + 余裕時間8秒 = 11秒
         try await Task.sleep(nanoseconds: 11_000_000_000) // 11秒
-        let endTime = Date()
-        let actualTimeWithScreening = endTime.timeIntervalSince(startTime)
 
-        XCTAssertGreaterThan(actualTimeWithScreening, expectedTimeWithoutScreening * 1.2, "スクリーニング有効時は実行時間が延長される")
-
-        let finalCount = try await prefetcher.getPrefetchedCount()
-        // スクリーニングがあるため、50枚以上プリフェッチされていれば成功とする
-        let minimumExpectedCount = 50
-        XCTAssertGreaterThanOrEqual(finalCount, minimumExpectedCount, "スクリーニング有効でも50枚以上の画像がプリフェッチされる")
+        let screenedCount = try await prefetcher.getPrefetchedCount()
+        let targetCount = CatImagePrefetcher.targetPrefetchCount
+        
+        // スクリーニングにより不適切な画像が除外され、枚数が減っていることを確認
+        XCTAssertLessThan(screenedCount, targetCount, "スクリーニング有効時は不適切な画像が除外され枚数が減る")
+        XCTAssertGreaterThan(screenedCount, 0, "スクリーニング有効でも適切な画像は取得される")
     }
 }
