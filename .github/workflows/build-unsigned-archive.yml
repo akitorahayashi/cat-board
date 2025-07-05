@@ -70,4 +70,4 @@ jobs:
           name: unsigned-archive
           path: |-
             ./ci-outputs/production/archives/CatBoardApp.xcarchive
-          retention-days: 7
+          retention-days: 3
