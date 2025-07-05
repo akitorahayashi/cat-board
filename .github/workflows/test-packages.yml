@@ -1,0 +1,71 @@
+name: Test Packages
+
+on:
+  workflow_call:
+
+jobs:
+  test-packages:
+    runs-on: macos-latest
+    
+    strategy:
+      matrix:
+        swift-version: ['5.9']
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: ${{ matrix.swift-version }}
+    
+    - name: Cache Swift Package Dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          .build
+          CatImageScreener/.build
+          CatImagePrefetcher/.build
+          CatImageURLRepository/.build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.swift', '**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Run Package Tests
+      run: ./test-packages.sh
+      
+    - name: Test iOS App Build
+      run: |
+        mint run xcodegen generate
+        xcodebuild -project CatBoardApp.xcodeproj \
+                   -scheme CatBoardApp \
+                   -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+                   build
+                   
+  test-individual-modules:
+    runs-on: macos-latest
+    
+    strategy:
+      matrix:
+        module: [CatImageScreener, CatImagePrefetcher, CatImageURLRepository]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: '5.9'
+    
+    - name: Cache Swift Package Dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ matrix.module }}/.build
+        key: ${{ runner.os }}-${{ matrix.module }}-${{ hashFiles(format('{0}/Package.swift', matrix.module)) }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.module }}-
+    
+    - name: Test ${{ matrix.module }}
+      run: |
+        cd ${{ matrix.module }}
+        swift test --parallel 

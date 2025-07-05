@@ -197,7 +197,7 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
     # Swift Package Managerのテストを実行
     step "Running Swift Package Manager Tests"
     echo "Running SPM tests..."
-    swift test || fail "Swift Package Manager tests failed"
+    ./test-packages.sh || fail "Swift Package Manager tests failed"
     success "Swift Package Manager tests completed successfully"
 
     echo "Running Xcode Unit Tests..."

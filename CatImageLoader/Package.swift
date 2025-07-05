@@ -13,7 +13,6 @@ let package = Package(
     dependencies: [
         .package(path: "../CatURLImageModel"),
         .package(path: "../CatImageURLRepository"),
-        .package(path: "../CatImageScreener"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.3.2"),
     ],
     targets: [
@@ -22,7 +21,6 @@ let package = Package(
             dependencies: [
                 .product(name: "CatURLImageModel", package: "CatURLImageModel"),
                 .product(name: "CatImageURLRepository", package: "CatImageURLRepository"),
-                .product(name: "CatImageScreener", package: "CatImageScreener"),
                 .product(name: "Kingfisher", package: "Kingfisher"),
             ],
             path: "Sources",

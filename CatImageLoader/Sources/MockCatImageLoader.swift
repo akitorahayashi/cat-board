@@ -1,5 +1,4 @@
 import CatAPIClient
-import CatImageScreener
 import CatURLImageModel
 import Foundation
 
