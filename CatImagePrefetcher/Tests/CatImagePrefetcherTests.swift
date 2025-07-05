@@ -17,7 +17,6 @@ final class CatImagePrefetcherTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
 
-        // テスト用のin-memoryモデルコンテナを作成
         let schema = Schema([PrefetchedCatImageURL.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -56,13 +55,9 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         try await prefetcher.startPrefetchingIfNeeded()
 
-        // スクリーニング無効の場合の期待時間を計算（目標枚数の1.5倍）
-        let waitTime = await UInt64(
-            mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 1.5)) *
-                1_000_000_000
-        )
-        try await Task.sleep(nanoseconds: waitTime)
+        // 十分な時間を確保して待機
+        // 計算式: 0.05秒/枚 × 150枚 = 7.5秒 + 余裕時間1.5秒 = 9秒
+        try await Task.sleep(nanoseconds: 9_000_000_000) // 9秒
 
         let count = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(count, 50) // 50枚以上プリフェッチされていれば成功
@@ -77,13 +72,9 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         try await prefetcher.startPrefetchingIfNeeded()
 
-        // 期待時間を計算（目標枚数の1.5倍）
-        let waitTime = await UInt64(
-            mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 1.5)) *
-                1_000_000_000
-        )
-        try await Task.sleep(nanoseconds: waitTime)
+        // 十分な時間を確保して待機
+        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間2.5秒 = 7秒
+        try await Task.sleep(nanoseconds: 7_000_000_000) // 7秒
 
         let initialCount = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(initialCount, 50) // 50枚以上プリフェッチされていれば成功
@@ -113,13 +104,9 @@ final class CatImagePrefetcherTests: XCTestCase {
         _ = try await task1.value
         _ = try await task2.value
 
-        // 重複実行が防止されるため、1回分の処理時間で十分（目標枚数の2倍）
-        let waitTime = await UInt64(
-            mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 2.0)) *
-                1_000_000_000
-        )
-        try await Task.sleep(nanoseconds: waitTime)
+        // 重複実行テストのため十分な時間を確保して待機
+        // 計算式: 0.02秒/枚 × 150枚 = 3秒 + 余裕時間2秒 = 5秒
+        try await Task.sleep(nanoseconds: 5_000_000_000) // 5秒
 
         // 重複実行が防止されるため、50枚以上プリフェッチされていれば成功
         let count = try await prefetcher.getPrefetchedCount()
@@ -143,13 +130,9 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         try await prefetcher.startPrefetchingIfNeeded()
 
-        // 期待時間を計算（CIを考慮し、目標枚数の3.0倍に増加）
-        let waitTime = await UInt64(
-            mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 3.0)) *
-                1_000_000_000
-        )
-        try await Task.sleep(nanoseconds: waitTime)
+        // プリフェッチ進行中のテストのため十分な時間を確保して待機
+        // 計算式: 0.04秒/枚 × 150枚 = 6秒 + 余裕時間2秒 = 8秒
+        try await Task.sleep(nanoseconds: 8_000_000_000) // 8秒
 
         let finalCount = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(finalCount, 50) // 50枚以上プリフェッチされていれば成功
@@ -171,12 +154,9 @@ final class CatImagePrefetcherTests: XCTestCase {
         // 最初のプリフェッチ
         try await prefetcher.startPrefetchingIfNeeded()
 
-        let waitTime1 = await UInt64(
-            mockLoader
-                .calculateTotalLoadingTime(for: Int(Double(CatImagePrefetcher.targetPrefetchCount) * 5.0)) *
-                1_000_000_000
-        )
-        try await Task.sleep(nanoseconds: waitTime1)
+        // 最初のプリフェッチ完了まで待機
+        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間2.0秒 = 6.5秒
+        try await Task.sleep(nanoseconds: 6_500_000_000) // 6.5秒
 
         let firstCount = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(firstCount, 50) // 50枚以上プリフェッチされていれば成功
@@ -190,12 +170,9 @@ final class CatImagePrefetcherTests: XCTestCase {
         // 2回目のプリフェッチ
         try await prefetcher.startPrefetchingIfNeeded()
 
-        let waitTime2 = await UInt64(
-            mockLoader
-                .calculateTotalLoadingTime(for: CatImagePrefetcher.targetPrefetchCount * 5) *
-                1_000_000_000
-        )
-        try await Task.sleep(nanoseconds: waitTime2)
+        // 2回目のプリフェッチ完了まで待機
+        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間7.5秒 = 12秒
+        try await Task.sleep(nanoseconds: 12_000_000_000) // 12秒
 
         let finalCount = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(finalCount, 50)
@@ -211,11 +188,9 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         let startTime = Date()
         try await prefetcher.startPrefetchingIfNeeded()
-        let waitTime = await UInt64(
-            mockLoader
-                .calculateTotalLoadingTime(for: CatImagePrefetcher.targetPrefetchCount * 5) * 1_000_000_000
-        )
-        try await Task.sleep(nanoseconds: waitTime)
+        // スクリーニング有効時のテストのため十分な時間を確保して待機
+        // 計算式: 0.02秒/枚 × 150枚 = 3秒 + スクリーニング時間 + 余裕時間 = 5秒
+        try await Task.sleep(nanoseconds: 5_000_000_000) // 5秒
         let endTime = Date()
         let actualTimeWithScreening = endTime.timeIntervalSince(startTime)
 

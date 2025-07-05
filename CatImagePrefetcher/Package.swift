@@ -13,6 +13,9 @@ let package = Package(
     dependencies: [
         .package(path: "../CatURLImageModel"),
         .package(path: "../CatImageLoader"),
+        .package(path: "../CatAPIClient"),
+        .package(path: "../CatImageScreener"),
+        .package(path: "../CatImageURLRepository"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.3.2"),
     ],
     targets: [
@@ -21,13 +24,22 @@ let package = Package(
             dependencies: [
                 .product(name: "CatURLImageModel", package: "CatURLImageModel"),
                 .product(name: "CatImageLoader", package: "CatImageLoader"),
+                .product(name: "CatImageScreener", package: "CatImageScreener"),
+                .product(name: "CatImageURLRepository", package: "CatImageURLRepository"),
                 .product(name: "Kingfisher", package: "Kingfisher"),
             ],
             path: "Sources"
         ),
         .testTarget(
             name: "CatImagePrefetcherTests",
-            dependencies: ["CatImagePrefetcher"],
+            dependencies: [
+                "CatImagePrefetcher",
+                .product(name: "CatAPIClient", package: "CatAPIClient"),
+                .product(name: "CatImageLoader", package: "CatImageLoader"),
+                .product(name: "CatImageScreener", package: "CatImageScreener"),
+                .product(name: "CatImageURLRepository", package: "CatImageURLRepository"),
+                .product(name: "CatURLImageModel", package: "CatURLImageModel"),
+            ],
             path: "Tests"
         ),
     ]
