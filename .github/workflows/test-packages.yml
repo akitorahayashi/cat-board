@@ -1,0 +1,31 @@
+name: Test Packages
+
+on:
+  workflow_call:
+
+jobs:
+  test-packages:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: '5.9'
+
+      - name: Cache Swift Package Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            CatImageScreener/.build
+            CatImagePrefetcher/.build
+            CatImageURLRepository/.build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.swift', '**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Run Package Tests
+        run: ./test-packages.sh

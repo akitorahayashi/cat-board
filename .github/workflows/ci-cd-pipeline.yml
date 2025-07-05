@@ -2,39 +2,28 @@ name: CatBoard CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  # Mintのセットアップ
-  setup-mint:
-    name: Setup Mint
-    uses: ./.github/workflows/setup-mint.yml
-    permissions:
-      contents: read
-
   # パッケージのテスト
   test-package:
     name: Test Package
-    uses: ./.github/workflows/package-tests.yml
+    uses: ./.github/workflows/test-packages.yml
 
   # コード品質チェック
   code-quality:
     name: Code Quality Check
-    needs: setup-mint
     uses: ./.github/workflows/code-quality.yml
     
   # ビルドとテスト
   build-and-test:
     name: Run Tests
-    needs: setup-mint
     uses: ./.github/workflows/run-tests.yml
     
   # アーカイブビルド検証
   build-archive:
     name: Build Unsigned Archive
-    needs: setup-mint
-    if: needs.setup-mint.result == 'success'
     uses: ./.github/workflows/build-unsigned-archive.yml 

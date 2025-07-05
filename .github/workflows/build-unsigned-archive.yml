@@ -6,22 +6,11 @@ on:
 jobs:
   archive:
     runs-on: macos-latest
-    env:
-      MINT_PATH: ${{ github.workspace }}/.mint
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
-      - name: Cache Mint packages
-        uses: actions/cache@v4
-        id: cache-mint-packages
-        with:
-          path: ${{ env.MINT_PATH }}
-          key: ${{ runner.os }}-mint-${{ hashFiles('**/Mintfile') }}
-          restore-keys: |
-            ${{ runner.os }}-mint-
 
       - name: Install Mint
         run: brew install mint
@@ -81,4 +70,4 @@ jobs:
           name: unsigned-archive
           path: |-
             ./ci-outputs/production/archives/CatBoardApp.xcarchive
-          retention-days: 7
+          retention-days: 3

@@ -1,19 +1,23 @@
-import CatAPIClient
 import CatImageLoader
 import CatImageScreener
+import CatURLImageModel
+import Foundation
 import ScaryCatScreeningKit
 import XCTest
 
 final class CatImageScreenerTests: XCTestCase {
     var screener: CatImageScreener!
+    var mockImageLoader: MockCatImageLoader!
 
     override func setUp() {
         super.setUp()
         screener = CatImageScreener()
+        mockImageLoader = MockCatImageLoader()
     }
 
     override func tearDown() {
         screener = nil
+        mockImageLoader = nil
         super.tearDown()
     }
 
@@ -29,14 +33,23 @@ final class CatImageScreenerTests: XCTestCase {
 
     /// MockCatImageLoaderを使用して画像処理が正常に実行できることを確認
     func testProcessImageWithMockLoader() async throws {
-        let mockLoader = MockCatImageLoader()
-        let mockAPIClient = MockCatAPIClient()
+        // テスト用のモックURLモデルを作成
+        let testModels = [
+            CatImageURLModel(imageURL: "https://example.com/cat1.jpg"),
+            CatImageURLModel(imageURL: "https://example.com/cat2.jpg"),
+        ]
 
-        let testModels = try await mockAPIClient.fetchImageURLs(totalCount: 2, batchSize: 2)
-        let loadedImages = try await mockLoader.loadImageData(from: testModels)
+        // MockCatImageLoaderを使用して画像データをロード
+        let loadedImages = try await mockImageLoader.loadImageData(from: testModels)
+
         let results = try await screener.screenImages(imageDataWithModels: loadedImages)
 
         XCTAssertNotNil(results)
         XCTAssertTrue(results.count <= loadedImages.count)
+
+        // 各結果がCatImageURLModelを含んでいることを確認
+        for result in results {
+            XCTAssertTrue(testModels.contains(result))
+        }
     }
 }
