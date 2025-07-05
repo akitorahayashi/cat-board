@@ -196,6 +196,16 @@ if [ "$run_unit_tests" = true ] || [ "$run_ui_tests" = true ]; then
   if [ "$run_unit_tests" = true ]; then
     # Swift Package Managerのテストを実行
     step "Running Swift Package Manager Tests"
+    
+    # test-packages.shの実行権限を確認・付与
+    if [ ! -x "./test-packages.sh" ]; then
+      echo "Making test-packages.sh executable..."
+      chmod +x "./test-packages.sh"
+      if [ $? -ne 0 ]; then
+          fail "Failed to make test-packages.sh executable."
+      fi
+    fi
+    
     echo "Running SPM tests..."
     ./test-packages.sh || fail "Swift Package Manager tests failed"
     success "Swift Package Manager tests completed successfully"

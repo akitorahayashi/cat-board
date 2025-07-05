@@ -17,4 +17,4 @@ let package = Package(
             path: "."
         ),
     ]
-) 
+)

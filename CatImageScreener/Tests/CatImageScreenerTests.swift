@@ -36,7 +36,7 @@ final class CatImageScreenerTests: XCTestCase {
         // テスト用のモックURLモデルを作成
         let testModels = [
             CatImageURLModel(imageURL: "https://example.com/cat1.jpg"),
-            CatImageURLModel(imageURL: "https://example.com/cat2.jpg")
+            CatImageURLModel(imageURL: "https://example.com/cat2.jpg"),
         ]
 
         // MockCatImageLoaderを使用して画像データをロード
@@ -46,7 +46,7 @@ final class CatImageScreenerTests: XCTestCase {
 
         XCTAssertNotNil(results)
         XCTAssertTrue(results.count <= loadedImages.count)
-        
+
         // 各結果がCatImageURLModelを含んでいることを確認
         for result in results {
             XCTAssertTrue(testModels.contains(result))
