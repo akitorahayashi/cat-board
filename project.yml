@@ -18,15 +18,24 @@ settings:
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
 
 packages:
-  CatBoard:
-    path: .
+  CatURLImageModel:
+    path: CatURLImageModel
+  CatAPIClient:
+    path: CatAPIClient
+  CatImageURLRepository:
+    path: CatImageURLRepository
+  CatImageScreener:
+    path: CatImageScreener
+  CatImageLoader:
+    path: CatImageLoader
+  CatImagePrefetcher:
+    path: CatImagePrefetcher
   TieredGridLayout:
     url: https://github.com/atrh95/tiered-grid-layout
     from: "1.2.0"
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher.git
     from: "8.3.2"
-  # Add other necessary packages for CatBoard here
 
 targets:
   CatBoardApp:
@@ -35,8 +44,18 @@ targets:
     sources:
       - path: CatBoardApp
     dependencies:
-      - package: CatBoard
-        product: CatBoard
+      - package: CatURLImageModel
+        product: CatURLImageModel
+      - package: CatAPIClient
+        product: CatAPIClient
+      - package: CatImageURLRepository
+        product: CatImageURLRepository
+      - package: CatImageScreener
+        product: CatImageScreener
+      - package: CatImageLoader
+        product: CatImageLoader
+      - package: CatImagePrefetcher
+        product: CatImagePrefetcher
       - package: TieredGridLayout
         product: TieredGridLayout
       - package: Kingfisher

@@ -1,7 +1,5 @@
 ## プロジェクト概要
 
-![Icon-App-60x60@3x](https://github.com/user-attachments/assets/f6822898-f8c6-43c7-a476-9de7eddbfd3d)
-
 Cat Board は、大量の猫の画像を効率的に処理して表示するための iOS アプリケーションです。
 
 スクリーニング処理には機械学習の処理が含まれるため、iPhone 16 等の実機での検証を推奨します。シミュレータでは十分なパフォーマンスが得られません。

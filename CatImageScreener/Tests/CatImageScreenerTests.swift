@@ -1,6 +1,6 @@
-import CatAPIClient
-import CatImageLoader
 import CatImageScreener
+import CatURLImageModel
+import Foundation
 import ScaryCatScreeningKit
 import XCTest
 
@@ -27,13 +27,18 @@ final class CatImageScreenerTests: XCTestCase {
         XCTAssertTrue(firstScreener === secondScreener)
     }
 
-    /// MockCatImageLoaderを使用して画像処理が正常に実行できることを確認
-    func testProcessImageWithMockLoader() async throws {
-        let mockLoader = MockCatImageLoader()
-        let mockAPIClient = MockCatAPIClient()
-
-        let testModels = try await mockAPIClient.fetchImageURLs(totalCount: 2, batchSize: 2)
-        let loadedImages = try await mockLoader.loadImageData(from: testModels)
+    /// モック画像データを使用して画像処理が正常に実行できることを確認
+    func testProcessImageWithMockData() async throws {
+        // テスト用のモック画像データを作成
+        let testModels = [
+            CatImageURLModel(imageURL: "https://example.com/cat1.jpg"),
+            CatImageURLModel(imageURL: "https://example.com/cat2.jpg")
+        ]
+        
+        // 簡単なテスト用画像データを作成
+        let mockImageData = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) // PNGヘッダー
+        let loadedImages = testModels.map { ($0, mockImageData) }
+        
         let results = try await screener.screenImages(imageDataWithModels: loadedImages)
 
         XCTAssertNotNil(results)
