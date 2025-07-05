@@ -56,8 +56,8 @@ final class CatImagePrefetcherTests: XCTestCase {
         try await prefetcher.startPrefetchingIfNeeded()
 
         // 十分な時間を確保して待機
-        // 計算式: 0.05秒/枚 × 150枚 = 7.5秒 + 余裕時間5秒 = 12.5秒
-        try await Task.sleep(nanoseconds: 12_500_000_000) // 12.5秒
+        // 計算式: 0.05秒/枚 × 150枚 = 7.5秒 + 余裕時間8秒 = 15.5秒
+        try await Task.sleep(nanoseconds: 15_500_000_000) // 15.5秒
 
         let count = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(count, 50) // 50枚以上プリフェッチされていれば成功
@@ -73,8 +73,8 @@ final class CatImagePrefetcherTests: XCTestCase {
         try await prefetcher.startPrefetchingIfNeeded()
 
         // 十分な時間を確保して待機
-        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間5秒 = 9.5秒
-        try await Task.sleep(nanoseconds: 9_500_000_000) // 9.5秒
+        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間8秒 = 12.5秒
+        try await Task.sleep(nanoseconds: 12_500_000_000) // 12.5秒
 
         let initialCount = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(initialCount, 50) // 50枚以上プリフェッチされていれば成功
@@ -105,8 +105,8 @@ final class CatImagePrefetcherTests: XCTestCase {
         _ = try await task2.value
 
         // 重複実行テストのため十分な時間を確保して待機
-        // 計算式: 0.02秒/枚 × 150枚 = 3秒 + 余裕時間5秒 = 8秒
-        try await Task.sleep(nanoseconds: 8_000_000_000) // 8秒
+        // 計算式: 0.02秒/枚 × 150枚 = 3秒 + 余裕時間8秒 = 11秒
+        try await Task.sleep(nanoseconds: 11_000_000_000) // 11秒
 
         // 重複実行が防止されるため、50枚以上プリフェッチされていれば成功
         let count = try await prefetcher.getPrefetchedCount()
@@ -131,8 +131,8 @@ final class CatImagePrefetcherTests: XCTestCase {
         try await prefetcher.startPrefetchingIfNeeded()
 
         // プリフェッチ進行中のテストのため十分な時間を確保して待機
-        // 計算式: 0.04秒/枚 × 150枚 = 6秒 + 余裕時間5秒 = 11秒
-        try await Task.sleep(nanoseconds: 11_000_000_000) // 11秒
+        // 計算式: 0.04秒/枚 × 150枚 = 6秒 + 余裕時間8秒 = 14秒
+        try await Task.sleep(nanoseconds: 14_000_000_000) // 14秒
 
         let finalCount = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(finalCount, 50) // 50枚以上プリフェッチされていれば成功
@@ -155,8 +155,8 @@ final class CatImagePrefetcherTests: XCTestCase {
         try await prefetcher.startPrefetchingIfNeeded()
 
         // 最初のプリフェッチ完了まで待機
-        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間5秒 = 9.5秒
-        try await Task.sleep(nanoseconds: 9_500_000_000) // 9.5秒
+        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間8秒 = 12.5秒
+        try await Task.sleep(nanoseconds: 12_500_000_000) // 12.5秒
 
         let firstCount = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(firstCount, 50) // 50枚以上プリフェッチされていれば成功
@@ -171,8 +171,8 @@ final class CatImagePrefetcherTests: XCTestCase {
         try await prefetcher.startPrefetchingIfNeeded()
 
         // 2回目のプリフェッチ完了まで待機
-        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間5秒 = 9.5秒
-        try await Task.sleep(nanoseconds: 9_500_000_000) // 9.5秒
+        // 計算式: 0.03秒/枚 × 150枚 = 4.5秒 + 余裕時間8秒 = 12.5秒
+        try await Task.sleep(nanoseconds: 12_500_000_000) // 12.5秒
 
         let finalCount = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(finalCount, 50)
@@ -189,8 +189,8 @@ final class CatImagePrefetcherTests: XCTestCase {
         let startTime = Date()
         try await prefetcher.startPrefetchingIfNeeded()
         // スクリーニング有効時のテストのため十分な時間を確保して待機
-        // 計算式: 0.02秒/枚 × 150枚 = 3秒 + スクリーニング時間 + 余裕時間5秒 = 8秒
-        try await Task.sleep(nanoseconds: 8_000_000_000) // 8秒
+        // 計算式: 0.02秒/枚 × 150枚 = 3秒 + スクリーニング時間 + 余裕時間8秒 = 11秒
+        try await Task.sleep(nanoseconds: 11_000_000_000) // 11秒
         let endTime = Date()
         let actualTimeWithScreening = endTime.timeIntervalSince(startTime)
 
