@@ -28,4 +28,4 @@ jobs:
             ${{ runner.os }}-spm-
 
       - name: Run Package Tests
-        run: ./test-packages.sh
+        run: ./.github/scripts/test-packages.sh
