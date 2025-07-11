@@ -27,5 +27,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
-      - name: Run Package Tests
-        run: ./.github/scripts/test-packages.sh
+      - name: Run Package Tests via Makefile
+        run: make test-packages

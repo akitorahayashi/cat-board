@@ -6,8 +6,19 @@ on:
 jobs:
   format-and-lint:
     runs-on: macos-latest
+    env:
+      MINT_PATH: ${{ github.workspace }}/.mint
     steps:
     - uses: actions/checkout@v4
+
+    - name: Cache Mint packages
+      uses: actions/cache@v4
+      id: cache-mint-packages
+      with:
+        path: ${{ github.workspace }}/.mint
+        key: ${{ runner.os }}-mint-${{ hashFiles('**/Mintfile') }}
+        restore-keys: |
+          ${{ runner.os }}-mint-
     
     - name: Install Mint
       run: brew install mint
