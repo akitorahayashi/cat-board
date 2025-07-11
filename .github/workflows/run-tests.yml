@@ -32,14 +32,14 @@ jobs:
         run: mint run xcodegen generate
 
       - name: Build for Testing via Makefile
-        run: make ci-build-for-testing # SIMULATOR_UDID is now handled by Makefile's select-simulator
+        run: make build-test # SIMULATOR_UDID is now handled by Makefile's select-simulator
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: built-products
           path: |
-            ${{ github.workspace }}/ci-outputs/test-results/DerivedData/Build/Products/
+            ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
           retention-days: 1
 
   unit-test:
@@ -74,11 +74,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: built-products
-          path: ${{ github.workspace }}/ci-outputs/test-results/DerivedData/Build/Products/
+          path: ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
 
       - name: Run Unit Tests via Makefile
         id: unit_tests
-        run: make ci-unit-test # SIMULATOR_UDID is now handled by Makefile's select-simulator
+        run: make unit-test # SIMULATOR_UDID is now handled by Makefile's select-simulator
+
+      - name: Upload Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: ${{ github.workspace }}/build/test-results/unit/TestResults.xcresult
+          retention-days: 3
 
   ui-test:
     runs-on: macos-latest
@@ -112,8 +120,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: built-products
-          path: ${{ github.workspace }}/ci-outputs/test-results/DerivedData/Build/Products/
+          path: ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
 
       - name: Run UI Tests via Makefile
         id: ui_tests
-        run: make ci-ui-test # SIMULATOR_UDID is now handled by Makefile's select-simulator
+        run: make ui-test # SIMULATOR_UDID is now handled by Makefile's select-simulator
+
+      - name: Upload UI Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: ${{ github.workspace }}/build/test-results/ui/TestResults.xcresult
+          retention-days: 3

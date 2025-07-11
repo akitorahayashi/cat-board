@@ -42,12 +42,12 @@ jobs:
           set -euo pipefail
           echo "Checking archive contents..."
           # Check if the specific .app directory exists within the archive's Products/Applications path
-          ARCHIVE_APP_PATH="./ci-outputs/production/archives/CatBoardApp.xcarchive/Products/Applications/CatBoardApp.app"
+          ARCHIVE_APP_PATH="build/production/archives/CatBoardApp.xcarchive/Products/Applications/CatBoardApp.app"
           if [ ! -d "$ARCHIVE_APP_PATH" ]; then
             echo "Error: 'CatBoardApp.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
             # Optionally list contents again on error
             echo "--- Archive Contents (on error) ---"
-            ls -lR ./ci-outputs/production/archives/CatBoardApp.xcarchive || echo "Archive directory not found or empty."
+            ls -lR build/production/archives/CatBoardApp.xcarchive || echo "Archive directory not found or empty."
             exit 1
           fi
           echo "✅ Archive content verified."
@@ -56,6 +56,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-archive
-          path: |-
-            ./ci-outputs/production/archives/CatBoardApp.xcarchive
+          path: build/production/archives/CatBoardApp.xcarchive
           retention-days: 3

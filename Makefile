@@ -25,7 +25,7 @@
 #   make ci-archive          - CI用: アーカイブ作成
 #
 # === Configuration ===
-OUTPUT_DIR := ./ci-outputs
+OUTPUT_DIR := build
 PROJECT_FILE := CatBoardApp.xcodeproj
 APP_SCHEME := CatBoardApp
 UNIT_TEST_SCHEME := CatBoardTests
@@ -249,19 +249,6 @@ endif
 		-scheme $(APP_SCHEME) \
 		-destination "platform=iOS Simulator,id=$(LOCAL_SIMULATOR_UDID)"
 	@echo "✅ Project build folder cleaned."
-
-# === CI specific targets ===
-.PHONY: ci-build-for-testing
-ci-build-for-testing:
-	$(MAKE) build-test SIMULATOR_UDID=$(SIMULATOR_UDID)
-
-.PHONY: ci-unit-test
-ci-unit-test:
-	$(MAKE) unit-test SIMULATOR_UDID=$(SIMULATOR_UDID)
-
-.PHONY: ci-ui-test
-ci-ui-test:
-	$(MAKE) ui-test SIMULATOR_UDID=$(SIMULATOR_UDID)
 
 # === Package Tests ===
 .PHONY: test-packages
