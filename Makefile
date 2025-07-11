@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 # Makefile for CatBoardApp iOS Project
 #
 # [ユーザ向けコマンド]
@@ -17,12 +19,7 @@
 #   make test-all            - 全テストを実行
 #
 # [内部ワークフロー用コマンド]
-#   make deps                - 依存関係をチェック
 #   make find-test-artifacts - テストの成果物探索
-#   make ci-build-for-testing - CI用: テスト用ビルド
-#   make ci-unit-test        - CI用: ユニットテスト実行
-#   make ci-ui-test          - CI用: UIテスト実行
-#   make ci-archive          - CI用: アーカイブ作成
 #
 # === Configuration ===
 OUTPUT_DIR := build
@@ -256,10 +253,10 @@ test-packages:
 	@echo "==============================="
 	@echo "CatBoard パッケージテスト開始"
 	@echo "==============================="
-	@MODULES="CatImageURLRepository CatImageScreener CatImagePrefetcher"; \
+	@MODULES=("CatImageURLRepository" "CatImageScreener" "CatImagePrefetcher"); \
 	FAILED_MODULES=""; \
 	echo "🧪 各モジュールのテストを実行中..."; \
-	for MODULE in $$MODULES; do \
+	for MODULE in $${MODULES[@]}; do \
 		echo ""; \
 		echo "📦 $$MODULE のテスト実行中..."; \
 		echo "----------------------------------------"; \
