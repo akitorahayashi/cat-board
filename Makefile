@@ -145,7 +145,7 @@ endif
 
 # === Archive ===
 .PHONY: archive
-archive: deps generate-project
+archive:
 	@echo "🧹 Cleaning previous outputs..."
 	@rm -rf $(ARCHIVE_PATH) $(OUTPUT_DIR)/archives/DerivedData # Keep other outputs if any
 	@mkdir -p $(shell dirname $(ARCHIVE_PATH)) $(OUTPUT_DIR)/archives/DerivedData
@@ -228,15 +228,6 @@ endif
 test-all: build-test unit-test ui-test
 	@echo "✅ All tests completed."
 
-# === Dependencies check ===
-.PHONY: deps
-deps:
-	@echo "🔍 Checking dependencies..."
-	@command -v mint >/dev/null 2>&1 || { echo "❌ Error: Mint not installed. Please install: brew install mint"; exit 1; }
-	@command -v xcbeautify >/dev/null 2>&1 || { echo "❌ Error: xcbeautify not installed. Please install: brew install xcbeautify"; exit 1; }
-	@command -v xcodegen >/dev/null 2>&1 || { echo "❌ Error: xcodegen not installed. Please install: brew install xcodegen"; exit 1; }
-	@echo "✅ All required dependencies are available."
-
 # === Find existing artifacts ===
 .PHONY: find-test-artifacts
 find-test-artifacts:
@@ -261,27 +252,20 @@ endif
 
 # === CI specific targets ===
 .PHONY: ci-build-for-testing
-ci-build-for-testing: deps generate-project
+ci-build-for-testing:
 	$(MAKE) build-test SIMULATOR_UDID=$(SIMULATOR_UDID)
 
 .PHONY: ci-unit-test
-ci-unit-test: deps generate-project
+ci-unit-test:
 	$(MAKE) unit-test SIMULATOR_UDID=$(SIMULATOR_UDID)
 
 .PHONY: ci-ui-test
-ci-ui-test: deps generate-project
+ci-ui-test:
 	$(MAKE) ui-test SIMULATOR_UDID=$(SIMULATOR_UDID)
-
-# Generate Xcode Project (Helper for CI, can be used locally too)
-.PHONY: generate-project
-generate-project: deps
-	@echo "⚙️ Generating Xcode project using xcodegen..."
-	mint run xcodegen generate
-	@echo "✅ Xcode project generated."
 
 # === Package Tests ===
 .PHONY: test-packages
-test-packages: deps
+test-packages:
 	@echo "==============================="
 	@echo "CatBoard パッケージテスト開始"
 	@echo "==============================="
