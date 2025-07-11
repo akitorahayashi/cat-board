@@ -256,10 +256,10 @@ test-packages:
 	@echo "==============================="
 	@echo "CatBoard パッケージテスト開始"
 	@echo "==============================="
-	@MODULES=("CatImageURLRepository" "CatImageScreener" "CatImagePrefetcher"); \
+	@MODULES="CatImageURLRepository CatImageScreener CatImagePrefetcher"; \
 	FAILED_MODULES=""; \
 	echo "🧪 各モジュールのテストを実行中..."; \
-	for MODULE in $${MODULES[@]}; do \
+	for MODULE in $$MODULES; do \
 		echo ""; \
 		echo "📦 $$MODULE のテスト実行中..."; \
 		echo "----------------------------------------"; \
