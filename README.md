@@ -6,10 +6,6 @@ Cat Board は、大量の猫の画像を効率的に処理して表示するた�
 
 ## アーキテクチャ
 
-Cat Board のアーキテクチャは SPM・Xcodegen によるマルチモジュール構成と依存性の注入、Swift Concurrency を使った安全で高速な非同期処理のアルゴリズムが特徴的な設計です。
-
-### 設計の特徴
-
 - **マルチモジュール構成**
   - Xcodegen での xcodeproj の管理
   - SwiftPM でのモジュールの管理
@@ -30,7 +26,7 @@ Cat Board のアーキテクチャは SPM・Xcodegen によるマルチモジュ
 
 - **依存性注入**
   - 依存性逆転の原則
-  - ネットワーク等の外部依存の排除
+  - ネットワーク等の外部依存を排除
 
 ## ディレクトリ構成
 
@@ -47,6 +43,7 @@ Cat Board のアーキテクチャは SPM・Xcodegen によるマルチモジュ
 ├── CatBoardTests/
 ├── CatBoardUITests/
 ├── project.yml
+├── Makefile
 ├── Mintfile
 ├── .swiftlint.yml
 ├── .swiftformat

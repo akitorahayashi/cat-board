@@ -13,7 +13,7 @@ let package = Package(
     dependencies: [
         .package(path: "../CatURLImageModel"),
         .package(path: "../CatImageLoader"),
-        .package(url: "https://github.com/atrh95/scary-cat-screening-kit", exact: "3.3.6"),
+        .package(url: "https://github.com/akitorahayashi/scary-cat-screening-kit", exact: "3.3.6"),
     ],
     targets: [
         .target(

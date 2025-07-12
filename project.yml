@@ -31,7 +31,7 @@ packages:
   CatImagePrefetcher:
     path: CatImagePrefetcher
   TieredGridLayout:
-    url: https://github.com/atrh95/tiered-grid-layout
+    url: https://github.com/akitorahayashi/tiered-grid-layout
     from: "1.2.0"
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher.git
