@@ -51,11 +51,13 @@ APP_BUNDLE_ID := com.example.catboardapp
 # === Boot simulator ===
 .PHONY: boot
 boot:
-ifndef LOCAL_SIMULATOR_UDID
-	$(error LOCAL_SIMULATOR_UDID is not set. Please uncomment and set it in the Makefile)
-endif
 	@echo "🚀 Booting local simulator: $(LOCAL_SIMULATOR_NAME) (OS: $(LOCAL_SIMULATOR_OS), UDID: $(LOCAL_SIMULATOR_UDID))"
-	xcrun simctl boot $(LOCAL_SIMULATOR_UDID) || echo "Simulator already booted."
+	@if xcrun simctl list | grep -A1 "$(LOCAL_SIMULATOR_UDID)" | grep -q "Booted"; then \
+		echo "⚡️ Simulator is already booted."; \
+	else \
+		xcrun simctl boot $(LOCAL_SIMULATOR_UDID); \
+		echo "✅ Simulator booted."; \
+	fi
 	open -a Simulator
 	@echo "✅ Local simulator boot command executed."
 
@@ -108,7 +110,7 @@ endif
 		CODE_SIGNING_ALLOWED=NO \
 		| xcbeautify
 	@echo "✅ Release build completed."
-	@echo "📲 リリースビルドをシミュレータ（$(LOCAL_SIMULATOR_NAME)）にインストールしています..."
+	@echo "📲 Installing release build to simulator ($(LOCAL_SIMULATOR_NAME))..."
 	xcrun simctl install $(LOCAL_SIMULATOR_UDID) $(OUTPUT_DIR)/release/DerivedData/Build/Products/Release-iphonesimulator/$(APP_SCHEME).app
 	@echo "✅ Installed release build."
 	@echo "🚀 Launching app ($(APP_BUNDLE_ID)) on simulator ($(LOCAL_SIMULATOR_NAME))..."
