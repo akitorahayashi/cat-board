@@ -40,19 +40,22 @@ UNIT_TEST_RESULTS := $(OUTPUT_DIR)/test-results/unit/TestResults.xcresult
 UI_TEST_RESULTS := $(OUTPUT_DIR)/test-results/ui/TestResults.xcresult
 DERIVED_DATA_PATH := $(OUTPUT_DIR)/test-results/DerivedData
 
-# === Local Simulator (ユーザの環境に合わせて変更してください) ===
-# LOCAL_SIMULATOR_NAME := iPhone 16 Pro
-# LOCAL_SIMULATOR_OS := 26.0
-# LOCAL_SIMULATOR_UDID := 5495CFE4-9EBC-45C5-8F85-37E0E143B3CC
+# === Local Simulator ===
+LOCAL_SIMULATOR_NAME := iPhone 16 Pro
+LOCAL_SIMULATOR_OS := 26.0
+LOCAL_SIMULATOR_UDID := 5495CFE4-9EBC-45C5-8F85-37E0E143B3CC
 
-# === App Bundle Identifier (プロジェクト設定に合わせて確認・変更してください) ===
-APP_BUNDLE_ID := com.example.catboardapp
+# === App Bundle Identifier ===
+APP_BUNDLE_ID := com.akitorahayashi.CatBoardApp
 
 # === Boot simulator ===
 .PHONY: boot
 boot:
+ifndef LOCAL_SIMULATOR_UDID
+	$(error LOCAL_SIMULATOR_UDID is not set. Please uncomment and set it in the Makefile)
+endif
 	@echo "🚀 Booting local simulator: $(LOCAL_SIMULATOR_NAME) (OS: $(LOCAL_SIMULATOR_OS), UDID: $(LOCAL_SIMULATOR_UDID))"
-	@if xcrun simctl list | grep -A1 "$(LOCAL_SIMULATOR_UDID)" | grep -q "Booted"; then \
+	@if xcrun simctl list devices | grep -q "$(LOCAL_SIMULATOR_UDID) (Booted)"; then \
 		echo "⚡️ Simulator is already booted."; \
 	else \
 		xcrun simctl boot $(LOCAL_SIMULATOR_UDID); \
