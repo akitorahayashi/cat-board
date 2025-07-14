@@ -30,8 +30,6 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         refillTask?.cancel()
     }
 
-    // MARK: - Public Interface
-
     public func getNextImageURLs(count: Int) async throws -> [CatImageURLModel] {
         // キャッシュが十分にある場合
         if loadedImageURLs.count >= count {
@@ -86,9 +84,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         print("loadedImageURLsから提供: \(count)枚提供（残り\(loadedImageURLs.count)枚）")
         return provided
     }
-
-    // MARK: - Automatic URL Refill System
-
+    
     private func initializeLoadedImageURLs() async {
         print("SwiftDataから初期URL読み込み開始: 目標\(maxLoadedURLCount)枚")
         do {

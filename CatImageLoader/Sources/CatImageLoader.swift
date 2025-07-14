@@ -19,7 +19,7 @@ import Kingfisher
 
 public actor CatImageLoader: CatImageLoaderProtocol {
     public init() {
-        // Kingfisherのキャッシュ設定
+        // Kingfisherのキャッシュを設定
         let diskCache = KingfisherManager.shared.cache.diskStorage
 
         // メモリキャッシュの制限: 200MB
