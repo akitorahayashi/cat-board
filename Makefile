@@ -8,6 +8,9 @@ SHELL := /bin/bash
 #   make run-debug           - デバッグビルドを作成し、ローカルシミュレータにインストール、起動
 #   make run-release         - リリースビルドを作成し、ローカルシミュレータにインストール、起動
 #   make clean-proj          - Xcodeプロジェクトのビルドフォルダをクリーン
+#   make resolve-pkg         - SwiftPMキャッシュ・依存関係・ビルドをリセット
+#   make open-proj           - Xcodeでプロジェクトを開く
+#   make test-packages       - CatBoard内の全てのローカルパッケージテストを実行
 #
 # --- ビルド関連 ---
 #   make build-test          - テスト用ビルド（テスト実行前に必須）
@@ -51,11 +54,8 @@ APP_BUNDLE_ID := com.akitorahayashi.CatBoardApp
 # === Boot simulator ===
 .PHONY: boot
 boot:
-ifndef LOCAL_SIMULATOR_UDID
-	$(error LOCAL_SIMULATOR_UDID is not set. Please uncomment and set it in the Makefile)
-endif
 	@echo "🚀 Booting local simulator: $(LOCAL_SIMULATOR_NAME) (OS: $(LOCAL_SIMULATOR_OS), UDID: $(LOCAL_SIMULATOR_UDID))"
-	@if xcrun simctl list devices | grep -q "$(LOCAL_SIMULATOR_UDID) (Booted)"; then \
+	@if xcrun simctl list | grep -A1 "$(LOCAL_SIMULATOR_UDID)" | grep -q "Booted"; then \
 		echo "⚡️ Simulator is already booted."; \
 	else \
 		xcrun simctl boot $(LOCAL_SIMULATOR_UDID); \
@@ -66,12 +66,9 @@ endif
 
 .PHONY: run-debug
 run-debug:
-ifndef LOCAL_SIMULATOR_UDID
-	$(error LOCAL_SIMULATOR_UDID is not set. Please uncomment and set it in the Makefile)
-endif
 	@echo "Using Local Simulator: $(LOCAL_SIMULATOR_NAME) (OS: $(LOCAL_SIMULATOR_OS), UDID: $(LOCAL_SIMULATOR_UDID))"
 	@echo "🧹 Cleaning previous outputs..."
-	@rm -rf $(OUTPUT_DIR)/debug
+	@rm -rf $(OUTPUT_DIR)
 	@mkdir -p $(OUTPUT_DIR)/debug
 	@echo "✅ Previous outputs cleaned."
 	@echo "🔨 Building debug..."
@@ -94,12 +91,9 @@ endif
 
 .PHONY: run-release
 run-release:
-ifndef LOCAL_SIMULATOR_UDID
-	$(error LOCAL_SIMULATOR_UDID is not set. Please uncomment and set it in the Makefile)
-endif
 	@echo "Using Local Simulator: $(LOCAL_SIMULATOR_NAME) (OS: $(LOCAL_SIMULATOR_OS), UDID: $(LOCAL_SIMULATOR_UDID))"
 	@echo "🧹 Cleaning previous outputs..."
-	@rm -rf $(OUTPUT_DIR)/release
+	@rm -rf $(OUTPUT_DIR)
 	@mkdir -p $(OUTPUT_DIR)/release
 	@echo "✅ Previous outputs cleaned."
 	@echo "🔨 Building release..."
@@ -120,18 +114,52 @@ endif
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 	@echo "✅ App launched."
 
+# === Resolve & Reset SwiftPM/Xcode Packages ===
+.PHONY: resolve-pkg
+resolve-pkg:
+	@echo "🧹 Removing SwiftPM build and cache..."
+	rm -rf .build
+	rm -rf ~/Library/Caches/org.swift.swiftpm
+	@echo "✅ SwiftPM build and cache removed."
+	@echo "🔄 Resolving Swift package dependencies..."
+	xcodebuild -resolvePackageDependencies -project $(PROJECT_FILE)
+	@echo "✅ Package dependencies resolved."
+
+# === Open Xcode Project ===
+.PHONY: open-proj
+open-proj:
+	@echo "🚀 Opening Xcode project: $(PROJECT_FILE)"
+	open $(PROJECT_FILE)
+	@echo "✅ Xcode project opened."
+	
+
+# === Package Tests ===
+.PHONY: test-packages
+test-packages:
+	@set -e; 
+	echo "🧪 Running package tests..."; 
+	echo "📦 Testing CatImageURLRepository..."; 
+	(cd CatImageURLRepository && set -o pipefail && swift test | xcbeautify); 
+	echo "📦 Testing CatImageScreener..."; 
+	(cd CatImageScreener && set -o pipefail && swift test | xcbeautify); 
+	echo "📦 Testing CatImagePrefetcher..."; 
+	(cd CatImagePrefetcher && set -o pipefail && swift test | xcbeautify); 
+	echo "✅ All package tests passed."
+
+
 # === Build for testing ===
+
 .PHONY: build-test
 build-test:
 ifeq ($(SIMULATOR_UDID),)
-	$(eval SIMULATOR_ID := $(call select-simulator))
+	$(eval SIMULATOR_ID := $(call select-simulator,$(APP_SCHEME)))
 else
 	$(eval SIMULATOR_ID := $(SIMULATOR_UDID))
 endif
 	@echo "Using Simulator UDID: $(SIMULATOR_ID)"
 	@echo "🧹 Cleaning previous outputs..."
-	@rm -rf $(DERIVED_DATA_PATH) $(UNIT_TEST_RESULTS) $(UI_TEST_RESULTS)
-	@mkdir -p $(DERIVED_DATA_PATH) $(shell dirname $(UNIT_TEST_RESULTS)) $(shell dirname $(UI_TEST_RESULTS)) $(shell dirname $(ARCHIVE_PATH))
+	@rm -rf $(OUTPUT_DIR)
+	@mkdir -p $(OUTPUT_DIR)/test-results/unit $(OUTPUT_DIR)/test-results/ui $(OUTPUT_DIR)/archives
 	@echo "✅ Previous outputs cleaned."
 	@echo "🔨 Building for testing..."
 	@set -o pipefail && xcodebuild build-for-testing \
@@ -149,15 +177,15 @@ endif
 .PHONY: archive
 archive:
 	@echo "🧹 Cleaning previous outputs..."
-	@rm -rf $(ARCHIVE_PATH) $(OUTPUT_DIR)/archives/DerivedData # Keep other outputs if any
-	@mkdir -p $(shell dirname $(ARCHIVE_PATH)) $(OUTPUT_DIR)/archives/DerivedData
+	@rm -rf $(OUTPUT_DIR)
+	@mkdir -p $(OUTPUT_DIR)/archives
 	@echo "✅ Previous outputs cleaned."
 	@echo "📦 Building archive..."
 	@set -o pipefail && xcodebuild \
 		-project $(PROJECT_FILE) \
 		-scheme $(APP_SCHEME) \
 		-configuration Release \
-		-destination "generic/platform=iOS" \
+		-destination "generic/platform=iOS Simulator" \
 		-archivePath $(ARCHIVE_PATH) \
 		-derivedDataPath $(OUTPUT_DIR)/archives/DerivedData \
 		-skipMacroValidation \
@@ -175,114 +203,80 @@ archive:
 
 # === Unit tests ===
 .PHONY: unit-test
-unit-test: find-test-artifacts # Ensure build artifacts are available
-ifeq ($(SIMULATOR_UDID),)
-	$(eval SIMULATOR_ID := $(call select-simulator))
-else
-	$(eval SIMULATOR_ID := $(SIMULATOR_UDID))
-endif
-	@echo "Using Simulator UDID: $(SIMULATOR_ID)"
+unit-test:
+	$(eval SIMULATOR_RAW := $(call select-simulator,$(UNIT_TEST_SCHEME)))
+	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
 	@echo "🧪 Running Unit Tests..."
 	@rm -rf $(UNIT_TEST_RESULTS)
 	@set -o pipefail && xcodebuild test-without-building \
 		-project $(PROJECT_FILE) \
 		-scheme $(UNIT_TEST_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(SIMULATOR_ID)" \
+		-destination "platform=iOS Simulator,id=$(word 1,$(subst |, ,$(SIMULATOR_RAW)))" \
 		-derivedDataPath $(DERIVED_DATA_PATH) \
 		-enableCodeCoverage NO \
 		-resultBundlePath $(UNIT_TEST_RESULTS) \
 		CODE_SIGNING_ALLOWED=NO \
 		| xcbeautify
 	@if [ ! -d "$(UNIT_TEST_RESULTS)" ]; then \
-		echo "❌ Error: Unit test result bundle not found at $(UNIT_TEST_RESULTS)"; \
+		echo "❌ Error: Unit test result bundle not found"; \
 		exit 1; \
 	fi
 	@echo "✅ Unit tests completed. Results: $(UNIT_TEST_RESULTS)"
 
 # === UI tests ===
 .PHONY: ui-test
-ui-test: find-test-artifacts # Ensure build artifacts are available
-ifeq ($(SIMULATOR_UDID),)
-	$(eval SIMULATOR_ID := $(call select-simulator))
-else
-	$(eval SIMULATOR_ID := $(SIMULATOR_UDID))
-endif
-	@echo "Using Simulator UDID: $(SIMULATOR_ID)"
+ui-test:
+	$(eval SIMULATOR_RAW := $(call select-simulator,$(UI_TEST_SCHEME)))
+	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
 	@echo "🧪 Running UI Tests..."
 	@rm -rf $(UI_TEST_RESULTS)
 	@set -o pipefail && xcodebuild test-without-building \
 		-project $(PROJECT_FILE) \
 		-scheme $(UI_TEST_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(SIMULATOR_ID)" \
+		-destination "platform=iOS Simulator,id=$(word 1,$(subst |, ,$(SIMULATOR_RAW)))" \
 		-derivedDataPath $(DERIVED_DATA_PATH) \
 		-enableCodeCoverage NO \
 		-resultBundlePath $(UI_TEST_RESULTS) \
 		CODE_SIGNING_ALLOWED=NO \
 		| xcbeautify
 	@if [ ! -d "$(UI_TEST_RESULTS)" ]; then \
-		echo "❌ Error: UI test result bundle not found at $(UI_TEST_RESULTS)"; \
+		echo "❌ Error: UI test result bundle not found"; \
 		exit 1; \
 	fi
 	@echo "✅ UI tests completed. Results: $(UI_TEST_RESULTS)"
 
 # === All tests ===
 .PHONY: test-all
-test-all: build-test unit-test ui-test
+test-all: find-test-artifacts unit-test ui-test
 	@echo "✅ All tests completed."
 
 # === Find existing artifacts ===
 .PHONY: find-test-artifacts
 find-test-artifacts:
-	@echo "🔍 Finding existing build artifacts in $(DERIVED_DATA_PATH)..."
-	@if [ -d "$(DERIVED_DATA_PATH)" ] && find "$(DERIVED_DATA_PATH)" -name "$(APP_SCHEME).app" -type d -print -quit | grep -q "."; then \
-		echo "✅ Found existing build artifacts."; \
-	else \
-		echo "ℹ️ No existing build artifacts found. This is expected if 'make build-test' or 'make ci-build-for-testing' hasn't run yet, or if derived data is in a different location."; \
+	@echo "🔍 Finding existing build artifacts..."
+	@FOUND=false; \
+	for path in "$(OUTPUT_DIR)/test-results/DerivedData" "DerivedData" "$$HOME/Library/Developer/Xcode/DerivedData"; do \
+		if [ -d "$$path" ] && find "$$path" -name "$(APP_SCHEME).app" -type d | head -1 | grep -q "$(APP_SCHEME).app"; then \
+			echo "✅ Found existing build artifacts at: $$path"; \
+			if [ "$$path" != "$(OUTPUT_DIR)/test-results/DerivedData" ]; then \
+				echo "🔗 Linking artifacts to $(OUTPUT_DIR)/test-results/DerivedData"; \
+				mkdir -p $(OUTPUT_DIR)/test-results; \
+				ln -sfn "$$path" "$(OUTPUT_DIR)/test-results/DerivedData"; \
+			fi; \
+			FOUND=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$FOUND" = false ]; then \
+		echo "❌ Error: No existing build artifacts found. Please run 'make build-test' first."; \
+		exit 1; \
 	fi
 
 .PHONY: clean-proj
 clean-proj:
-ifndef LOCAL_SIMULATOR_UDID
-	$(error LOCAL_SIMULATOR_UDID is not set. Please uncomment and set it in the Makefile)
-endif
 	@echo "🧹 Cleaning Xcode project build folder..."
 	xcodebuild clean \
 		-project $(PROJECT_FILE) \
 		-scheme $(APP_SCHEME) \
 		-destination "platform=iOS Simulator,id=$(LOCAL_SIMULATOR_UDID)"
 	@echo "✅ Project build folder cleaned."
-
-# === Package Tests ===
-.PHONY: test-packages
-test-packages:
-	@echo "==============================="
-	@echo "CatBoard パッケージテスト開始"
-	@echo "==============================="
-	@MODULES=("CatImageURLRepository" "CatImageScreener" "CatImagePrefetcher"); \
-	FAILED_MODULES=""; \
-	echo "🧪 各モジュールのテストを実行中..."; \
-	for MODULE in $${MODULES[@]}; do \
-		echo ""; \
-		echo "📦 $$MODULE のテスト実行中..."; \
-		echo "----------------------------------------"; \
-		if (cd "$$MODULE" && swift test); then \
-			echo "✅ $$MODULE のテスト完了"; \
-		else \
-			echo "❌ $$MODULE のテストが失敗しました"; \
-			FAILED_MODULES="$$FAILED_MODULES $$MODULE"; \
-		fi; \
-	done; \
-	echo ""; \
-	echo "==============================="; \
-	echo "テスト結果"; \
-	echo "==============================="; \
-	if [ -z "$$FAILED_MODULES" ]; then \
-		echo "✅ 全てのモジュールのテストが成功しました！"; \
-		exit 0; \
-	else \
-		echo "❌ 以下のモジュールでテストが失敗しました:"; \
-		for FAILED in $$FAILED_MODULES; do \
-			echo "  - $$FAILED"; \
-		done; \
-		exit 1; \
-	fi
