@@ -4,25 +4,27 @@ SHELL := /bin/bash
 #
 # [ユーザ向けコマンド]
 # --- Xcodeの操作 ---
-#   make boot                - ローカルシミュレータ（iPhone 16 Pro）を起動
-#   make run-debug           - デバッグビルドを作成し、ローカルシミュレータにインストール、起動
-#   make run-release         - リリースビルドを作成し、ローカルシミュレータにインストール、起動
-#   make clean-proj          - Xcodeプロジェクトのビルドフォルダをクリーン
-#   make resolve-pkg         - SwiftPMキャッシュ・依存関係・ビルドをリセット
-#   make open-proj           - Xcodeでプロジェクトを開く
-#   make test-packages       - CatBoard内の全てのローカルパッケージテストを実行
+#   make boot                      - ローカルシミュレータ（iPhone 16 Pro）を起動
+#   make run-debug                 - デバッグビルドを作成し、ローカルシミュレータにインストール、起動
+#   make run-release               - リリースビルドを作成し、ローカルシミュレータにインストール、起動
+#   make clean-proj                - Xcodeプロジェクトのビルドフォルダをクリーン
+#   make resolve-pkg               - SwiftPMキャッシュ・依存関係・ビルドをリセット
+#   make open-proj                 - Xcodeでプロジェクトを開く
+#   make test-packages             - CatBoard内の全てのローカルパッケージテストを実行
 #
-# --- ビルド関連 ---
-#   make build-test          - テスト用ビルド（テスト実行前に必須）
-#   make archive             - リリース用のアーカイブを作成
+# --- ビルド ---
+#   make build-test                - テスト用ビルド（テスト実行前に必須）
+#   make archive                   - リリース用のアーカイブを作成
 #
-# --- テスト関連 ---
-#   make unit-test           - ユニットテストを実行
-#   make ui-test             - UIテストを実行
-#   make test-all            - 全テストを実行
+# --- テスト ---
+#   make unit-test                  - ユニットテストをビルドして実行
+#   make ui-test                    - UIテストをビルドして実行
+#   make test-all                   - 全テストをビルドして実行
+#   make unit-test-without-building  - ユニットテストを実行（ビルドなし）
+#   make ui-test-without-building    - UIテストを実行（ビルドなし）
 #
 # [内部ワークフロー用コマンド]
-#   make find-test-artifacts - テストの成果物探索
+#   make find-test-artifacts        - テストの成果物探索
 #
 # === Configuration ===
 OUTPUT_DIR := build
@@ -208,6 +210,27 @@ unit-test:
 	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
 	@echo "🧪 Running Unit Tests..."
 	@rm -rf $(UNIT_TEST_RESULTS)
+	@set -o pipefail && xcodebuild test \
+		-project $(PROJECT_FILE) \
+		-scheme $(UNIT_TEST_SCHEME) \
+		-destination "platform=iOS Simulator,id=$(word 1,$(subst |, ,$(SIMULATOR_RAW)))" \
+		-derivedDataPath $(DERIVED_DATA_PATH) \
+		-enableCodeCoverage NO \
+		-resultBundlePath $(UNIT_TEST_RESULTS) \
+		CODE_SIGNING_ALLOWED=NO \
+		| xcbeautify
+	@if [ ! -d "$(UNIT_TEST_RESULTS)" ]; then \
+		echo "❌ Error: Unit test result bundle not found"; \
+		exit 1; \
+	fi
+	@echo "✅ Unit tests completed. Results: $(UNIT_TEST_RESULTS)"
+
+.PHONY: unit-test-without-building
+unit-test-without-building:
+	$(eval SIMULATOR_RAW := $(call select-simulator,$(UNIT_TEST_SCHEME)))
+	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
+	@echo "🧪 Running Unit Tests..."
+	@rm -rf $(UNIT_TEST_RESULTS)
 	@set -o pipefail && xcodebuild test-without-building \
 		-project $(PROJECT_FILE) \
 		-scheme $(UNIT_TEST_SCHEME) \
@@ -230,6 +253,27 @@ ui-test:
 	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
 	@echo "🧪 Running UI Tests..."
 	@rm -rf $(UI_TEST_RESULTS)
+	@set -o pipefail && xcodebuild test \
+		-project $(PROJECT_FILE) \
+		-scheme $(UI_TEST_SCHEME) \
+		-destination "platform=iOS Simulator,id=$(word 1,$(subst |, ,$(SIMULATOR_RAW)))" \
+		-derivedDataPath $(DERIVED_DATA_PATH) \
+		-enableCodeCoverage NO \
+		-resultBundlePath $(UI_TEST_RESULTS) \
+		CODE_SIGNING_ALLOWED=NO \
+		| xcbeautify
+	@if [ ! -d "$(UI_TEST_RESULTS)" ]; then \
+		echo "❌ Error: UI test result bundle not found"; \
+		exit 1; \
+	fi
+	@echo "✅ UI tests completed. Results: $(UI_TEST_RESULTS)"
+
+.PHONY: ui-test-without-building
+ui-test-without-building:
+	$(eval SIMULATOR_RAW := $(call select-simulator,$(UI_TEST_SCHEME)))
+	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
+	@echo "🧪 Running UI Tests..."
+	@rm -rf $(UI_TEST_RESULTS)
 	@set -o pipefail && xcodebuild test-without-building \
 		-project $(PROJECT_FILE) \
 		-scheme $(UI_TEST_SCHEME) \
@@ -247,7 +291,7 @@ ui-test:
 
 # === All tests ===
 .PHONY: test-all
-test-all: find-test-artifacts unit-test ui-test
+test-all: build-test unit-test-without-building ui-test-without-building
 	@echo "✅ All tests completed."
 
 # === Find existing artifacts ===
