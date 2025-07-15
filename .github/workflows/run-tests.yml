@@ -32,7 +32,7 @@ jobs:
         run: mint run xcodegen generate
 
       - name: Build for Testing via Makefile
-        run: make build-test # SIMULATOR_UDID is now handled by Makefile's select-simulator
+        run: make build-test
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -78,7 +78,7 @@ jobs:
 
       - name: Run Unit Tests via Makefile
         id: unit_tests
-        run: make unit-test # SIMULATOR_UDID is now handled by Makefile's select-simulator
+        run: make unit-test-without-building
 
       - name: Upload Unit Test Results
         if: always()
@@ -124,7 +124,7 @@ jobs:
 
       - name: Run UI Tests via Makefile
         id: ui_tests
-        run: make ui-test # SIMULATOR_UDID is now handled by Makefile's select-simulator
+        run: make ui-test-without-building
 
       - name: Upload UI Test Results
         if: always()
