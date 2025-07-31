@@ -37,7 +37,7 @@ struct CatBoardApp: App {
                         await mockImageLoader.setError(NSError(
                             domain: "MockCatImageLoader",
                             code: -1,
-                            userInfo: [NSLocalizedDescriptionKey: "テスト用の画像読み込みエラーです"]
+                            userInfo: [NSLocalizedDescriptionKey: "テスト用のエラーです"]
                         ))
                     }
                 }

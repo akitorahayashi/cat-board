@@ -71,6 +71,7 @@ struct CatImageGallery: View {
                                 .foregroundColor(.primary)
                         }
                     )
+                    .padding(.leading, 3.6)
                     .accessibilityIdentifier("refreshButton")
                     .opacity(
                         !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
