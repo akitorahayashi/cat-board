@@ -84,7 +84,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         print("loadedImageURLsから提供: \(count)枚提供（残り\(loadedImageURLs.count)枚）")
         return provided
     }
-    
+
     private func initializeLoadedImageURLs() async {
         print("SwiftDataから初期URL読み込み開始: 目標\(maxLoadedURLCount)枚")
         do {

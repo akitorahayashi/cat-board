@@ -199,7 +199,7 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         let screenedCount = try await prefetcher.getPrefetchedCount()
         let targetCount = CatImagePrefetcher.targetPrefetchCount
-        
+
         // スクリーニングにより不適切な画像が除外され、枚数が減っていることを確認
         XCTAssertLessThan(screenedCount, targetCount, "スクリーニング有効時は不適切な画像が除外され枚数が減る")
         XCTAssertGreaterThan(screenedCount, 0, "スクリーニング有効でも適切な画像は取得される")

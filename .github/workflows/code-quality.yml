@@ -24,12 +24,7 @@ jobs:
       run: brew install mint
 
     - name: Run SwiftFormat
-      run: mint run swiftformat .
+      run: make format-check
 
     - name: Run SwiftLint
-      run: mint run swiftlint --strict
-
-    - name: Check for changes
-      id: check
-      run: |
-        git diff --exit-code && echo "FORMAT_OK=true" >> $GITHUB_ENV || echo "FORMAT_OK=false" >> $GITHUB_ENV 
+      run: make lint
