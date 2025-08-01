@@ -70,6 +70,7 @@ struct CatImageGallery: View {
             }
             .sheet(isPresented: $isShowingSettings) {
                 SettingsView(prefetcher: prefetcher)
+                    .presentationDetents([.medium])
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
