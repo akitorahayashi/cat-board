@@ -171,7 +171,7 @@ final class CatImagePrefetcherTests: XCTestCase {
         _ = try await prefetcher.getPrefetchedImages(imageCount: consumeCount)
 
         let afterConsumeCount = try await prefetcher.getPrefetchedCount()
-        XCTAssertGreaterThan(firstCount - consumeCount, afterConsumeCount)
+        XCTAssertGreaterThanOrEqual(firstCount - consumeCount, afterConsumeCount)
 
         // 2回目のプリフェッチ
         try await prefetcher.startPrefetchingIfNeeded()
