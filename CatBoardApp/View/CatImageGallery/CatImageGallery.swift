@@ -8,6 +8,8 @@ import SwiftUI
 import TieredGridLayout
 
 struct CatImageGallery: View {
+    private let rotationAnimationDuration = 0.3
+    private let actionDelay = 0.35 // アニメーション完了後の小さな余裕
     private static let minImageCountForRefresh = 30
 
     @StateObject private var viewModel: GalleryViewModel
@@ -42,7 +44,7 @@ struct CatImageGallery: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 errorContent
                     .opacity(isErrorContentVisible ? 1 : 0)
@@ -83,7 +85,6 @@ struct CatImageGallery: View {
                     .presentationDetents([.medium])
             }
         }
-        .navigationViewStyle(StackNavigationViewStyle())
     }
 
     private var refreshToolbarItem: some ToolbarContent {
@@ -91,10 +92,10 @@ struct CatImageGallery: View {
             let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching || isErrorContentVisible
             Button(
                 action: {
-                    withAnimation(.easeOut(duration: 0.3)) {
+                    withAnimation(.easeOut(duration: rotationAnimationDuration)) {
                         refreshRotationAngle += 180
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + actionDelay) {
                         viewModel.clearDisplayedImages()
                         viewModel.loadInitialImages()
                     }
@@ -145,10 +146,10 @@ struct CatImageGallery: View {
                 .padding(.horizontal)
 
             Button(action: {
-                withAnimation(.easeOut(duration: 0.3)) {
+                withAnimation(.easeOut(duration: rotationAnimationDuration)) {
                     retryRotationAngle += 360
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + actionDelay) {
                     viewModel.clearDisplayedImages()
                     viewModel.loadInitialImages()
                 }

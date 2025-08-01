@@ -27,7 +27,7 @@ struct SettingsToggleCard: View {
         }
         .padding()
         .background(Color(.systemBackground).opacity(0.6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 

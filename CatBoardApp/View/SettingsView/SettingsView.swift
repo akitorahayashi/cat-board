@@ -3,7 +3,7 @@ import CatImageScreener
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) var dismiss
     @StateObject private var screeningSettings = ScreeningSettings()
 
     let prefetcher: CatImagePrefetcherProtocol?
@@ -70,7 +70,7 @@ struct SettingsView: View {
     private var doneToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(action: {
-                presentationMode.wrappedValue.dismiss()
+                dismiss()
             }) {
                 Label("完了", systemImage: "checkmark")
             }
