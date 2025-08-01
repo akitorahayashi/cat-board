@@ -13,6 +13,7 @@ final class CatImagePrefetcherTests: XCTestCase {
     private var mockScreener: MockCatImageScreener!
     private var prefetcher: CatImagePrefetcher!
     private var modelContainer: ModelContainer!
+    private var testScreeningSettings: ScreeningSettings!
 
     /// CI環境では長めに、ローカル環境では短めに設定
     private static let bufferTimeInSeconds: Double = 12.0
@@ -26,7 +27,8 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         mockRepository = MockCatImageURLRepository(apiClient: MockCatAPIClient())
         mockLoader = MockCatImageLoader()
-        mockScreener = MockCatImageScreener()
+        testScreeningSettings = ScreeningSettings(isScreeningEnabled: false, scaryMode: false)
+        mockScreener = MockCatImageScreener(screeningSettings: testScreeningSettings)
         prefetcher = CatImagePrefetcher(
             repository: mockRepository,
             imageLoader: mockLoader,
@@ -41,6 +43,7 @@ final class CatImagePrefetcherTests: XCTestCase {
         mockScreener = nil
         prefetcher = nil
         modelContainer = nil
+        testScreeningSettings = nil
 
         super.tearDown()
     }
@@ -51,7 +54,6 @@ final class CatImagePrefetcherTests: XCTestCase {
     func testStartPrefetching() async throws {
         // 1枚あたり0.05秒でローディング
         await mockLoader.setLoadingTimeInSeconds(0.05)
-        await mockScreener.setIsScreeningEnabled(false)
 
         let initialCount = try await prefetcher.getPrefetchedCount()
         XCTAssertEqual(initialCount, 0)
@@ -72,7 +74,6 @@ final class CatImagePrefetcherTests: XCTestCase {
         // 1枚あたり0.03秒でローディング
         let loadingTimePerImage = 0.03
         await mockLoader.setLoadingTimeInSeconds(loadingTimePerImage)
-        await mockScreener.setIsScreeningEnabled(false)
 
         try await prefetcher.startPrefetchingIfNeeded()
 
@@ -97,7 +98,6 @@ final class CatImagePrefetcherTests: XCTestCase {
         // 1枚あたり0.02秒でローディング
         let loadingTimePerImage = 0.02
         await mockLoader.setLoadingTimeInSeconds(loadingTimePerImage)
-        await mockScreener.setIsScreeningEnabled(false)
 
         let task1 = Task {
             try await prefetcher.startPrefetchingIfNeeded()
@@ -129,7 +129,6 @@ final class CatImagePrefetcherTests: XCTestCase {
         // 1枚あたり0.04秒でローディング
         let loadingTimePerImage = 0.04
         await mockLoader.setLoadingTimeInSeconds(loadingTimePerImage)
-        await mockScreener.setIsScreeningEnabled(false)
 
         let initialCount = try await prefetcher.getPrefetchedCount()
         XCTAssertEqual(initialCount, 0)
@@ -156,7 +155,6 @@ final class CatImagePrefetcherTests: XCTestCase {
         // 1枚あたり0.03秒でローディング
         let loadingTimePerImage = 0.03
         await mockLoader.setLoadingTimeInSeconds(loadingTimePerImage)
-        await mockScreener.setIsScreeningEnabled(false)
 
         // 最初のプリフェッチ
         try await prefetcher.startPrefetchingIfNeeded()
@@ -189,7 +187,7 @@ final class CatImagePrefetcherTests: XCTestCase {
     /// スクリーニングが有効に動作していることを確認
     func testScreeningIsWorking() async throws {
         await mockLoader.setLoadingTimeInSeconds(0.02)
-        await mockScreener.setIsScreeningEnabled(true)
+        testScreeningSettings.isScreeningEnabled = true
 
         try await prefetcher.startPrefetchingIfNeeded()
         // スクリーニング有効時のテストのため十分な時間を確保して待機

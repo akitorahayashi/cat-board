@@ -11,7 +11,8 @@ final class CatImageScreenerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        screener = CatImageScreener()
+        let testSettings = ScreeningSettings(isScreeningEnabled: true, scaryMode: false)
+        screener = CatImageScreener(screeningSettings: testSettings)
         mockImageLoader = MockCatImageLoader()
     }
 

@@ -1,14 +1,12 @@
 import Foundation
 import SwiftUI
 
-
-
-class AppSettings: ObservableObject {
+public class ScreeningSettings: ObservableObject {
     // 引数なしinit: UserDefaultsから値を取得。未設定ならデフォルト値
-    init() {
+    public init() {
         let defaults = UserDefaults.standard
-        let screeningKey = AppSettings.Keys.isScreeningEnabled.rawValue
-        let scaryKey = AppSettings.Keys.scaryMode.rawValue
+        let screeningKey = ScreeningSettings.Keys.isScreeningEnabled.rawValue
+        let scaryKey = ScreeningSettings.Keys.scaryMode.rawValue
 
         let hasScreening = defaults.object(forKey: screeningKey) != nil
         let hasScary = defaults.object(forKey: scaryKey) != nil
@@ -22,18 +20,18 @@ class AppSettings: ObservableObject {
     }
 
     // 引数ありinit: 明示的に値を指定
-    init(isScreeningEnabled: Bool, scaryMode: Bool) {
+    public init(isScreeningEnabled: Bool, scaryMode: Bool) {
         self.isScreeningEnabled = isScreeningEnabled
         self.scaryMode = scaryMode
     }
 
-    @Published var isScreeningEnabled: Bool {
+    @Published public var isScreeningEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isScreeningEnabled, forKey: Keys.isScreeningEnabled.rawValue)
         }
     }
 
-    @Published var scaryMode: Bool {
+    @Published public var scaryMode: Bool {
         didSet {
             UserDefaults.standard.set(scaryMode, forKey: Keys.scaryMode.rawValue)
         }

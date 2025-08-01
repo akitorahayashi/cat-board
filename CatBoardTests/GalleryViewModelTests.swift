@@ -16,11 +16,13 @@ final class GalleryViewModelTests: XCTestCase {
     var mockRepository: MockCatImageURLRepository!
     var mockScreener: MockCatImageScreener!
     var mockPrefetcher: NoopCatImagePrefetcher!
+    var testScreeningSettings: ScreeningSettings!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         mockRepository = MockCatImageURLRepository(apiClient: MockCatAPIClient())
-        mockScreener = MockCatImageScreener()
+        testScreeningSettings = ScreeningSettings(isScreeningEnabled: false, scaryMode: false)
+        mockScreener = MockCatImageScreener(screeningSettings: testScreeningSettings)
         mockLoader = MockCatImageLoader()
         mockPrefetcher = NoopCatImagePrefetcher(
             repository: mockRepository,
@@ -41,13 +43,13 @@ final class GalleryViewModelTests: XCTestCase {
         mockRepository = nil
         mockScreener = nil
         mockPrefetcher = nil
+        testScreeningSettings = nil
 
         super.tearDown()
     }
 
     func testLoadInitialImages() async {
         await mockLoader.setLoadingTimeInSeconds(0.01)
-        await mockScreener.setIsScreeningEnabled(false)
 
         XCTAssertTrue(viewModel.imageURLsToShow.isEmpty)
 
@@ -66,7 +68,6 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testFetchAdditionalImages() async {
         await mockLoader.setLoadingTimeInSeconds(0.01)
-        await mockScreener.setIsScreeningEnabled(false)
 
         viewModel.loadInitialImages()
         // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 4秒 (CIの実行時間を考慮)
@@ -81,7 +82,6 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testClearDisplayedImages() async {
         await mockLoader.setLoadingTimeInSeconds(0.01)
-        await mockScreener.setIsScreeningEnabled(false)
 
         viewModel.loadInitialImages()
         // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 2秒 (CIの実行時間を考慮)
@@ -96,7 +96,6 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testMaxImageCountReached() async {
         await mockLoader.setLoadingTimeInSeconds(0.01)
-        await mockScreener.setIsScreeningEnabled(false)
 
         viewModel.loadInitialImages()
         // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 2秒 (CIの実行時間を考慮)
@@ -116,7 +115,7 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testScreeningInInitialImages() async throws {
         await mockLoader.setLoadingTimeInSeconds(0.01)
-        await mockScreener.setIsScreeningEnabled(true)
+        testScreeningSettings.isScreeningEnabled = true
 
         viewModel.loadInitialImages()
         // 初期読み込み完了まで待機: 30枚処理 × 0.01秒/枚 = 0.3秒 + バッファ = 5秒 (CIの実行時間を考慮)
@@ -135,7 +134,7 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testScreeningInAdditionalImages() async throws {
         await mockLoader.setLoadingTimeInSeconds(0.01)
-        await mockScreener.setIsScreeningEnabled(true)
+        testScreeningSettings.isScreeningEnabled = true
 
         viewModel.loadInitialImages()
 

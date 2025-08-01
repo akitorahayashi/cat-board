@@ -1,9 +1,10 @@
 import CatImagePrefetcher
+import CatImageScreener
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
-    @StateObject private var appSettings = AppSettings()
+    @StateObject private var screeningSettings = ScreeningSettings()
     
     let prefetcher: CatImagePrefetcherProtocol?
     
@@ -26,9 +27,9 @@ struct SettingsView: View {
                     SettingsToggleCard(
                         title: "画像スクリーニング",
                         caption: "不適切な画像をフィルタリングします。オフにすると全ての画像が表示されます",
-                        isOn: $appSettings.isScreeningEnabled
+                        isOn: $screeningSettings.isScreeningEnabled
                     )
-                    .onChange(of: appSettings.isScreeningEnabled) {
+                    .onChange(of: screeningSettings.isScreeningEnabled) {
                         clearPrefetchCache()
                     }
 
@@ -43,9 +44,9 @@ struct SettingsView: View {
                     SettingsToggleCard(
                         title: "スケアリーモード",
                         caption: "危険と判定された画像のみを表示します。通常は安全な画像のみが表示されます",
-                        isOn: $appSettings.scaryMode
+                        isOn: $screeningSettings.scaryMode
                     )
-                    .onChange(of: appSettings.scaryMode) {
+                    .onChange(of: screeningSettings.scaryMode) {
                         clearPrefetchCache()
                     }
 
