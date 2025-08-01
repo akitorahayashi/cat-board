@@ -12,6 +12,8 @@ struct CatImageGallery: View {
 
     @StateObject private var viewModel: GalleryViewModel
     @State private var isShowingSettings = false
+    @State private var gearRotationAngle: Double = 0
+    @State private var refreshRotationAngle: Double = 0
 
     private let prefetcher: CatImagePrefetcherProtocol
 
@@ -78,9 +80,13 @@ struct CatImageGallery: View {
 
     private var refreshToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
+            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching
             Button(
                 action: {
-                    withAnimation {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        refreshRotationAngle += 180
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         viewModel.clearDisplayedImages()
                         viewModel.loadInitialImages()
                     }
@@ -88,17 +94,14 @@ struct CatImageGallery: View {
                 label: {
                     Image(systemName: "arrow.triangle.2.circlepath")
                         .foregroundColor(.primary)
+                        .opacity(isDisabled ? 0.3 : 1)
+                        .animation(.easeOut(duration: 0.3), value: isDisabled)
                 }
             )
+            .rotationEffect(.degrees(refreshRotationAngle))
+            .disabled(isDisabled)
             .padding(.leading, 3.2)
             .accessibilityIdentifier("refreshButton")
-            .opacity(
-                !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
-                    .count >= Self.minImageCountForRefresh ? 1 : 0
-            )
-            .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
-            .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)
-            .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
         }
     }
 
@@ -106,11 +109,15 @@ struct CatImageGallery: View {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(
                 action: {
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        gearRotationAngle += 360
+                    }
                     isShowingSettings = true
                 },
                 label: {
                     Image(systemName: "gear")
                         .foregroundColor(.primary)
+                        .rotationEffect(.degrees(gearRotationAngle))
                 }
             )
             .padding(.leading, 3.2)
