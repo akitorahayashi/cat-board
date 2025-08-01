@@ -39,7 +39,7 @@ class AppSettings: ObservableObject {
         }
     }
 
-    static enum Keys: String {
+    private enum Keys: String {
         case isScreeningEnabled
         case scaryMode
     }

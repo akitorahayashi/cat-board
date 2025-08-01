@@ -4,8 +4,12 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var appSettings = AppSettings()
-
+    
     let prefetcher: CatImagePrefetcherProtocol?
+    
+    init(prefetcher: CatImagePrefetcherProtocol? = nil) {
+        self.prefetcher = prefetcher
+    }
 
     private var isSimulator: Bool {
         #if targetEnvironment(simulator)

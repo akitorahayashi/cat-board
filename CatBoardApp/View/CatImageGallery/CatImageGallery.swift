@@ -14,6 +14,7 @@ struct CatImageGallery: View {
     @State private var isShowingSettings = false
     @State private var gearRotationAngle: Double = 0
     @State private var refreshRotationAngle: Double = 0
+    @State private var retryRotationAngle: Double = 0
 
     private let prefetcher: CatImagePrefetcherProtocol
 
@@ -32,35 +33,43 @@ struct CatImageGallery: View {
         ))
     }
 
+    private var isErrorContentVisible: Bool {
+        viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty)
+    }
+
+
+    private var isInitialLoadingIndicatorVisible: Bool {
+        viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty
+    }
+
     var body: some View {
         NavigationView {
-            Group {
-                if viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty) {
-                    errorContent
-                        .transition(.opacity)
-                } else {
-                    ZStack(alignment: .top) {
-                        scrollContent
-                            .transition(.opacity)
+            ZStack {
+                errorContent
+                    .opacity(isErrorContentVisible ? 1 : 0)
+                    .allowsHitTesting(isErrorContentVisible)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)
 
-                        // 初期ロード時の ProgressView
-                        if viewModel.isInitializing, viewModel.imageURLsToShow.isEmpty {
-                            VStack {
-                                Spacer()
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .scaleEffect(1.5)
-                                Text("Loading...")
-                                    .font(.headline)
-                                    .padding(.top, 8)
-                                Spacer()
-                            }
-                            .transition(.opacity)
-                        }
+                ZStack(alignment: .top) {
+                    scrollContent
+                        .opacity(isErrorContentVisible ? 0 : 1)
+                        .allowsHitTesting(!isErrorContentVisible)
+                        .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)
+
+                    VStack {
+                        Spacer()
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .scaleEffect(1.5)
+                        Text("Loading...")
+                            .font(.headline)
+                            .padding(.top, 8)
+                        Spacer()
                     }
+                    .opacity(isInitialLoadingIndicatorVisible ? 1 : 0)
+                    .animation(.easeOut(duration: 0.3), value: isInitialLoadingIndicatorVisible)
                 }
             }
-            .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)
             .navigationTitle("Cat Board")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -80,7 +89,7 @@ struct CatImageGallery: View {
 
     private var refreshToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching
+            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching || isErrorContentVisible
             Button(
                 action: {
                     withAnimation(.easeOut(duration: 0.3)) {
@@ -100,7 +109,7 @@ struct CatImageGallery: View {
             )
             .rotationEffect(.degrees(refreshRotationAngle))
             .disabled(isDisabled)
-            .padding(.leading, 3.2)
+            .padding(.leading, 1.2)
             .accessibilityIdentifier("refreshButton")
         }
     }
@@ -120,7 +129,7 @@ struct CatImageGallery: View {
                         .rotationEffect(.degrees(gearRotationAngle))
                 }
             )
-            .padding(.leading, 3.2)
+            .padding(.leading, 1.2)
             .accessibilityIdentifier("settingsButton")
         }
     }
@@ -137,7 +146,10 @@ struct CatImageGallery: View {
                 .padding(.horizontal)
 
             Button(action: {
-                withAnimation {
+                withAnimation(.easeOut(duration: 0.3)) {
+                    retryRotationAngle += 360
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     viewModel.clearDisplayedImages()
                     viewModel.loadInitialImages()
                 }
@@ -145,6 +157,7 @@ struct CatImageGallery: View {
                 Image(systemName: "arrow.clockwise")
                     .font(.title2)
                     .foregroundColor(.blue)
+                    .rotationEffect(.degrees(retryRotationAngle))
             }
             .accessibilityIdentifier("retryButton")
             .padding()
