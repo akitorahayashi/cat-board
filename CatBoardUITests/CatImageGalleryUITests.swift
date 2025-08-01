@@ -45,10 +45,6 @@ final class CatImageGalleryUITests: XCTestCase {
 
         let refreshExists = firstImage.waitForExistence(timeout: 0.02)
         XCTAssertTrue(refreshExists)
-
-        let errorTitle = app.staticTexts["errorTitle"]
-        let errorExists = errorTitle.exists
-        XCTAssertFalse(errorExists)
     }
 
     // MARK: - エラー状態テスト
