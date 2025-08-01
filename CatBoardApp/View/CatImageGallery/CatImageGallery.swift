@@ -37,7 +37,6 @@ struct CatImageGallery: View {
         viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty)
     }
 
-
     private var isInitialLoadingIndicatorVisible: Bool {
         viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty
     }

@@ -19,7 +19,7 @@ struct CatBoardApp: App {
     init() {
         // スクリーニング設定を初期化
         screeningSettings = ScreeningSettings()
-        
+
         // UIテスト実行時はモック依存関係を使用
         if ProcessInfo.processInfo.arguments.contains("--uitesting") {
             do {

@@ -5,9 +5,9 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var screeningSettings = ScreeningSettings()
-    
+
     let prefetcher: CatImagePrefetcherProtocol?
-    
+
     init(prefetcher: CatImagePrefetcherProtocol? = nil) {
         self.prefetcher = prefetcher
     }

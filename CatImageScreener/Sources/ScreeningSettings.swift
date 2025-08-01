@@ -12,11 +12,11 @@ public class ScreeningSettings: ObservableObject {
         let hasScary = defaults.object(forKey: scaryKey) != nil
 
         #if targetEnvironment(simulator)
-        self.isScreeningEnabled = hasScreening ? defaults.bool(forKey: screeningKey) : false
+            isScreeningEnabled = hasScreening ? defaults.bool(forKey: screeningKey) : false
         #else
-        self.isScreeningEnabled = hasScreening ? defaults.bool(forKey: screeningKey) : true
+            isScreeningEnabled = hasScreening ? defaults.bool(forKey: screeningKey) : true
         #endif
-        self.scaryMode = hasScary ? defaults.bool(forKey: scaryKey) : false
+        scaryMode = hasScary ? defaults.bool(forKey: scaryKey) : false
     }
 
     // 引数ありinit: 明示的に値を指定
