@@ -59,9 +59,10 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                doneToolbarItem
-            }
+            // presentationDetentsでmediumに指定しており、sheet外の部分をタップすると自動で閉じるため
+            // .toolbar {
+            //     doneToolbarItem
+            // }
         }
     }
 
