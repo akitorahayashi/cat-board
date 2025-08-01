@@ -3,17 +3,11 @@ import Foundation
 
 public actor MockCatImageScreener: CatImageScreenerProtocol {
     private let error: Error?
+    private let screeningSettings: ScreeningSettings
 
-    public var isScreeningEnabled: Bool = true
-
-    public init(
-        error: Error? = nil
-    ) {
+    public init(screeningSettings: ScreeningSettings, error: Error? = nil) {
+        self.screeningSettings = screeningSettings
         self.error = error
-    }
-
-    public func setIsScreeningEnabled(_ enabled: Bool) {
-        isScreeningEnabled = enabled
     }
 
     public func screenImages(
@@ -24,7 +18,7 @@ public actor MockCatImageScreener: CatImageScreenerProtocol {
         }
 
         // スクリーニングが無効の場合は全ての画像をそのまま返す
-        if !isScreeningEnabled {
+        if !screeningSettings.isScreeningEnabled {
             return imageDataWithModels.map(\.model)
         }
 

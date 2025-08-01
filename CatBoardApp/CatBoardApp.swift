@@ -14,8 +14,12 @@ struct CatBoardApp: App {
     let imageLoader: CatImageLoaderProtocol
     let screener: CatImageScreenerProtocol
     let prefetcher: CatImagePrefetcherProtocol
+    let screeningSettings: ScreeningSettings
 
     init() {
+        // スクリーニング設定を初期化
+        screeningSettings = ScreeningSettings()
+
         // UIテスト実行時はモック依存関係を使用
         if ProcessInfo.processInfo.arguments.contains("--uitesting") {
             do {
@@ -24,7 +28,7 @@ struct CatBoardApp: App {
                 modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
 
                 let mockAPIClient = MockCatAPIClient()
-                screener = MockCatImageScreener()
+                screener = MockCatImageScreener(screeningSettings: screeningSettings)
                 let mockImageLoader = MockCatImageLoader()
 
                 imageLoader = mockImageLoader
@@ -58,7 +62,7 @@ struct CatBoardApp: App {
                 modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
 
                 let imageClient = CatAPIClient()
-                screener = CatImageScreener()
+                screener = CatImageScreener(screeningSettings: screeningSettings)
                 imageLoader = CatImageLoader()
                 repository = CatImageURLRepository(
                     modelContainer: modelContainer,

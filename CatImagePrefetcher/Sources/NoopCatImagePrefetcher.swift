@@ -29,4 +29,6 @@ public actor NoopCatImagePrefetcher: CatImagePrefetcherProtocol {
     }
 
     public func startPrefetchingIfNeeded() async throws {}
+
+    public func clearAllPrefetchedImages() async throws {}
 }

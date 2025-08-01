@@ -11,6 +11,12 @@ struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
 
     @StateObject private var viewModel: GalleryViewModel
+    @State private var isShowingSettings = false
+    @State private var gearRotationAngle: Double = 0
+    @State private var refreshRotationAngle: Double = 0
+    @State private var retryRotationAngle: Double = 0
+
+    private let prefetcher: CatImagePrefetcherProtocol
 
     init(
         repository: CatImageURLRepositoryProtocol,
@@ -18,6 +24,7 @@ struct CatImageGallery: View {
         screener: CatImageScreenerProtocol,
         prefetcher: CatImagePrefetcherProtocol
     ) {
+        self.prefetcher = prefetcher
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,
             imageLoader: imageLoader,
@@ -26,67 +33,104 @@ struct CatImageGallery: View {
         ))
     }
 
+    private var isErrorContentVisible: Bool {
+        viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty)
+    }
+
+    private var isInitialLoadingIndicatorVisible: Bool {
+        viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty
+    }
+
     var body: some View {
         NavigationView {
-            Group {
-                if viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty) {
-                    errorContent
-                        .transition(.opacity)
-                } else {
-                    ZStack(alignment: .top) {
-                        scrollContent
-                            .transition(.opacity)
+            ZStack {
+                errorContent
+                    .opacity(isErrorContentVisible ? 1 : 0)
+                    .allowsHitTesting(isErrorContentVisible)
+                    .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)
 
-                        // 初期ロード時の ProgressView
-                        if viewModel.isInitializing, viewModel.imageURLsToShow.isEmpty {
-                            VStack {
-                                Spacer()
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .scaleEffect(1.5)
-                                Text("Loading...")
-                                    .font(.headline)
-                                    .padding(.top, 8)
-                                Spacer()
-                            }
-                            .transition(.opacity)
-                        }
+                ZStack(alignment: .top) {
+                    scrollContent
+                        .opacity(isErrorContentVisible ? 0 : 1)
+                        .allowsHitTesting(!isErrorContentVisible)
+                        .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)
+
+                    VStack {
+                        Spacer()
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .scaleEffect(1.5)
+                        Text("Loading...")
+                            .font(.headline)
+                            .padding(.top, 8)
+                        Spacer()
                     }
+                    .opacity(isInitialLoadingIndicatorVisible ? 1 : 0)
+                    .animation(.easeOut(duration: 0.3), value: isInitialLoadingIndicatorVisible)
                 }
             }
-            .animation(.easeOut(duration: 0.3), value: viewModel.errorMessage)
             .navigationTitle("Cat Board")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(
-                        action: {
-                            withAnimation {
-                                viewModel.clearDisplayedImages()
-                                viewModel.loadInitialImages()
-                            }
-                        },
-                        label: {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .foregroundColor(.primary)
-                        }
-                    )
-                    .padding(.leading, 3.6)
-                    .accessibilityIdentifier("refreshButton")
-                    .opacity(
-                        !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
-                            .count >= Self.minImageCountForRefresh ? 1 : 0
-                    )
-                    .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
-                    .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)
-                    .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
-                }
+                refreshToolbarItem
+                settingsToolbarItem
             }
             .onAppear {
                 viewModel.loadInitialImages()
             }
+            .sheet(isPresented: $isShowingSettings) {
+                SettingsView(prefetcher: prefetcher)
+                    .presentationDetents([.medium])
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+    }
+
+    private var refreshToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching || isErrorContentVisible
+            Button(
+                action: {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        refreshRotationAngle += 180
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        viewModel.clearDisplayedImages()
+                        viewModel.loadInitialImages()
+                    }
+                },
+                label: {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundColor(.primary)
+                        .opacity(isDisabled ? 0.3 : 1)
+                        .animation(.easeOut(duration: 0.3), value: isDisabled)
+                }
+            )
+            .rotationEffect(.degrees(refreshRotationAngle))
+            .disabled(isDisabled)
+            .padding(.leading, 1.2)
+            .accessibilityIdentifier("refreshButton")
+        }
+    }
+
+    private var settingsToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(
+                action: {
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        gearRotationAngle += 360
+                    }
+                    isShowingSettings = true
+                },
+                label: {
+                    Image(systemName: "gear")
+                        .foregroundColor(.primary)
+                        .rotationEffect(.degrees(gearRotationAngle))
+                }
+            )
+            .padding(.leading, 1.2)
+            .accessibilityIdentifier("settingsButton")
+        }
     }
 
     private var errorContent: some View {
@@ -101,7 +145,10 @@ struct CatImageGallery: View {
                 .padding(.horizontal)
 
             Button(action: {
-                withAnimation {
+                withAnimation(.easeOut(duration: 0.3)) {
+                    retryRotationAngle += 360
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     viewModel.clearDisplayedImages()
                     viewModel.loadInitialImages()
                 }
@@ -109,6 +156,7 @@ struct CatImageGallery: View {
                 Image(systemName: "arrow.clockwise")
                     .font(.title2)
                     .foregroundColor(.blue)
+                    .rotationEffect(.degrees(retryRotationAngle))
             }
             .accessibilityIdentifier("retryButton")
             .padding()

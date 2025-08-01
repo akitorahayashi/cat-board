@@ -5,11 +5,11 @@ import ScaryCatScreeningKit
 public actor CatImageScreener: CatImageScreenerProtocol {
     private var screener: ScaryCatScreener?
     private static let screeningProbabilityThreshold: Float = 0.85
-    private static let isScreeningEnabled = false
-    private static let scaryMode = false
     private static let enableLogging = false
+    private let screeningSettings: ScreeningSettings
 
-    public init() {
+    public init(screeningSettings: ScreeningSettings) {
+        self.screeningSettings = screeningSettings
         screener = nil
     }
 
@@ -38,7 +38,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
         guard !imageDataWithModels.isEmpty else { return [] }
 
         // スクリーニングが無効な場合
-        if !Self.isScreeningEnabled {
+        if !screeningSettings.isScreeningEnabled {
             return imageDataWithModels.map(\.model)
         }
 
@@ -64,7 +64,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
             // スクリーニング結果から元のモデルを取得するために、モデルの配列を準備
             let models = imageDataWithModels.map(\.model)
 
-            if Self.scaryMode {
+            if screeningSettings.scaryMode {
                 // 怖いモードの場合、unsafeResultsを使用
                 let results = screeningResults.unsafeResults.compactMap { result in
                     models[result.originalIndex]
