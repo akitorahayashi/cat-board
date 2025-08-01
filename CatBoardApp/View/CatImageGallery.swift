@@ -62,43 +62,8 @@ struct CatImageGallery: View {
             .navigationTitle("Cat Board")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(
-                        action: {
-                            withAnimation {
-                                viewModel.clearDisplayedImages()
-                                viewModel.loadInitialImages()
-                            }
-                        },
-                        label: {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .foregroundColor(.primary)
-                        }
-                    )
-                    .padding(.leading, 3.2)
-                    .accessibilityIdentifier("refreshButton")
-                    .opacity(
-                        !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
-                            .count >= Self.minImageCountForRefresh ? 1 : 0
-                    )
-                    .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
-                    .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)
-                    .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
-                }
-
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(
-                        action: {
-                            isShowingSettings = true
-                        },
-                        label: {
-                            Image(systemName: "gear")
-                                .foregroundColor(.primary)
-                        }
-                    )
-                    .padding(.leading, 3.2)
-                    .accessibilityIdentifier("settingsButton")
-                }
+                refreshToolbarItem
+                settingsToolbarItem
             }
             .onAppear {
                 viewModel.loadInitialImages()
@@ -108,6 +73,48 @@ struct CatImageGallery: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+    }
+
+    private var refreshToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button(
+                action: {
+                    withAnimation {
+                        viewModel.clearDisplayedImages()
+                        viewModel.loadInitialImages()
+                    }
+                },
+                label: {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundColor(.primary)
+                }
+            )
+            .padding(.leading, 3.2)
+            .accessibilityIdentifier("refreshButton")
+            .opacity(
+                !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
+                    .count >= Self.minImageCountForRefresh ? 1 : 0
+            )
+            .animation(.easeOut(duration: 0.3), value: viewModel.isInitializing)
+            .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)
+            .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
+        }
+    }
+
+    private var settingsToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(
+                action: {
+                    isShowingSettings = true
+                },
+                label: {
+                    Image(systemName: "gear")
+                        .foregroundColor(.primary)
+                }
+            )
+            .padding(.leading, 3.2)
+            .accessibilityIdentifier("settingsButton")
+        }
     }
 
     private var errorContent: some View {

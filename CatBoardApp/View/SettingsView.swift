@@ -60,13 +60,17 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Label("完了", systemImage: "checkmark")
-                    }
-                }
+                doneToolbarItem
+            }
+        }
+    }
+
+    private var doneToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: {
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Label("完了", systemImage: "checkmark")
             }
         }
     }
