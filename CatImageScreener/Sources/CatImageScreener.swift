@@ -5,9 +5,16 @@ import ScaryCatScreeningKit
 public actor CatImageScreener: CatImageScreenerProtocol {
     private var screener: ScaryCatScreener?
     private static let screeningProbabilityThreshold: Float = 0.85
-    private static let isScreeningEnabled = false
-    private static let scaryMode = false
     private static let enableLogging = false
+
+    // Dynamic settings that can be changed from UI
+    private static var isScreeningEnabled: Bool {
+        UserDefaults.standard.bool(forKey: "isScreeningEnabled")
+    }
+
+    private static var scaryMode: Bool {
+        UserDefaults.standard.bool(forKey: "scaryMode")
+    }
 
     public init() {
         screener = nil

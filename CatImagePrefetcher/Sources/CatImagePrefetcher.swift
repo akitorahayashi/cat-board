@@ -74,6 +74,29 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
         }
     }
 
+    /// プリフェッチされた全ての画像をSwiftDataから削除し、メモリキャッシュもクリアする
+    public func clearAllPrefetchedImages() async throws {
+        // 前回のタスクをキャンセル
+        prefetchTask?.cancel()
+        isPrefetching = false
+
+        try await MainActor.run {
+            let modelContext = modelContainer.mainContext
+            let descriptor = FetchDescriptor<PrefetchedCatImageURL>()
+            let entities = try modelContext.fetch(descriptor)
+
+            for entity in entities {
+                modelContext.delete(entity)
+            }
+            try modelContext.save()
+        }
+
+        // Kingfisherのメモリキャッシュもクリア
+        KingfisherManager.shared.cache.clearMemoryCache()
+
+        print("プリフェッチキャッシュをクリアしました")
+    }
+
     // MARK: - Private Methods
 
     private func resetPrefetchingState() {

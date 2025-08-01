@@ -11,6 +11,9 @@ struct CatImageGallery: View {
     private static let minImageCountForRefresh = 30
 
     @StateObject private var viewModel: GalleryViewModel
+    @State private var isShowingSettings = false
+
+    private let prefetcher: CatImagePrefetcherProtocol
 
     init(
         repository: CatImageURLRepositoryProtocol,
@@ -18,6 +21,7 @@ struct CatImageGallery: View {
         screener: CatImageScreenerProtocol,
         prefetcher: CatImagePrefetcherProtocol
     ) {
+        self.prefetcher = prefetcher
         _viewModel = StateObject(wrappedValue: GalleryViewModel(
             repository: repository,
             imageLoader: imageLoader,
@@ -71,7 +75,7 @@ struct CatImageGallery: View {
                                 .foregroundColor(.primary)
                         }
                     )
-                    .padding(.leading, 3.6)
+                    .padding(.leading, 3.2)
                     .accessibilityIdentifier("refreshButton")
                     .opacity(
                         !viewModel.isInitializing && !viewModel.isAdditionalFetching && viewModel.imageURLsToShow
@@ -81,9 +85,26 @@ struct CatImageGallery: View {
                     .animation(.easeOut(duration: 0.3), value: viewModel.isAdditionalFetching)
                     .animation(.easeOut(duration: 0.3), value: viewModel.imageURLsToShow.count)
                 }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(
+                        action: {
+                            isShowingSettings = true
+                        },
+                        label: {
+                            Image(systemName: "gear")
+                                .foregroundColor(.primary)
+                        }
+                    )
+                    .padding(.leading, 3.2)
+                    .accessibilityIdentifier("settingsButton")
+                }
             }
             .onAppear {
                 viewModel.loadInitialImages()
+            }
+            .sheet(isPresented: $isShowingSettings) {
+                SettingsView(prefetcher: prefetcher)
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
