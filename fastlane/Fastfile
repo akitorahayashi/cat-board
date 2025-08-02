@@ -23,7 +23,7 @@ desc "Build for testing"
 lane :build_for_testing do
   get_simulator_udid
   udid = Actions.lane_context[:SIMULATOR_UDID]
-  sh "rm -rf build/test-results/unit/TestResults.xcresult"
+  sh "rm -rf fastlane/build/test-results/unit/TestResults.xcresult"
   sh "xcodebuild build-for-testing \
     -project ../CatBoardApp.xcodeproj \
     -scheme CatBoardApp \
@@ -38,13 +38,13 @@ end
   lane :archive do
     get_simulator_udid
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf build/archives/CatBoardApp.xcarchive"
+    sh "rm -rf fastlane/build/archives/CatBoardApp.xcarchive"
     sh "xcodebuild archive \
       -project ../CatBoardApp.xcodeproj \
       -scheme CatBoardApp \
       -configuration Release \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -archivePath build/archives/CatBoardApp.xcarchive \
+      -archivePath fastlane/build/archives/CatBoardApp.xcarchive \
       -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
@@ -54,14 +54,14 @@ end
   lane :unit_test do
     get_simulator_udid
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf build/test-results/unit/TestResults.xcresult"
+    sh "rm -rf fastlane/build/test-results/unit/TestResults.xcresult"
     sh "xcodebuild test \
       -project ../CatBoardApp.xcodeproj \
       -scheme CatBoardTests \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath build/test-results/DerivedData \
+      -derivedDataPath fastlane/build/test-results/DerivedData \
       -enableCodeCoverage NO \
-      -resultBundlePath build/test-results/unit/TestResults.xcresult \
+      -resultBundlePath fastlane/build/test-results/unit/TestResults.xcresult \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
   end
@@ -70,14 +70,14 @@ end
   lane :unit_test_without_building do
     get_simulator_udid
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf build/test-results/unit/TestResults.xcresult"
+    sh "rm -rf fastlane/build/test-results/unit/TestResults.xcresult"
     sh "xcodebuild test-without-building \
       -project ../CatBoardApp.xcodeproj \
       -scheme CatBoardTests \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath build/test-results/DerivedData \
+      -derivedDataPath fastlane/build/test-results/DerivedData \
       -enableCodeCoverage NO \
-      -resultBundlePath build/test-results/unit/TestResults.xcresult \
+      -resultBundlePath fastlane/build/test-results/unit/TestResults.xcresult \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
   end
@@ -86,14 +86,14 @@ end
   lane :ui_test do
     get_simulator_udid
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf build/test-results/ui/TestResults.xcresult"
+    sh "rm -rf fastlane/build/test-results/ui/TestResults.xcresult"
     sh "xcodebuild test \
       -project ../CatBoardApp.xcodeproj \
       -scheme CatBoardUITests \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath build/test-results/DerivedData \
+      -derivedDataPath fastlane/build/test-results/DerivedData \
       -enableCodeCoverage NO \
-      -resultBundlePath build/test-results/ui/TestResults.xcresult \
+      -resultBundlePath fastlane/build/test-results/ui/TestResults.xcresult \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
   end
@@ -102,14 +102,14 @@ end
   lane :ui_test_without_building do
     get_simulator_udid
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf build/test-results/ui/TestResults.xcresult"
+    sh "rm -rf fastlane/build/test-results/ui/TestResults.xcresult"
     sh "xcodebuild test-without-building \
       -project ../CatBoardApp.xcodeproj \
       -scheme CatBoardUITests \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath build/test-results/DerivedData \
+      -derivedDataPath fastlane/build/test-results/DerivedData \
       -enableCodeCoverage NO \
-      -resultBundlePath build/test-results/ui/TestResults.xcresult \
+      -resultBundlePath fastlane/build/test-results/ui/TestResults.xcresult \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
   end

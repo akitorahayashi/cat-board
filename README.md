@@ -42,6 +42,7 @@ Since the screening process involves machine learning, verification on a real de
 ├── CatURLImageModel/
 ├── CatBoardTests/
 ├── CatBoardUITests/
+├── fastlane/
 ├── project.yml
 ├── Makefile
 ├── Mintfile
