@@ -74,7 +74,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: built-products
-          path: ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
+          path: ${{ github.workspace }}/fastlane/build/test-results/DerivedData/Build/Products/
 
       - name: Run Unit Tests via Makefile
         id: unit_tests
@@ -85,7 +85,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: ${{ github.workspace }}/build/test-results/unit/TestResults.xcresult
+          path: ${{ github.workspace }}/fastlane/build/test-results/unit/TestResults.xcresult
           retention-days: 3
 
   ui-test:
@@ -131,5 +131,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ui-test-results
-          path: ${{ github.workspace }}/build/test-results/ui/TestResults.xcresult
+          path: ${{ github.workspace }}/fastlane/build/test-results/ui/TestResults.xcresult
           retention-days: 3

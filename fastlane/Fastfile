@@ -1,0 +1,132 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#     https://docs.fastlane.tools/plugins/available-plugins
+
+
+default_platform(:ios)
+
+platform :ios do
+
+desc "Get first available iPhone simulator UDID"
+lane :get_simulator_udid do
+  udid = sh("xcrun simctl list devices available | grep -A1 'iPhone' | grep -Eo '[A-F0-9-]{36}' | head -n 1").strip
+  UI.message("First available iPhone simulator UDID: #{udid}")
+  Actions.lane_context[:SIMULATOR_UDID] = udid
+end
+
+desc "Build for testing"
+lane :build_for_testing do
+  get_simulator_udid
+  udid = Actions.lane_context[:SIMULATOR_UDID]
+  sh "rm -rf build/test-results/unit/TestResults.xcresult"
+  sh "xcodebuild build-for-testing \
+    -project ../CatBoardApp.xcodeproj \
+    -scheme CatBoardApp \
+    -destination 'platform=iOS Simulator,id=#{udid}' \
+    -configuration Debug \
+    -skipMacroValidation \
+    CODE_SIGNING_ALLOWED=NO \
+    | xcbeautify"
+end
+
+  desc "Archive release build"
+  lane :archive do
+    get_simulator_udid
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    sh "rm -rf build/archives/CatBoardApp.xcarchive"
+    sh "xcodebuild archive \
+      -project ../CatBoardApp.xcodeproj \
+      -scheme CatBoardApp \
+      -configuration Release \
+      -destination 'platform=iOS Simulator,id=#{udid}' \
+      -archivePath build/archives/CatBoardApp.xcarchive \
+      -skipMacroValidation \
+      CODE_SIGNING_ALLOWED=NO \
+      | xcbeautify"
+  end
+
+  desc "Run unit tests"
+  lane :unit_test do
+    get_simulator_udid
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    sh "rm -rf build/test-results/unit/TestResults.xcresult"
+    sh "xcodebuild test \
+      -project ../CatBoardApp.xcodeproj \
+      -scheme CatBoardTests \
+      -destination 'platform=iOS Simulator,id=#{udid}' \
+      -derivedDataPath build/test-results/DerivedData \
+      -enableCodeCoverage NO \
+      -resultBundlePath build/test-results/unit/TestResults.xcresult \
+      CODE_SIGNING_ALLOWED=NO \
+      | xcbeautify"
+  end
+
+  desc "Run unit tests without building (xcodebuild test-without-building)"
+  lane :unit_test_without_building do
+    get_simulator_udid
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    sh "rm -rf build/test-results/unit/TestResults.xcresult"
+    sh "xcodebuild test-without-building \
+      -project ../CatBoardApp.xcodeproj \
+      -scheme CatBoardTests \
+      -destination 'platform=iOS Simulator,id=#{udid}' \
+      -derivedDataPath build/test-results/DerivedData \
+      -enableCodeCoverage NO \
+      -resultBundlePath build/test-results/unit/TestResults.xcresult \
+      CODE_SIGNING_ALLOWED=NO \
+      | xcbeautify"
+  end
+
+  desc "Run UI tests"
+  lane :ui_test do
+    get_simulator_udid
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    sh "rm -rf build/test-results/ui/TestResults.xcresult"
+    sh "xcodebuild test \
+      -project ../CatBoardApp.xcodeproj \
+      -scheme CatBoardUITests \
+      -destination 'platform=iOS Simulator,id=#{udid}' \
+      -derivedDataPath build/test-results/DerivedData \
+      -enableCodeCoverage NO \
+      -resultBundlePath build/test-results/ui/TestResults.xcresult \
+      CODE_SIGNING_ALLOWED=NO \
+      | xcbeautify"
+  end
+
+  desc "Run UI tests without building (xcodebuild test-without-building)"
+  lane :ui_test_without_building do
+    get_simulator_udid
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    sh "rm -rf build/test-results/ui/TestResults.xcresult"
+    sh "xcodebuild test-without-building \
+      -project ../CatBoardApp.xcodeproj \
+      -scheme CatBoardUITests \
+      -destination 'platform=iOS Simulator,id=#{udid}' \
+      -derivedDataPath build/test-results/DerivedData \
+      -enableCodeCoverage NO \
+      -resultBundlePath build/test-results/ui/TestResults.xcresult \
+      CODE_SIGNING_ALLOWED=NO \
+      | xcbeautify"
+  end
+
+  desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
+  lane :package_test do
+    sh "cd CatImageURLRepository && swift test | xcbeautify"
+    sh "cd CatImageScreener && swift test | xcbeautify"
+    sh "cd CatImagePrefetcher && swift test | xcbeautify"
+  end
+
+  desc "Run all tests (unit, UI, package)"
+  lane :test_all do
+    build_for_testing
+    unit_test
+    ui_test
+    package_test
+  end
+
+end

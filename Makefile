@@ -7,14 +7,14 @@
 #   make open                 - Xcodeでプロジェクトを開く
 #
 # --- ビルド ---
-#   make build-test                - テスト用のビルドを実行
-#   make archive                   - リリース用のアーカイブを作成
+#   make build-test                - fastlaneでテスト用のビルドを実行
+#   make archive                   - fastlaneでリリース用のアーカイブを作成
 #
 # --- テスト ---
-#   make unit-test                 - ユニットテストをビルドして実行
-#   make ui-test                   - UIテストをビルドして実行
-#   make test-packages             - 全パッケージのテストを実行
-#   make test-all                  - 全テストをビルドして実行
+#   make unit-test                 - fastlaneでユニットテストを実行
+#   make ui-test                   - fastlaneでUIテストを実行
+#   make package-test             - 全パッケージのテストを実行
+#   make test-all                  - fastlaneで全テストを実行
 #   make unit-test-without-building - ユニットテストを実行（ビルド済みアーティファクトを利用）
 #   make ui-test-without-building  - UIテストを実行（ビルド済みアーティファクトを利用）
 # 
@@ -23,8 +23,6 @@
 #   make format-check          - コードのフォーマットをチェック
 #   make lint                  - lintを実行
 #
-# [内部ワークフロー用コマンド]
-#   make find-test-artifacts       - テストの成果物を探す
 
 # === Configuration ===
 OUTPUT_DIR := build
@@ -32,12 +30,6 @@ PROJECT_FILE := CatBoardApp.xcodeproj
 APP_SCHEME := CatBoardApp
 UNIT_TEST_SCHEME := CatBoardTests
 UI_TEST_SCHEME := CatBoardUITests
-
-# CI用にシミュレータを選ぶ関数
-select-simulator = $(shell \
-	xcrun simctl list devices available | \
-	grep -A1 "iPhone" | grep -Eo "[A-F0-9-]{36}" | head -n 1 \
-)
 
 
 # === Derived paths ===
@@ -156,172 +148,41 @@ open:
 # === Build for testing ===
 .PHONY: build-test
 build-test:
-ifeq ($(SIMULATOR_UDID),)
-	$(eval SIMULATOR_ID := $(call select-simulator,$(APP_SCHEME)))
-else
-	$(eval SIMULATOR_ID := $(SIMULATOR_UDID))
-endif
-	@echo "Using Simulator UDID: $(SIMULATOR_ID)"
-	@echo "🧹 Cleaning previous outputs..."
-	@rm -rf $(OUTPUT_DIR)
-	@mkdir -p $(OUTPUT_DIR)/test-results/unit $(OUTPUT_DIR)/test-results/ui $(OUTPUT_DIR)/archives
-	@echo "✅ Previous outputs cleaned."
-	@echo "🔨 Building for testing..."
-	@set -o pipefail && xcodebuild build-for-testing \
-		-project $(PROJECT_FILE) \
-		-scheme $(APP_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(SIMULATOR_ID)" \
-		-derivedDataPath $(DERIVED_DATA_PATH) \
-		-configuration Debug \
-		-skipMacroValidation \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcbeautify
-	@echo "✅ Build for testing completed."
+	bundle exec fastlane build_for_testing
 
 # === Archive ===
 .PHONY: archive
 archive:
-	@echo "🧹 Cleaning previous outputs..."
-	@rm -rf $(OUTPUT_DIR)
-	@mkdir -p $(OUTPUT_DIR)/archives
-	@echo "✅ Previous outputs cleaned."
-	@echo "📦 Building archive..."
-	@set -o pipefail && xcodebuild \
-		-project $(PROJECT_FILE) \
-		-scheme $(APP_SCHEME) \
-		-configuration Release \
-		-destination "generic/platform=iOS Simulator" \
-		-archivePath $(ARCHIVE_PATH) \
-		-derivedDataPath $(OUTPUT_DIR)/archives/DerivedData \
-		-skipMacroValidation \
-		CODE_SIGNING_ALLOWED=NO \
-		archive \
-		| xcbeautify
-	@echo "🔍 Verifying archive contents..."
-	@ARCHIVE_APP_PATH="$(ARCHIVE_PATH)/Products/Applications/$(APP_SCHEME).app"; \
-	if [ ! -d "$$ARCHIVE_APP_PATH" ]; then \
-		echo "❌ Error: '$(APP_SCHEME).app' not found in expected archive location ($$ARCHIVE_APP_PATH)"; \
-		echo "Archive directory: $(ARCHIVE_PATH)"; \
-		exit 1; \
-	fi
-	@echo "✅ Archive build completed and verified."
+	bundle exec fastlane archive
 
 # === Unit tests ===
 .PHONY: unit-test
 unit-test:
-	$(eval SIMULATOR_RAW := $(call select-simulator,$(UNIT_TEST_SCHEME)))
-	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
-	@echo "🧪 Running Unit Tests..."
-	@rm -rf $(UNIT_TEST_RESULTS)
-	@set -o pipefail && xcodebuild test \
-		-project $(PROJECT_FILE) \
-		-scheme $(UNIT_TEST_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(word 1,$(subst |, ,$(SIMULATOR_RAW)))" \
-		-derivedDataPath $(DERIVED_DATA_PATH) \
-		-enableCodeCoverage NO \
-		-resultBundlePath $(UNIT_TEST_RESULTS) \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcbeautify
-	@if [ ! -d "$(UNIT_TEST_RESULTS)" ]; then \
-		echo "❌ Error: Unit test result bundle not found"; \
-		exit 1; \
-	fi
-	@echo "✅ Unit tests completed. Results: $(UNIT_TEST_RESULTS)"
+	bundle exec fastlane unit_test
 
 # === UI tests ===
 .PHONY: ui-test
 ui-test:
-	$(eval SIMULATOR_RAW := $(call select-simulator,$(UI_TEST_SCHEME)))
-	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
-	@echo "🧪 Running UI Tests..."
-	@rm -rf $(UI_TEST_RESULTS)
-	@set -o pipefail && xcodebuild test \
-		-project $(PROJECT_FILE) \
-		-scheme $(UI_TEST_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(word 1,$(subst |, ,$(SIMULATOR_RAW)))" \
-		-derivedDataPath $(DERIVED_DATA_PATH) \
-		-enableCodeCoverage NO \
-		-resultBundlePath $(UI_TEST_RESULTS) \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcbeautify
-	@if [ ! -d "$(UI_TEST_RESULTS)" ]; then \
-		echo "❌ Error: UI test result bundle not found"; \
-		exit 1; \
-	fi
-	@echo "✅ UI tests completed. Results: $(UI_TEST_RESULTS)"
-
-# === Package Tests ===
-.PHONY: test-packages
-test-packages:
-	@set -e; 
-	echo "🧪 Running package tests..."; 
-	echo "📦 Testing CatImageURLRepository..."; 
-	(cd CatImageURLRepository && set -o pipefail && swift test | xcbeautify); 
-	echo "📦 Testing CatImageScreener..."; 
-	(cd CatImageScreener && set -o pipefail && swift test | xcbeautify); 
-	echo "📦 Testing CatImagePrefetcher..."; 
-	(cd CatImagePrefetcher && set -o pipefail && swift test | xcbeautify); 
-	echo "✅ All package tests passed."
+	bundle exec fastlane ui_test
+# === Package tests ===
+.PHONY: package-test
+package-test:
+	bundle exec fastlane package_test
 
 # === Unit tests without building ===
 .PHONY: unit-test-without-building
-unit-test-without-building: find-test-artifacts
-	$(eval SIMULATOR_RAW := $(call select-simulator,$(UNIT_TEST_SCHEME)))
-	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
-	@echo "🧪 Running Unit Tests..."
-	@rm -rf $(UNIT_TEST_RESULTS)
-	@set -o pipefail && xcodebuild test-without-building \
-		-project $(PROJECT_FILE) \
-		-scheme $(UNIT_TEST_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(word 1,$(subst |, ,$(SIMULATOR_RAW)))" \
-		-derivedDataPath $(DERIVED_DATA_PATH) \
-		-enableCodeCoverage NO \
-		-resultBundlePath $(UNIT_TEST_RESULTS) \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcbeautify
-	@if [ ! -d "$(UNIT_TEST_RESULTS)" ]; then \
-		echo "❌ Error: Unit test result bundle not found"; \
-		exit 1; \
-	fi
-	@echo "✅ Unit tests completed. Results: $(UNIT_TEST_RESULTS)"
+unit-test-without-building:
+	bundle exec fastlane unit_test_without_building
 
 # === UI tests without building ===
 .PHONY: ui-test-without-building
 ui-test-without-building:
-	$(eval SIMULATOR_RAW := $(call select-simulator,$(UI_TEST_SCHEME)))
-	@echo "Using Simulator UDID: $(SIMULATOR_RAW)"
-	@echo "🧪 Running UI Tests..."
-	@rm -rf $(UI_TEST_RESULTS)
-	@set -o pipefail && xcodebuild test-without-building \
-		-project $(PROJECT_FILE) \
-		-scheme $(UI_TEST_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(word 1,$(subst |, ,$(SIMULATOR_RAW)))" \
-		-derivedDataPath $(DERIVED_DATA_PATH) \
-		-enableCodeCoverage NO \
-		-resultBundlePath $(UI_TEST_RESULTS) \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcbeautify
-	@if [ ! -d "$(UI_TEST_RESULTS)" ]; then \
-		echo "❌ Error: UI test result bundle not found"; \
-		exit 1; \
-	fi
-	@echo "✅ UI tests completed. Results: $(UI_TEST_RESULTS)"
+	bundle exec fastlane ui_test_without_building
 
 # === All tests ===
 .PHONY: test-all
-test-all: build-test unit-test-without-building ui-test-without-building test-packages
-	@echo "✅ All tests completed."
-
-# === Find existing artifacts ===
-.PHONY: find-test-artifacts
-find-test-artifacts:
-	@echo "🔍 Finding existing build artifacts..."
-	@if find "$(OUTPUT_DIR)/test-results/DerivedData" -name "CatBoardApp.app" -type d -print -quit | grep -q .; then \
-		echo "✅ Found existing build artifacts at: $(OUTPUT_DIR)/test-results/DerivedData"; \
-	else \
-		echo "❌ Error: No existing build artifacts found. Please run 'make build-test' first."; \
-		exit 1; \
-	fi
+test-all:
+	bundle exec fastlane test_all
 
 # === Code Style ===
 .PHONY: format

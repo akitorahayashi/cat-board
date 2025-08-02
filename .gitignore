@@ -34,3 +34,8 @@ Package.resolved
 *.cer
 *.mobileprovision
 /.cursor/
+
+# Fastlane files
+fastlane/README.md
+fastlane/report.xml
+Gemfile.lock
