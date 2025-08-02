@@ -90,9 +90,7 @@ resolve-pkg:
 # === Open project in Xcode ===
 .PHONY: open
 open:
-	@echo "📖 Opening $(PROJECT_FILE) in Xcode..."
 	@open $(PROJECT_FILE)
-	@echo "✅ Project opened."
 
 # === Build for testing ===
 .PHONY: build-test
@@ -136,18 +134,12 @@ test-all:
 # === Code Style ===
 .PHONY: format
 format:
-	@echo "🎨 Running swiftformat (mint)..."
 	mint run swiftformat .
-	@echo "✅ Code formatted."
 
 .PHONY: format-check
 format-check:
-	@echo "🔍 Checking code format with swiftformat (mint)..."
 	mint run swiftformat --lint .
-	@echo "✅ Format check completed."
 
 .PHONY: lint
 lint:
-	@echo "🔍 Running swiftlint (mint)..."
 	mint run swiftlint --strict
-	@echo "✅ Lint completed."

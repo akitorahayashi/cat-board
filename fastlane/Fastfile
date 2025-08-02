@@ -31,7 +31,46 @@ SWIFT_PACKAGES = [
 
 platform :ios do
 
-desc "Get simulator information based on environment"
+# === Public Lanes ===
+
+  desc "Run unit tests"
+  lane :unit_test do
+    test_with_scheme(scheme: UNIT_TEST_SCHEME, result_path: UNIT_TEST_RESULTS_PATH)
+  end
+
+  desc "Run unit tests without building"
+  lane :unit_test_without_building do
+    test_without_building_with_scheme(scheme: UNIT_TEST_SCHEME, result_path: UNIT_TEST_RESULTS_PATH)
+  end
+
+  desc "Run UI tests"
+  lane :ui_test do
+    test_with_scheme(scheme: UI_TEST_SCHEME, result_path: UI_TEST_RESULTS_PATH)
+  end
+
+  desc "Run UI tests without building (xcodebuild test-without-building)"
+  lane :ui_test_without_building do
+    test_without_building_with_scheme(scheme: UI_TEST_SCHEME, result_path: UI_TEST_RESULTS_PATH)
+  end
+
+  desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
+  lane :package_test do
+    SWIFT_PACKAGES.each do |package|
+      sh "cd ../#{package} && swift test | xcbeautify"
+    end
+  end
+
+  desc "Run all tests (unit, UI, package)"
+  lane :test_all do
+    build_for_testing
+    unit_test
+    ui_test
+    package_test
+  end
+
+# === Private ===
+
+  desc "Get simulator information based on environment"
 lane :get_simulator_info do
   udid = nil
   if ENV['CI'] == 'true'
@@ -46,6 +85,64 @@ lane :get_simulator_info do
     end
   end
   Actions.lane_context[:SIMULATOR_UDID] = udid
+end
+
+desc "Build with specified configuration"
+private_lane :build_with_config do |options|
+  config = options[:configuration]
+  get_simulator_info
+  udid = Actions.lane_context[:SIMULATOR_UDID]
+  build_path = "#{BUILD_DIR}/#{config.downcase}"
+  
+  sh("rm -rf #{build_path}")
+  sh("mkdir -p #{build_path}")
+  sh("set -o pipefail && xcodebuild build \
+    -project #{PROJECT_PATH} \
+    -scheme #{MAIN_SCHEME} \
+    -destination 'platform=iOS Simulator,id=#{udid}' \
+    -derivedDataPath #{build_path}/DerivedData \
+    -configuration #{config} \
+    -skipMacroValidation \
+    CODE_SIGNING_ALLOWED=NO \
+    | xcbeautify")
+end
+
+desc "Run test for a given scheme"
+private_lane :test_with_scheme do |options|
+  scheme = options[:scheme]
+  result_path = options[:result_path]
+  get_simulator_info
+  udid = Actions.lane_context[:SIMULATOR_UDID]
+  sh "rm -rf #{result_path}"
+  sh "xcodebuild test \
+    -project #{PROJECT_PATH} \
+    -scheme #{scheme} \
+    -destination 'platform=iOS Simulator,id=#{udid}' \
+    -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
+    -enableCodeCoverage NO \
+    -resultBundlePath #{result_path} \
+    -skipMacroValidation \
+    CODE_SIGNING_ALLOWED=NO \
+    | xcbeautify"
+end
+
+desc "Run test-without-building for a given scheme"
+private_lane :test_without_building_with_scheme do |options|
+  scheme = options[:scheme]
+  result_path = options[:result_path]
+  get_simulator_info
+  udid = Actions.lane_context[:SIMULATOR_UDID]
+  sh "rm -rf #{result_path}"
+  sh "xcodebuild test-without-building \
+    -project #{PROJECT_PATH} \
+    -scheme #{scheme} \
+    -destination 'platform=iOS Simulator,id=#{udid}' \
+    -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
+    -enableCodeCoverage NO \
+    -resultBundlePath #{result_path} \
+    -skipMacroValidation \
+    CODE_SIGNING_ALLOWED=NO \
+    | xcbeautify"
 end
 
 desc "Build for testing"
@@ -66,39 +163,16 @@ lane :build_for_testing do
     | xcbeautify"
 end
 
+  # Build Lanes
 
   desc "Build debug configuration"
   lane :build_debug do
-    get_simulator_info
-    udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh("rm -rf #{BUILD_DIR}/debug")
-    sh("mkdir -p #{BUILD_DIR}/debug")
-    sh("set -o pipefail && xcodebuild build \
-      -project #{PROJECT_PATH} \
-      -scheme #{MAIN_SCHEME} \
-      -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{BUILD_DIR}/debug/DerivedData \
-      -configuration Debug \
-      -skipMacroValidation \
-      CODE_SIGNING_ALLOWED=NO \
-      | xcbeautify")
+    build_with_config(configuration: "Debug")
   end
 
   desc "Build release configuration"
   lane :build_release do
-    get_simulator_info
-    udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh("rm -rf #{BUILD_DIR}/release")
-    sh("mkdir -p #{BUILD_DIR}/release")
-    sh("set -o pipefail && xcodebuild build \
-      -project #{PROJECT_PATH} \
-      -scheme #{MAIN_SCHEME} \
-      -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{BUILD_DIR}/release/DerivedData \
-      -configuration Release \
-      -skipMacroValidation \
-      CODE_SIGNING_ALLOWED=NO \
-      | xcbeautify")
+    build_with_config(configuration: "Release")
   end
 
   desc "Archive release build"
@@ -115,88 +189,5 @@ end
       -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
-  end
-
-  desc "Run unit tests"
-  lane :unit_test do
-    get_simulator_info
-    udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf #{UNIT_TEST_RESULTS_PATH}"
-    sh "xcodebuild test \
-      -project #{PROJECT_PATH} \
-      -scheme #{UNIT_TEST_SCHEME} \
-      -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
-      -enableCodeCoverage NO \
-      -resultBundlePath #{UNIT_TEST_RESULTS_PATH} \
-      -skipMacroValidation \
-      CODE_SIGNING_ALLOWED=NO \
-      | xcbeautify"
-  end
-
-  desc "Run unit tests without building"
-  lane :unit_test_without_building do
-    get_simulator_info
-    udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf #{UNIT_TEST_RESULTS_PATH}"
-    sh "xcodebuild test-without-building \
-      -project #{PROJECT_PATH} \
-      -scheme #{UNIT_TEST_SCHEME} \
-      -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
-      -enableCodeCoverage NO \
-      -resultBundlePath #{UNIT_TEST_RESULTS_PATH} \
-      -skipMacroValidation \
-      CODE_SIGNING_ALLOWED=NO \
-      | xcbeautify"
-  end
-
-  desc "Run UI tests"
-  lane :ui_test do
-    get_simulator_info
-    udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf #{UI_TEST_RESULTS_PATH}"
-    sh "xcodebuild test \
-      -project #{PROJECT_PATH} \
-      -scheme #{UI_TEST_SCHEME} \
-      -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
-      -enableCodeCoverage NO \
-      -resultBundlePath #{UI_TEST_RESULTS_PATH} \
-      -skipMacroValidation \
-      CODE_SIGNING_ALLOWED=NO \
-      | xcbeautify"
-  end
-
-  desc "Run UI tests without building (xcodebuild test-without-building)"
-  lane :ui_test_without_building do
-    get_simulator_info
-    udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf #{UI_TEST_RESULTS_PATH}"
-    sh "xcodebuild test-without-building \
-      -project #{PROJECT_PATH} \
-      -scheme #{UI_TEST_SCHEME} \
-      -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
-      -enableCodeCoverage NO \
-      -resultBundlePath #{UI_TEST_RESULTS_PATH} \
-      -skipMacroValidation \
-      CODE_SIGNING_ALLOWED=NO \
-      | xcbeautify"
-  end
-
-  desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
-  lane :package_test do
-    SWIFT_PACKAGES.each do |package|
-      sh "cd ../#{package} && swift test | xcbeautify"
-    end
-  end
-
-  desc "Run all tests (unit, UI, package)"
-  lane :test_all do
-    build_for_testing
-    unit_test
-    ui_test
-    package_test
   end
 end
