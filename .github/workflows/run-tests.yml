@@ -31,6 +31,9 @@ jobs:
       - name: Generate Xcode Project
         run: mint run xcodegen generate
 
+      - name: Install Ruby Gems
+        run: bundle install
+
       - name: Build for Testing via Makefile
         run: make build-test
 
@@ -69,6 +72,9 @@ jobs:
 
       - name: Generate Xcode Project
         run: mint run xcodegen generate
+
+      - name: Install Ruby Gems
+        run: bundle install
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -115,6 +121,9 @@ jobs:
 
       - name: Generate Xcode Project
         run: mint run xcodegen generate
+
+      - name: Install Ruby Gems
+        run: bundle install
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
