@@ -38,4 +38,3 @@ Package.resolved
 # Fastlane files
 fastlane/README.md
 fastlane/report.xml
-Gemfile.lock
