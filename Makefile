@@ -55,8 +55,8 @@ endif
 .PHONY: run-debug
 run-debug:
 	$(MAKE) boot
-	@bundle exec fastlane build_release
-	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/release/DerivedData/Build/Products/Release-iphonesimulator/CatBoardApp.app
+	@bundle exec fastlane build_debug
+	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/debug/DerivedData/Build/Products/Debug-iphonesimulator/CatBoardApp.app
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 
 # === Run release build ===
