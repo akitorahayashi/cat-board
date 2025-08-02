@@ -28,4 +28,4 @@ jobs:
             ${{ runner.os }}-spm-
 
       - name: Run Package Tests via Makefile
-        run: make test-packages
+        run: make package-test

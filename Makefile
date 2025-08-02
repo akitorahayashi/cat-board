@@ -13,7 +13,7 @@
 # --- テスト ---
 #   make unit-test                 - ユニットテストを実行
 #   make ui-test                   - UIテストを実行
-#   make package-test              - 全パッケージのテストを実行
+#   make testp-package             - 全パッケージのテストを実行
 #   make test-all                  - 全テストを実行
 #   make unit-test-without-building - ユニットテストを実行（ビルド済みアーティファクトを利用）
 #   make ui-test-without-building  - UIテストを実行（ビルド済みアーティファクトを利用）
@@ -42,7 +42,7 @@ boot:
 ifndef LOCAL_SIMULATOR_UDID
 	$(error LOCAL_SIMULATOR_UDID is not set. Please set it in your .env)
 endif
-	@echo "🚀 Booting local simulator: $(LOCAL_SIMULATOR_NAME) (OS: $(LOCAL_SIMULATOR_OS), UDID: $(LOCAL_SIMULATOR_UDID))"
+	@echo "🚀 Booting local simulator: UDID: $(LOCAL_SIMULATOR_UDID)"
 	@if xcrun simctl list devices | grep -q "$(LOCAL_SIMULATOR_UDID) (Booted)"; then \
 		echo "⚡️ Simulator is already booted."; \
 	else \
@@ -50,7 +50,6 @@ endif
 		echo "✅ Simulator booted."; \
 	fi
 	open -a Simulator
-	@echo "✅ Local simulator boot command executed."
 
 # === Run debug build ===
 .PHONY: run-debug
