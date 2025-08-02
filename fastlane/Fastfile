@@ -33,8 +33,17 @@ platform :ios do
 
 desc "Get simulator information based on environment"
 lane :get_simulator_info do
-  udid = ENV['LOCAL_SIMULATOR_UDID']
-  if udid.nil? || udid.empty?
+  udid = nil
+  if ENV['CI'] == 'true'
+    udid = sh("xcrun simctl list devices available | grep -A1 'iPhone' | grep -Eo '[A-F0-9-]{36}' | head -n 1").strip
+    if udid.nil? || udid.empty?
+      UI.user_error!("CI環境で利用可能なiPhoneシミュレータのUDIDが取得できませんでした")
+    end
+  else
+    udid = ENV['LOCAL_SIMULATOR_UDID']
+    if udid.nil? || udid.empty?
+      UI.user_error!("LOCAL_SIMULATOR_UDIDが設定されていません。環境変数をセットしてください")
+    end
   end
   Actions.lane_context[:SIMULATOR_UDID] = udid
 end
@@ -88,7 +97,7 @@ end
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify")
   end
-  
+
   desc "Archive release build"
   lane :archive do
     get_simulator_info
