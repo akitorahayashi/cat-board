@@ -1,20 +1,20 @@
 # --- Xcode操作 ---
 #   make boot                      - ローカルシミュレータ（iPhone 16 Pro）を起動
-#   make run-debug                 - デバッグビルドを作成し、ローカルシミュレータにインストール、起動
-#   make run-release               - リリースビルドを作成し、ローカルシミュレータにインストール、起動
+#   make run-debug                 - デバッグビルドを作成し、ローカルシミュレータにインストール、起動（Fastlane経由）
+#   make run-release               - リリースビルドを作成し、ローカルシミュレータにインストール、起動（Fastlane経由）
 #   make clean                - Xcodeプロジェクトのビルドフォルダをクリーン
 #   make resolve-pkg               - SwiftPMキャッシュ・依存関係・ビルドをリセット
 #   make open                 - Xcodeでプロジェクトを開く
 #
 # --- ビルド ---
-#   make build-test                - fastlaneでテスト用のビルドを実行
-#   make archive                   - fastlaneでリリース用のアーカイブを作成
+#   make build-test                - テスト用のビルドを実行
+#   make archive                   - リリース用のアーカイブを作成
 #
 # --- テスト ---
-#   make unit-test                 - fastlaneでユニットテストを実行
-#   make ui-test                   - fastlaneでUIテストを実行
-#   make package-test             - 全パッケージのテストを実行
-#   make test-all                  - fastlaneで全テストを実行
+#   make unit-test                 - ユニットテストを実行
+#   make ui-test                   - UIテストを実行
+#   make package-test              - 全パッケージのテストを実行
+#   make test-all                  - 全テストを実行
 #   make unit-test-without-building - ユニットテストを実行（ビルド済みアーティファクトを利用）
 #   make ui-test-without-building  - UIテストを実行（ビルド済みアーティファクトを利用）
 # 
@@ -24,27 +24,16 @@
 #   make lint                  - lintを実行
 #
 
-# === Configuration ===
-OUTPUT_DIR := build
-PROJECT_FILE := CatBoardApp.xcodeproj
-APP_SCHEME := CatBoardApp
-UNIT_TEST_SCHEME := CatBoardTests
-UI_TEST_SCHEME := CatBoardUITests
-
-
-# === Derived paths ===
-ARCHIVE_PATH := $(OUTPUT_DIR)/archives/CatBoardApp.xcarchive
-UNIT_TEST_RESULTS := $(OUTPUT_DIR)/test-results/unit/TestResults.xcresult
-UI_TEST_RESULTS := $(OUTPUT_DIR)/test-results/ui/TestResults.xcresult
-DERIVED_DATA_PATH := $(OUTPUT_DIR)/test-results/DerivedData
-
 # === Local Simulator ===
 # .envファイルが存在すれば読み込む
 ifneq (,$(wildcard ./.env))
 	include .env
 endif
 
-# === App Bundle Identifier ===
+# === Configuration ===
+OUTPUT_DIR := build
+PROJECT_FILE := CatBoardApp.xcodeproj
+APP_SCHEME := CatBoardApp
 APP_BUNDLE_ID := com.akitorahayashi.CatBoardApp
 
 # === Boot simulator ===
@@ -66,56 +55,18 @@ endif
 # === Run debug build ===
 .PHONY: run-debug
 run-debug:
-	make boot
-	@echo "Using Local Simulator: $(LOCAL_SIMULATOR_NAME) (OS: $(LOCAL_SIMULATOR_OS), UDID: $(LOCAL_SIMULATOR_UDID))"
-	@echo "🧹 Cleaning previous outputs..."
-	@rm -rf $(OUTPUT_DIR)
-	@mkdir -p $(OUTPUT_DIR)/debug
-	@echo "✅ Previous outputs cleaned."
-	@echo "🔨 Building debug..."
-	@set -o pipefail && xcodebuild build \
-		-project $(PROJECT_FILE) \
-		-scheme $(APP_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(LOCAL_SIMULATOR_UDID)" \
-		-derivedDataPath $(OUTPUT_DIR)/debug/DerivedData \
-		-configuration Debug \
-		-skipMacroValidation \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcbeautify
-	@echo "✅ Debug build completed."
-	@echo "📲 Installing debug build to simulator ($(LOCAL_SIMULATOR_NAME))..."
-	xcrun simctl install $(LOCAL_SIMULATOR_UDID) $(OUTPUT_DIR)/debug/DerivedData/Build/Products/Debug-iphonesimulator/CatBoardApp.app
-	@echo "✅ Installed debug build."
-	@echo "🚀 Launching app ($(APP_BUNDLE_ID)) on simulator ($(LOCAL_SIMULATOR_NAME))..."
+	$(MAKE) boot
+	@bundle exec fastlane build_release
+	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/release/DerivedData/Build/Products/Release-iphonesimulator/CatBoardApp.app
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
-	@echo "✅ App launched."
 
 # === Run release build ===
 .PHONY: run-release
 run-release:
-	make boot
-	@echo "Using Local Simulator: $(LOCAL_SIMULATOR_NAME) (OS: $(LOCAL_SIMULATOR_OS), UDID: $(LOCAL_SIMULATOR_UDID))"
-	@echo "🧹 Cleaning previous outputs..."
-	@rm -rf $(OUTPUT_DIR)
-	@mkdir -p $(OUTPUT_DIR)/release
-	@echo "✅ Previous outputs cleaned."
-	@echo "🔨 Building release..."
-	@set -o pipefail && xcodebuild build \
-		-project $(PROJECT_FILE) \
-		-scheme $(APP_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(LOCAL_SIMULATOR_UDID)" \
-		-derivedDataPath $(OUTPUT_DIR)/release/DerivedData \
-		-configuration Release \
-		-skipMacroValidation \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcbeautify
-	@echo "✅ Release build completed."
-	@echo "📲 Installing release build to simulator ($(LOCAL_SIMULATOR_NAME))..."
-	xcrun simctl install $(LOCAL_SIMULATOR_UDID) $(OUTPUT_DIR)/release/DerivedData/Build/Products/Release-iphonesimulator/CatBoardApp.app
-	@echo "✅ Installed release build."
-	@echo "🚀 Launching app ($(APP_BUNDLE_ID)) on simulator ($(LOCAL_SIMULATOR_NAME))..."
+	$(MAKE) boot
+	@bundle exec fastlane build_release
+	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/release/DerivedData/Build/Products/Release-iphonesimulator/CatBoardApp.app
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
-	@echo "✅ App launched."
 
 # === Clean project ===
 .PHONY: clean
@@ -123,8 +74,7 @@ clean:
 	@echo "🧹 Cleaning Xcode project build folder..."
 	xcodebuild clean \
 		-project $(PROJECT_FILE) \
-		-scheme $(APP_SCHEME) \
-		-destination "platform=iOS Simulator,id=$(LOCAL_SIMULATOR_UDID)"
+		-scheme $(APP_SCHEME)
 	@echo "✅ Project build folder cleaned."
 
 # === Resolve & Reset SwiftPM/Xcode Packages ===

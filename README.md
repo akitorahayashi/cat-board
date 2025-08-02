@@ -75,6 +75,55 @@ A machine learning model checks all cat images before display, automatically fil
 ### 7. Error Handling and Recovery
 Each module implements its own error handling to manage exceptions such as network errors, decoding errors, and memory access issues. Stable operation is achieved through settings like a maximum of 5 retries and a 10-second timeout.
 
+## Setup
+
+### 1. Environment Configuration
+
+Copy `.env.example` to `.env` and configure your local environment:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your local simulator settings:
+
+```bash
+# ローカルシミュレータ設定（必須）
+LOCAL_SIMULATOR_NAME="iPhone 16 Pro"  # Your preferred simulator
+LOCAL_SIMULATOR_OS="26.0"            # iOS version
+LOCAL_SIMULATOR_UDID="YOUR_UDID"     # Your simulator's UDID
+
+# Apple Developer設定（fastlane用）
+APPLE_ID="your_apple_id@example.com"
+TEAM_ID="YOUR_TEAM_ID"
+```
+
+To find your simulator's UDID, run:
+```bash
+xcrun simctl list devices
+# or use xcsiml for a cleaner output:
+# xcsiml list
+```
+
+### 2. Dependencies
+
+Install dependencies:
+```bash
+bundle install  # Ruby dependencies (fastlane)
+mint bootstrap  # Swift dependencies (swiftformat, swiftlint)
+```
+
+### 3. Available Commands
+
+See the Makefile for available commands:
+```bash
+make run-debug   # Build and run debug version
+make run-release # Build and run release version
+make test-all    # Run all tests
+make format      # Format code
+make lint        # Run linter
+```
+
 ## Unit Tests
 
 - **GalleryViewModelTests**: Verifies ViewModel's image loading, additional fetching, clearing, maximum count limit, and integration with screening.

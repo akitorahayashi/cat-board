@@ -7,26 +7,46 @@
 # For a list of all available plugins, check out
 #     https://docs.fastlane.tools/plugins/available-plugins
 
-
 default_platform(:ios)
+
+# Constants for common configurations
+PROJECT_PATH = "../CatBoardApp.xcodeproj"
+MAIN_SCHEME = "CatBoardApp"
+UNIT_TEST_SCHEME = "CatBoardTests"
+UI_TEST_SCHEME = "CatBoardUITests"
+
+# Build and test paths
+BUILD_DIR = "build"
+DERIVED_DATA_PATH = "#{BUILD_DIR}/test-results/DerivedData"
+UNIT_TEST_RESULTS_PATH = "#{BUILD_DIR}/test-results/unit/TestResults.xcresult"
+UI_TEST_RESULTS_PATH = "#{BUILD_DIR}/test-results/ui/TestResults.xcresult"
+ARCHIVE_PATH = "#{BUILD_DIR}/archives/CatBoardApp.xcarchive"
+
+# Swift package directories
+SWIFT_PACKAGES = [
+  "CatImageURLRepository",
+  "CatImageScreener",
+  "CatImagePrefetcher"
+]
 
 platform :ios do
 
-desc "Get first available iPhone simulator UDID"
-lane :get_simulator_udid do
-  udid = sh("xcrun simctl list devices available | grep -A1 'iPhone' | grep -Eo '[A-F0-9-]{36}' | head -n 1").strip
-  UI.message("First available iPhone simulator UDID: #{udid}")
+desc "Get simulator information based on environment"
+lane :get_simulator_info do
+  udid = ENV['LOCAL_SIMULATOR_UDID']
+  if udid.nil? || udid.empty?
+  end
   Actions.lane_context[:SIMULATOR_UDID] = udid
 end
 
 desc "Build for testing"
 lane :build_for_testing do
-  get_simulator_udid
+  get_simulator_info
   udid = Actions.lane_context[:SIMULATOR_UDID]
-  sh "rm -rf fastlane/build/test-results/unit/TestResults.xcresult"
+  sh "rm -rf #{UNIT_TEST_RESULTS_PATH}"
   sh "xcodebuild build-for-testing \
-    -project ../CatBoardApp.xcodeproj \
-    -scheme CatBoardApp \
+    -project #{PROJECT_PATH} \
+    -scheme #{MAIN_SCHEME} \
     -destination 'platform=iOS Simulator,id=#{udid}' \
     -configuration Debug \
     -skipMacroValidation \
@@ -34,17 +54,52 @@ lane :build_for_testing do
     | xcbeautify"
 end
 
+
+  desc "Build debug configuration"
+  lane :build_debug do
+    get_simulator_info
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    sh("rm -rf #{BUILD_DIR}/debug")
+    sh("mkdir -p #{BUILD_DIR}/debug")
+    sh("set -o pipefail && xcodebuild build \
+      -project #{PROJECT_PATH} \
+      -scheme #{MAIN_SCHEME} \
+      -destination 'platform=iOS Simulator,id=#{udid}' \
+      -derivedDataPath #{BUILD_DIR}/debug/DerivedData \
+      -configuration Debug \
+      -skipMacroValidation \
+      CODE_SIGNING_ALLOWED=NO \
+      | xcbeautify")
+  end
+
+  desc "Build release configuration"
+  lane :build_release do
+    get_simulator_info
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    sh("rm -rf #{BUILD_DIR}/release")
+    sh("mkdir -p #{BUILD_DIR}/release")
+    sh("set -o pipefail && xcodebuild build \
+      -project #{PROJECT_PATH} \
+      -scheme #{MAIN_SCHEME} \
+      -destination 'platform=iOS Simulator,id=#{udid}' \
+      -derivedDataPath #{BUILD_DIR}/release/DerivedData \
+      -configuration Release \
+      -skipMacroValidation \
+      CODE_SIGNING_ALLOWED=NO \
+      | xcbeautify")
+  end
+  
   desc "Archive release build"
   lane :archive do
-    get_simulator_udid
+    get_simulator_info
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf fastlane/build/archives/CatBoardApp.xcarchive"
+    sh "rm -rf #{ARCHIVE_PATH}"
     sh "xcodebuild archive \
-      -project ../CatBoardApp.xcodeproj \
-      -scheme CatBoardApp \
+      -project #{PROJECT_PATH} \
+      -scheme #{MAIN_SCHEME} \
       -configuration Release \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -archivePath fastlane/build/archives/CatBoardApp.xcarchive \
+      -archivePath #{ARCHIVE_PATH} \
       -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
@@ -52,73 +107,77 @@ end
 
   desc "Run unit tests"
   lane :unit_test do
-    get_simulator_udid
+    get_simulator_info
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf fastlane/build/test-results/unit/TestResults.xcresult"
+    sh "rm -rf #{UNIT_TEST_RESULTS_PATH}"
     sh "xcodebuild test \
-      -project ../CatBoardApp.xcodeproj \
-      -scheme CatBoardTests \
+      -project #{PROJECT_PATH} \
+      -scheme #{UNIT_TEST_SCHEME} \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath fastlane/build/test-results/DerivedData \
+      -derivedDataPath #{DERIVED_DATA_PATH} \
       -enableCodeCoverage NO \
-      -resultBundlePath fastlane/build/test-results/unit/TestResults.xcresult \
+      -resultBundlePath #{UNIT_TEST_RESULTS_PATH} \
+      -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
   end
 
-  desc "Run unit tests without building (xcodebuild test-without-building)"
+  desc "Run unit tests without building"
   lane :unit_test_without_building do
-    get_simulator_udid
+    get_simulator_info
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf fastlane/build/test-results/unit/TestResults.xcresult"
+    sh "rm -rf #{UNIT_TEST_RESULTS_PATH}"
     sh "xcodebuild test-without-building \
-      -project ../CatBoardApp.xcodeproj \
-      -scheme CatBoardTests \
+      -project #{PROJECT_PATH} \
+      -scheme #{UNIT_TEST_SCHEME} \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath fastlane/build/test-results/DerivedData \
+      -derivedDataPath #{DERIVED_DATA_PATH} \
       -enableCodeCoverage NO \
-      -resultBundlePath fastlane/build/test-results/unit/TestResults.xcresult \
+      -resultBundlePath #{UNIT_TEST_RESULTS_PATH} \
+      -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
   end
 
   desc "Run UI tests"
   lane :ui_test do
-    get_simulator_udid
+    get_simulator_info
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf fastlane/build/test-results/ui/TestResults.xcresult"
+    sh "rm -rf #{UI_TEST_RESULTS_PATH}"
     sh "xcodebuild test \
-      -project ../CatBoardApp.xcodeproj \
-      -scheme CatBoardUITests \
+      -project #{PROJECT_PATH} \
+      -scheme #{UI_TEST_SCHEME} \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath fastlane/build/test-results/DerivedData \
+      -derivedDataPath #{DERIVED_DATA_PATH} \
       -enableCodeCoverage NO \
-      -resultBundlePath fastlane/build/test-results/ui/TestResults.xcresult \
+      -resultBundlePath #{UI_TEST_RESULTS_PATH} \
+      -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
   end
 
   desc "Run UI tests without building (xcodebuild test-without-building)"
   lane :ui_test_without_building do
-    get_simulator_udid
+    get_simulator_info
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    sh "rm -rf fastlane/build/test-results/ui/TestResults.xcresult"
+    sh "rm -rf #{UI_TEST_RESULTS_PATH}"
     sh "xcodebuild test-without-building \
-      -project ../CatBoardApp.xcodeproj \
-      -scheme CatBoardUITests \
+      -project #{PROJECT_PATH} \
+      -scheme #{UI_TEST_SCHEME} \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath fastlane/build/test-results/DerivedData \
+      -derivedDataPath #{DERIVED_DATA_PATH} \
       -enableCodeCoverage NO \
-      -resultBundlePath fastlane/build/test-results/ui/TestResults.xcresult \
+      -resultBundlePath #{UI_TEST_RESULTS_PATH} \
+      -skipMacroValidation \
       CODE_SIGNING_ALLOWED=NO \
       | xcbeautify"
   end
 
   desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
   lane :package_test do
-    sh "cd CatImageURLRepository && swift test | xcbeautify"
-    sh "cd CatImageScreener && swift test | xcbeautify"
-    sh "cd CatImagePrefetcher && swift test | xcbeautify"
+    SWIFT_PACKAGES.each do |package|
+      sh "cd #{package} && swift test | xcbeautify"
+    end
   end
 
   desc "Run all tests (unit, UI, package)"
@@ -128,5 +187,4 @@ end
     ui_test
     package_test
   end
-
 end

@@ -1,15 +1,7 @@
 # For more information about the Appfile, see:
 #     https://docs.fastlane.tools/advanced/#appfile
 
-# Apple Developer
+app_identifier("com.akitorahayashi.CatBoardApp")
+
 apple_id(ENV["APPLE_ID"]) 
 team_id(ENV["TEAM_ID"])
-
-# プロジェクトの情報
-project_name("CatBoardApp")
-deployment_target("17.0")
-
-# アプリの情報
-app_identifier("com.akitorahayashi.CatBoardApp")
-scheme("CatBoardApp")
-
