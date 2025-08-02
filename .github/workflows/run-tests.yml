@@ -39,7 +39,7 @@ jobs:
         with:
           name: built-products
           path: |
-            ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
+            ${{ github.workspace }}/fastlane/build/test-results/DerivedData/Build/Products/
           retention-days: 1
 
   unit-test:
@@ -120,7 +120,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: built-products
-          path: ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
+          path: ${{ github.workspace }}/fastlane/build/test-results/DerivedData/Build/Products/
 
       - name: Run UI Tests via Makefile
         id: ui_tests
