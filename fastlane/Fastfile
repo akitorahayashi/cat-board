@@ -17,7 +17,7 @@ UI_TEST_SCHEME = "CatBoardUITests"
 
 # Build and test paths
 BUILD_DIR = "build"
-DERIVED_DATA_PATH = "#{BUILD_DIR}/test-results/DerivedData"
+TEST_BUILD_DERIVED_DATA_PATH = "#{BUILD_DIR}/test-results/DerivedData"
 UNIT_TEST_RESULTS_PATH = "#{BUILD_DIR}/test-results/unit/TestResults.xcresult"
 UI_TEST_RESULTS_PATH = "#{BUILD_DIR}/test-results/ui/TestResults.xcresult"
 ARCHIVE_PATH = "#{BUILD_DIR}/archives/CatBoardApp.xcarchive"
@@ -53,10 +53,13 @@ lane :build_for_testing do
   get_simulator_info
   udid = Actions.lane_context[:SIMULATOR_UDID]
   sh "rm -rf #{UNIT_TEST_RESULTS_PATH}"
+  sh "rm -rf #{TEST_BUILD_DERIVED_DATA_PATH}"
+  sh "mkdir -p #{TEST_BUILD_DERIVED_DATA_PATH}"
   sh "xcodebuild build-for-testing \
     -project #{PROJECT_PATH} \
     -scheme #{MAIN_SCHEME} \
     -destination 'platform=iOS Simulator,id=#{udid}' \
+    -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
     -configuration Debug \
     -skipMacroValidation \
     CODE_SIGNING_ALLOWED=NO \
@@ -123,7 +126,7 @@ end
       -project #{PROJECT_PATH} \
       -scheme #{UNIT_TEST_SCHEME} \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{DERIVED_DATA_PATH} \
+      -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
       -enableCodeCoverage NO \
       -resultBundlePath #{UNIT_TEST_RESULTS_PATH} \
       -skipMacroValidation \
@@ -140,7 +143,7 @@ end
       -project #{PROJECT_PATH} \
       -scheme #{UNIT_TEST_SCHEME} \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{DERIVED_DATA_PATH} \
+      -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
       -enableCodeCoverage NO \
       -resultBundlePath #{UNIT_TEST_RESULTS_PATH} \
       -skipMacroValidation \
@@ -157,7 +160,7 @@ end
       -project #{PROJECT_PATH} \
       -scheme #{UI_TEST_SCHEME} \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{DERIVED_DATA_PATH} \
+      -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
       -enableCodeCoverage NO \
       -resultBundlePath #{UI_TEST_RESULTS_PATH} \
       -skipMacroValidation \
@@ -174,7 +177,7 @@ end
       -project #{PROJECT_PATH} \
       -scheme #{UI_TEST_SCHEME} \
       -destination 'platform=iOS Simulator,id=#{udid}' \
-      -derivedDataPath #{DERIVED_DATA_PATH} \
+      -derivedDataPath #{TEST_BUILD_DERIVED_DATA_PATH} \
       -enableCodeCoverage NO \
       -resultBundlePath #{UI_TEST_RESULTS_PATH} \
       -skipMacroValidation \
@@ -185,7 +188,7 @@ end
   desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
   lane :package_test do
     SWIFT_PACKAGES.each do |package|
-      sh "cd #{package} && swift test | xcbeautify"
+      sh "cd ../#{package} && swift test | xcbeautify"
     end
   end
 
