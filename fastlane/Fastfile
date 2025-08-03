@@ -10,7 +10,7 @@
 default_platform(:ios)
 
 # Constants for common configurations
-PROJECT_PATH = "../CatBoardApp.xcodeproj"
+PROJECT_PATH = "CatBoardApp.xcodeproj"
 MAIN_SCHEME = "CatBoardApp"
 UNIT_TEST_SCHEME = "CatBoardTests"
 UI_TEST_SCHEME = "CatBoardUITests"
