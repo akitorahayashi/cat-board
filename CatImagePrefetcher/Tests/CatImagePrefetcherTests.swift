@@ -164,12 +164,11 @@ final class CatImagePrefetcherTests: XCTestCase {
             modelContainer: modelContainer
         )
 
+        // isPrefetching が false になるまで待つ
         try await prefetcher.startPrefetchingIfNeeded()
-
         try await waitFor({
-            let screenedCount = try await self.prefetcher.getPrefetchedCount()
-            return screenedCount > 0
-        }, description: "スクリーニング後、最低1枚の画像が取得されるべき")
+            await self.prefetcher.isPrefetching == false
+        }, description: "プリフェッチ処理が完了するのを待つ")
 
         let screenedCount = try await prefetcher.getPrefetchedCount()
         let targetCount = CatImagePrefetcher.targetPrefetchCount

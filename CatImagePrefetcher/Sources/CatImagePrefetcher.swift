@@ -10,7 +10,7 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
     private let imageLoader: CatImageLoaderProtocol
     private let screener: CatImageScreenerProtocol
     private let modelContainer: ModelContainer
-    private var isPrefetching: Bool = false
+    public internal(set) var isPrefetching: Bool = false
     private var prefetchTask: Task<Void, Never>?
 
     // プリフェッチ関連の定数

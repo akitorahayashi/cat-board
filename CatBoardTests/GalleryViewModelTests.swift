@@ -54,7 +54,7 @@ final class GalleryViewModelTests: XCTestCase {
         viewModel.loadInitialImages()
 
         await waitFor({
-            self.viewModel.imageURLsToShow.count >= GalleryViewModel.targetInitialDisplayCount
+            self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount
         }, description: "初期画像が目標枚数読み込まれるべき")
 
         XCTAssertEqual(viewModel.imageURLsToShow.count, GalleryViewModel.targetInitialDisplayCount)
@@ -63,11 +63,11 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testFetchAdditionalImages() async {
         viewModel.loadInitialImages()
-        await waitFor({ self.viewModel.imageURLsToShow.count >= GalleryViewModel.targetInitialDisplayCount })
+        await waitFor({ self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount })
         let initialCount = viewModel.imageURLsToShow.count
 
         await viewModel.fetchAdditionalImages()
-        await waitFor({ self.viewModel.imageURLsToShow.count >= initialCount + GalleryViewModel.batchDisplayCount })
+        await waitFor({ self.viewModel.imageURLsToShow.count == initialCount + GalleryViewModel.batchDisplayCount })
 
         XCTAssertEqual(viewModel.imageURLsToShow.count, initialCount + GalleryViewModel.batchDisplayCount)
         XCTAssertFalse(viewModel.isAdditionalFetching)
@@ -75,7 +75,7 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testClearDisplayedImages() async {
         viewModel.loadInitialImages()
-        await waitFor({ !self.viewModel.imageURLsToShow.isEmpty })
+        await waitFor({ self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount })
         XCTAssertFalse(viewModel.imageURLsToShow.isEmpty)
 
         viewModel.clearDisplayedImages()
@@ -86,7 +86,7 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testMaxImageCountReached() async {
         viewModel.loadInitialImages()
-        await waitFor({ self.viewModel.imageURLsToShow.count >= GalleryViewModel.targetInitialDisplayCount })
+        await waitFor({ self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount })
 
         // isInitializing が true になるまで追加取得を試みる（最大30回試行）
         for _ in 0 ..< 30 {
