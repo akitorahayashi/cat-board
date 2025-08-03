@@ -1,13 +1,15 @@
+import CatImagePrefetcher
+import CatImageURLRepository
 import Foundation
 
 public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable, Sendable {
-    public var id: UUID
-    public var imageURL: String
+    public let id: UUID
+    public let imageURL: URL
     private enum CodingKeys: String, CodingKey {
         case imageURL = "url"
     }
 
-    public init(imageURL: String) {
+    public init(imageURL: URL) {
         id = UUID()
         self.imageURL = imageURL
     }
@@ -28,6 +30,6 @@ public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable, Se
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = UUID()
-        imageURL = try container.decode(String.self, forKey: .imageURL)
+        imageURL = try container.decode(URL.self, forKey: .imageURL)
     }
 }

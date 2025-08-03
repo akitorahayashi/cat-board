@@ -1,4 +1,3 @@
-import CatURLImageModel
 import Foundation
 import Kingfisher
 
@@ -35,19 +34,14 @@ public actor CatImageLoader: CatImageLoaderProtocol {
         KingfisherManager.shared.cache.clearMemoryCache()
     }
 
-    public nonisolated func loadImageData(from models: [CatImageURLModel]) async throws -> [(
+    public nonisolated func loadImageData(from urls: [URL]) async throws -> [(
         imageData: Data,
-        model: CatImageURLModel
+        imageURL: URL
     )] {
-        var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
-        loadedImages.reserveCapacity(models.count)
+        var loadedImages: [(imageData: Data, imageURL: URL)] = []
+        loadedImages.reserveCapacity(urls.count)
 
-        for (index, item) in models.enumerated() {
-            guard let url = URL(string: item.imageURL) else {
-                print("無効なURL: \(item.imageURL)")
-                continue
-            }
-
+        for (index, url) in urls.enumerated() {
             do {
                 let result = try await KingfisherManager.shared.retrieveImage(
                     with: url,
@@ -63,7 +57,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
 
                 autoreleasepool {
                     if let imageData = toJPEGData(result.image, 0.8) {
-                        loadedImages.append((imageData: imageData, model: item))
+                        loadedImages.append((imageData: imageData, imageURL: url))
                     }
                 }
             } catch let error as NSError {
@@ -71,7 +65,7 @@ public actor CatImageLoader: CatImageLoaderProtocol {
                     throw error
                 }
                 let errorType = error.domain == NSURLErrorDomain ? "ネットワーク" : "その他"
-                print("画像のダウンロードに失敗 [\(index + 1)/\(models.count)]: \(errorType)エラー (\(item.imageURL))")
+                print("画像のダウンロードに失敗 [\(index + 1)/\(urls.count)]: \(errorType)エラー (\(url.absoluteString))")
                 continue
             }
         }

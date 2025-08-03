@@ -1,4 +1,3 @@
-import CatURLImageModel
 import Foundation
 
 public actor MockCatImageScreener: CatImageScreenerProtocol {
@@ -11,20 +10,21 @@ public actor MockCatImageScreener: CatImageScreenerProtocol {
     }
 
     public func screenImages(
-        imageDataWithModels: [(imageData: Data, model: CatImageURLModel)]
-    ) async throws -> [CatImageURLModel] {
+        imageDataWithURLs: [(imageData: Data, imageURL: URL)]
+    ) async throws -> [URL] {
         if let error {
             throw error
         }
 
+        let allURLs = imageDataWithURLs.map(\.imageURL)
         // スクリーニングが無効の場合は全ての画像をそのまま返す
         if !screeningSettings.isScreeningEnabled {
-            return imageDataWithModels.map(\.model)
+            return allURLs
         }
 
         // 決定論的なスクリーニング：インデックスが偶数の画像を返す
-        return imageDataWithModels.enumerated().compactMap { index, element in
-            index % 2 == 0 ? element.model : nil
+        return imageDataWithURLs.enumerated().compactMap { index, element in
+            index % 2 == 0 ? element.imageURL : nil
         }
     }
 }

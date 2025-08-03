@@ -3,7 +3,7 @@ import CatImageLoader
 import CatImagePrefetcher
 import CatImageScreener
 import CatImageURLRepository
-import CatURLImageModel
+import CatImagePrefetcher
 import SwiftData
 import SwiftUI
 

@@ -1,5 +1,3 @@
-import CatAPIClient
-import CatURLImageModel
 import Foundation
 
 public actor MockCatImageLoader: CatImageLoaderProtocol {
@@ -20,11 +18,11 @@ public actor MockCatImageLoader: CatImageLoaderProtocol {
         errorToThrow = error
     }
 
-    public func loadImageData(from models: [CatImageURLModel]) async throws -> [(
+    public func loadImageData(from urls: [URL]) async throws -> [(
         imageData: Data,
-        model: CatImageURLModel
+        imageURL: URL
     )] {
-        print("MockCatImageLoader.loadImageData が呼ばれました: \(models.count)枚")
+        print("MockCatImageLoader.loadImageData が呼ばれました: \(urls.count)枚")
 
         // エラーが設定されている場合は投げてからクリア
         if let error = errorToThrow {
@@ -35,10 +33,10 @@ public actor MockCatImageLoader: CatImageLoaderProtocol {
 
         print("MockCatImageLoader: 正常処理を開始します")
 
-        var loadedImages: [(imageData: Data, model: CatImageURLModel)] = []
-        loadedImages.reserveCapacity(models.count)
+        var loadedImages: [(imageData: Data, imageURL: URL)] = []
+        loadedImages.reserveCapacity(urls.count)
 
-        for (index, model) in models.enumerated() {
+        for (index, url) in urls.enumerated() {
             do {
                 guard let imageData = try? Data(contentsOf: testImageURL) else {
                     throw NSError(
@@ -47,9 +45,9 @@ public actor MockCatImageLoader: CatImageLoaderProtocol {
                         userInfo: [NSLocalizedDescriptionKey: "Sample image not found"]
                     )
                 }
-                loadedImages.append((imageData: imageData, model: model))
+                loadedImages.append((imageData: imageData, imageURL: url))
             } catch {
-                print("画像のダウンロードに失敗 [\(index + 1)/\(models.count)]: \(error.localizedDescription)")
+                print("画像のダウンロードに失敗 [\(index + 1)/\(urls.count)]: \(error.localizedDescription)")
                 continue
             }
         }

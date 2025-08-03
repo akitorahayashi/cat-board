@@ -1,4 +1,3 @@
-import CatURLImageModel
 import Foundation
 import ScaryCatScreeningKit
 
@@ -33,13 +32,15 @@ public actor CatImageScreener: CatImageScreenerProtocol {
     }
 
     public nonisolated func screenImages(
-        imageDataWithModels: [(imageData: Data, model: CatImageURLModel)]
-    ) async throws -> [CatImageURLModel] {
-        guard !imageDataWithModels.isEmpty else { return [] }
+        imageDataWithURLs: [(imageData: Data, imageURL: URL)]
+    ) async throws -> [URL] {
+        guard !imageDataWithURLs.isEmpty else { return [] }
+
+        let allURLs = imageDataWithURLs.map(\.imageURL)
 
         // スクリーニングが無効な場合
         if !screeningSettings.isScreeningEnabled {
-            return imageDataWithModels.map(\.model)
+            return allURLs
         }
 
         do {
@@ -48,10 +49,10 @@ public actor CatImageScreener: CatImageScreenerProtocol {
             // スクリーナーがnilの場合は全ての画像を安全として返す
             guard let screener else {
                 print("スクリーナーの初期化に失敗したため、全ての画像を安全として返します")
-                return imageDataWithModels.map(\.model)
+                return allURLs
             }
 
-            let imageDataList = imageDataWithModels.map(\.imageData)
+            let imageDataList = imageDataWithURLs.map(\.imageData)
             let probabilityThreshold = Self.screeningProbabilityThreshold
             let enableLogging = Self.enableLogging
 
@@ -61,26 +62,23 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                 enableLogging: enableLogging
             )
 
-            // スクリーニング結果から元のモデルを取得するために、モデルの配列を準備
-            let models = imageDataWithModels.map(\.model)
-
             if screeningSettings.scaryMode {
                 // 怖いモードの場合、unsafeResultsを使用
                 let results = screeningResults.unsafeResults.compactMap { result in
-                    models[result.originalIndex]
+                    allURLs[result.originalIndex]
                 }
                 if Self.enableLogging {
-                    print("スクリーニング結果: \(imageDataWithModels.count)枚中\(results.count)枚が危険と判定")
+                    print("スクリーニング結果: \(imageDataWithURLs.count)枚中\(results.count)枚が危険と判定")
                     print(screeningResults.generateDetailedReport())
                 }
                 return results
             } else {
                 // 通常モードの場合、safeResultsを使用
                 let results = screeningResults.safeResults.compactMap { result in
-                    models[result.originalIndex]
+                    allURLs[result.originalIndex]
                 }
                 if Self.enableLogging {
-                    print("スクリーニング結果: \(imageDataWithModels.count)枚中\(results.count)枚が安全と判定")
+                    print("スクリーニング結果: \(imageDataWithURLs.count)枚中\(results.count)枚が安全と判定")
                     print(screeningResults.generateDetailedReport())
                 }
                 return results
@@ -92,7 +90,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                 print("原因: \(underlying.localizedDescription)")
             }
             // エラーが発生した場合、全ての画像を安全として返す
-            return imageDataWithModels.map(\.model)
+            return allURLs
         }
     }
 }
