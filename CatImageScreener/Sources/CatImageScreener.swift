@@ -39,7 +39,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
         let allURLs = imageDataWithURLs.map(\.imageURL)
 
         // スクリーニングが無効な場合
-        if !screeningSettings.isScreeningEnabled {
+        if !await screeningSettings.isScreeningEnabled {
             return allURLs
         }
 
@@ -62,7 +62,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
                 enableLogging: enableLogging
             )
 
-            if screeningSettings.scaryMode {
+            if await screeningSettings.scaryMode {
                 // 怖いモードの場合、unsafeResultsを使用
                 let results = screeningResults.unsafeResults.compactMap { result in
                     allURLs[result.originalIndex]

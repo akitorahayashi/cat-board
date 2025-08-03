@@ -5,7 +5,7 @@ on:
 
 jobs:
   format-and-lint:
-    runs-on: macos-latest
+    runs-on: macos-15
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
     steps:
