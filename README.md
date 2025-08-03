@@ -1,4 +1,4 @@
-## Project Overview
+## Overview
 
 Cat Board is an iOS app designed to efficiently process and display a large number of cat images.
 
@@ -42,7 +42,8 @@ Since the screening process involves machine learning, verification on a real de
 ├── CatURLImageModel/
 ├── CatBoardTests/
 ├── CatBoardUITests/
-├── project.yml
+├── fastlane/
+├── project.envsubst.yml
 ├── Makefile
 ├── Mintfile
 ├── .swiftlint.yml
@@ -73,6 +74,47 @@ A machine learning model checks all cat images before display, automatically fil
 
 ### 7. Error Handling and Recovery
 Each module implements its own error handling to manage exceptions such as network errors, decoding errors, and memory access issues. Stable operation is achieved through settings like a maximum of 5 retries and a 10-second timeout.
+
+## Setup
+
+### 1. Environment Configuration
+
+Copy `.env.example` to `.env` and configure your local environment:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your local simulator settings:
+
+```bash
+# ローカルシミュレータの設定
+LOCAL_SIMULATOR_UDID="YOUR_UDID"     
+
+# Apple Developer
+APPLE_ID="your_apple_id@example.com"
+TEAM_ID="YOUR_TEAM_ID"
+```
+
+To find your simulator's UDID, run:
+```bash
+xcrun simctl list devices
+# or use xcsiml for a cleaner output:
+# xcsiml list
+```
+
+### 2. Dependencies & Project Generation
+
+Install dependencies:
+```bash
+bundle install  # Ruby dependencies (fastlane)
+mint bootstrap  # Swift dependencies (swiftformat, swiftlint)
+```
+
+Generate Xcode project (with env values):
+```bash
+make gen-proj   # Generates project.yml from project.envsubst.yml and runs xcodegen
+```
 
 ## Unit Tests
 

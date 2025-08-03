@@ -23,7 +23,10 @@ jobs:
     name: Run Tests
     uses: ./.github/workflows/run-tests.yml
     
-  # アーカイブビルド検証
-  build-archive:
-    name: Build Unsigned Archive
-    uses: ./.github/workflows/build-unsigned-archive.yml 
+  # リリースビルド
+  release-build:
+    name: Build Unsigned Release
+    uses: ./.github/workflows/build-unsigned-release.yml
+    secrets:
+      TEAM_ID: ${{ secrets.TEAM_ID }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}

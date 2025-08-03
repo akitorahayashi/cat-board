@@ -29,17 +29,22 @@ jobs:
         run: brew install mint
 
       - name: Generate Xcode Project
-        run: mint run xcodegen generate
+        run: make gen-proj
 
-      - name: Build for Testing via Makefile
-        run: make build-test
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Build for Testing
+        run: make build-for-testing
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: built-products
           path: |
-            ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
+            ${{ github.workspace }}/fastlane/build/test-results/DerivedData/Build/Products/
           retention-days: 1
 
   unit-test:
@@ -68,15 +73,20 @@ jobs:
         run: brew install mint
 
       - name: Generate Xcode Project
-        run: mint run xcodegen generate
+        run: make gen-proj
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: built-products
-          path: ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
+          path: ${{ github.workspace }}/fastlane/build/test-results/DerivedData/Build/Products/
 
-      - name: Run Unit Tests via Makefile
+      - name: Run Unit Tests
         id: unit_tests
         run: make unit-test-without-building
 
@@ -85,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: ${{ github.workspace }}/build/test-results/unit/TestResults.xcresult
+          path: ${{ github.workspace }}/fastlane/build/test-results/unit/TestResults.xcresult
           retention-days: 3
 
   ui-test:
@@ -114,15 +124,23 @@ jobs:
           xcode-version: '16.2'
 
       - name: Generate Xcode Project
-        run: mint run xcodegen generate
+        run: make gen-proj
+
+      - name: Generate Xcode Project
+        run: make gen-proj
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: built-products
-          path: ${{ github.workspace }}/build/test-results/DerivedData/Build/Products/
+          path: ${{ github.workspace }}/fastlane/build/test-results/DerivedData/Build/Products/
 
-      - name: Run UI Tests via Makefile
+      - name: Run UI Tests
         id: ui_tests
         run: make ui-test-without-building
 
@@ -131,5 +149,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ui-test-results
-          path: ${{ github.workspace }}/build/test-results/ui/TestResults.xcresult
+          path: ${{ github.workspace }}/fastlane/build/test-results/ui/TestResults.xcresult
           retention-days: 3

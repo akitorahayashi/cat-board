@@ -110,7 +110,7 @@ struct CatImageGallery: View {
             .rotationEffect(.degrees(refreshRotationAngle))
             .disabled(isDisabled)
             .padding(.leading, 1.2)
-            .accessibilityIdentifier("refreshButton")
+            .accessibilityIdentifier(CBAccessibilityID.Gallery.refreshButton)
         }
     }
 
@@ -130,7 +130,7 @@ struct CatImageGallery: View {
                 }
             )
             .padding(.leading, 1.2)
-            .accessibilityIdentifier("settingsButton")
+            .accessibilityIdentifier(CBAccessibilityID.Gallery.settingsButton)
         }
     }
 
@@ -138,7 +138,7 @@ struct CatImageGallery: View {
         VStack(spacing: 16) {
             Text("エラーが発生しました")
                 .font(.headline)
-                .accessibilityIdentifier("errorTitle")
+                .accessibilityIdentifier(CBAccessibilityID.ErrorView.title)
             Text(viewModel.errorMessage ?? "")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -159,7 +159,7 @@ struct CatImageGallery: View {
                     .foregroundColor(.blue)
                     .rotationEffect(.degrees(retryRotationAngle))
             }
-            .accessibilityIdentifier("retryButton")
+            .accessibilityIdentifier(CBAccessibilityID.ErrorView.retryButton)
             .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -197,7 +197,7 @@ struct CatImageGallery: View {
                             .padding(2)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                             .rotationEffect(.degrees(180))
-                            .accessibilityIdentifier("galleryImage_\(globalIndex)")
+                            .accessibilityIdentifier(CBAccessibilityID.Gallery.image(id: globalIndex))
                             .onAppear {
                                 if image.id == viewModel.imageURLsToShow.last?.id {
                                     Task {

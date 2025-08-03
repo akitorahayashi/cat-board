@@ -1,6 +1,5 @@
-# $ mint run xcodegen generate
-
 name: CatBoardApp
+
 options:
   deploymentTarget:
     iOS: 17.0
@@ -16,6 +15,10 @@ settings:
     MARKETING_VERSION: 1.0
     CURRENT_PROJECT_VERSION: 1
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+    DEVELOPMENT_TEAM: $TEAM_ID
+  configs:
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: "-O" 
 
 packages:
   CatURLImageModel:
@@ -65,7 +68,10 @@ targets:
         DEVELOPMENT_LANGUAGE: ja
         GENERATE_INFOPLIST_FILE: "YES"
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardApp
-        # Add other required iOS settings
+      configs:
+        Debug:
+          ENABLE_TESTABILITY: "YES"
+        Release: {}
     info:
       path: CatBoardApp/Info.plist
       properties:
@@ -110,8 +116,7 @@ targets:
     platform: iOS
     sources:
       - path: CatBoardUITests
-    dependencies:
-      - target: CatBoardApp
+      - path: CatBoardApp/Accessibility/CBAccessibilityID.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardUITests

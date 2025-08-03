@@ -1,0 +1,202 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+# To see a list of all available lanes, run `bundle exec fastlane lanes`
+#
+
+default_platform(:ios)
+
+require_relative 'Config'
+
+platform :ios do
+# === Build-only Lanes ===
+  desc "Build unsigned debug archive"
+  lane :build_debug do
+    build_app_with_config(
+      configuration: CONFIGURATIONS[:debug]
+    )
+  end
+
+  desc "Build unsigned release archive"
+  lane :build_release do
+    build_app_with_config(
+      configuration: CONFIGURATIONS[:release]
+    )
+  end
+
+  # === Signing-only Lanes ===
+  desc "Sign debug archive for development"
+  lane :sign_debug_development do
+    sign_archive(
+      archive_path: DEBUG_ARCHIVE_PATH,
+      export_method: EXPORT_METHODS[:development],
+      configuration: CONFIGURATIONS[:debug]
+    )
+  end
+
+  desc "Sign release archive with specified export method (development, app_store, ad_hoc, enterprise)"
+  lane :sign_release do |options|
+    export_method = options[:export_method]
+    sign_archive(
+      archive_path: RELEASE_ARCHIVE_PATH,
+      export_method: export_method,
+      configuration: CONFIGURATIONS[:release]
+    )
+  end
+
+  # === Test Lanes ===
+  desc "Build for testing"
+  lane :build_for_testing do
+    get_simulator_info
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    scan(
+      project: PROJECT_PATH,
+      scheme: SCHEMES[:app],
+      destination: "platform=iOS Simulator,id=#{udid}",
+      derived_data_path: TEST_DERIVED_DATA_PATH,
+      configuration: CONFIGURATIONS[:debug],
+      build_for_testing: true,
+      clean: true,
+      xcargs: "SKIP_MACRO_VALIDATION=YES"
+    )
+  end
+
+  desc "Run unit tests"
+  lane :unit_test do
+    test_with_scheme(scheme: SCHEMES[:unit_test], result_path: UNIT_TEST_RESULT_PATH)
+  end
+
+  desc "Run unit tests without building"
+  lane :unit_test_without_building do
+    test_with_scheme(scheme: SCHEMES[:unit_test], result_path: UNIT_TEST_RESULT_PATH, test_without_building: true)
+  end
+
+  desc "Run UI tests"
+  lane :ui_test do
+    test_with_scheme(scheme: SCHEMES[:ui_test], result_path: UI_TEST_RESULT_PATH)
+  end
+
+  desc "Run UI tests without building (xcodebuild test-without-building)"
+  lane :ui_test_without_building do
+    test_with_scheme(scheme: SCHEMES[:ui_test], result_path: UI_TEST_RESULT_PATH, test_without_building: true)
+  end
+
+  desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
+  lane :package_test do
+    SWIFT_PACKAGES.each do |package|
+      sh "cd ../#{package} && swift test"
+    end
+  end
+
+  desc "Run all tests (unit, UI, package)"
+  lane :test_all do
+    build_for_testing
+    unit_test_without_building
+    ui_test_without_building
+    package_test
+  end
+
+# === Private ===
+
+  desc "Get simulator information based on environment"
+  private_lane :get_simulator_info do
+    udid = nil
+    if is_ci?
+      udid = sh("xcrun simctl list devices available 'iPhone' | grep -Eo '[A-F0-9-]{36}' | head -n 1").strip
+      if udid.nil? || udid.empty?
+        UI.user_error!("CI環境で利用可能なiPhoneシミュレータのUDIDが取得できませんでした")
+      end
+    else
+      udid = ENV['LOCAL_SIMULATOR_UDID']
+      if udid.nil? || udid.empty?
+        UI.user_error!("LOCAL_SIMULATOR_UDIDが設定されていません。環境変数をセットしてください")
+      end
+    end
+    Actions.lane_context[:SIMULATOR_UDID] = udid
+  end
+
+  desc "Build with specified configuration"
+  def config_paths(configuration)
+    case configuration
+    when CONFIGURATIONS[:release]
+      {
+        archive_path: RELEASE_ARCHIVE_PATH,
+        derived_data_path: RELEASE_BUILD_DERIVED_DATA_PATH
+      }
+    when CONFIGURATIONS[:debug]
+      {
+        archive_path: DEBUG_ARCHIVE_PATH,
+        derived_data_path: DEBUG_BUILD_DERIVED_DATA_PATH
+      }
+    else
+      UI.user_error!("Unknown configuration: #{configuration}. Must be one of #{CONFIGURATIONS.values.join(', ')}")
+    end
+  end
+
+  private_lane :build_app_with_config do |options|
+    configuration = options[:configuration]
+    paths = config_paths(configuration)
+    build_app(
+      project: PROJECT_PATH,
+      scheme: SCHEMES[:app],
+      configuration: configuration,
+      clean: true,
+      skip_codesigning: true,
+      skip_package_ipa: true,
+      xcargs: "SKIP_MACRO_VALIDATION=YES",
+      derived_data_path: paths[:derived_data_path],
+      archive_path: paths[:archive_path],
+      export_team_id: ENV['TEAM_ID']
+    )
+  end
+
+  desc "Sign and export archive with specified export method"
+  private_lane :sign_archive do |options|
+    export_method = options[:export_method]
+    archive_path = options[:archive_path]
+    configuration = options[:configuration]
+    
+    export_base = case configuration
+                  when CONFIGURATIONS[:release] then RELEASE_EXPORT_BASE
+                  when CONFIGURATIONS[:debug] then DEBUG_EXPORT_BASE
+                  else UI.user_error!("Unknown configuration: #{configuration}")
+                  end
+
+    build_app(
+      project: PROJECT_PATH,
+      scheme: SCHEMES[:app],
+      archive_path: archive_path,
+      export_method: export_method,
+      skip_build_archive: true,
+      output_directory: "#{export_base}/#{export_method}",
+      export_team_id: ENV['TEAM_ID']
+    )
+  end
+
+  desc "Run test for a given scheme (optionally without building)"
+  private_lane :test_with_scheme do |options|
+    result_path = File.expand_path(options[:result_path], Dir.pwd)
+    sh("rm -rf \"#{result_path}\"")
+    get_simulator_info
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    scan_args = {
+      project: PROJECT_PATH,
+      scheme: options[:scheme],
+      destination: "platform=iOS Simulator,id=#{udid}",
+      derived_data_path: TEST_DERIVED_DATA_PATH,
+      result_bundle_path: result_path,
+      code_coverage: false,
+      xcargs: "SKIP_MACRO_VALIDATION=YES",
+      output_types: "xcresult",
+      clean: false
+    }
+    scan_args[:test_without_building] = options[:test_without_building] if options[:test_without_building]
+    scan(**scan_args)
+  end
+end

@@ -2,12 +2,20 @@ name: Build Unsigned Archive
 
 on:
   workflow_call:
+    secrets:
+      TEAM_ID:
+        required: true
+      APPLE_ID:
+        required: true
 
 jobs:
   archive:
     runs-on: macos-latest
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
+      TEAM_ID: ${{ secrets.TEAM_ID }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,29 +40,29 @@ jobs:
         run: brew install mint
 
       - name: Generate Xcode Project
-        run: mint run xcodegen generate
+        run: make gen-proj
 
-      - name: Build Release Version (Unsigned) via Makefile
-        run: make archive
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Build Unsigned Release Version
+        run: make build-release
           
       - name: Verify Archive Contents
         run: |
-          set -euo pipefail
-          echo "Checking archive contents..."
-          # Check if the specific .app directory exists within the archive's Products/Applications path
-          ARCHIVE_APP_PATH="build/archives/CatBoardApp.xcarchive/Products/Applications/CatBoardApp.app"
-          if [ ! -d "$ARCHIVE_APP_PATH" ]; then
-            echo "Error: 'CatBoardApp.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
-            # Optionally list contents again on error
-            echo "--- Archive Contents (on error) ---"
-            ls -lR build/archives/CatBoardApp.xcarchive || echo "Archive directory not found or empty."
+          ARCHIVE_APP_PATH="fastlane/build/release/archive/CatBoardApp.xcarchive/Products/Applications/CatBoardApp.app"
+          if [ -d "$ARCHIVE_APP_PATH" ]; then
+            echo "✅ Archive content verified."
+          else
+            echo "❌ 'CatBoardApp.app' not found."
             exit 1
           fi
-          echo "✅ Archive content verified."
             
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-archive
-          path: build/archives/CatBoardApp.xcarchive
+          path: fastlane/build/archives/CatBoardApp.xcarchive
           retention-days: 3

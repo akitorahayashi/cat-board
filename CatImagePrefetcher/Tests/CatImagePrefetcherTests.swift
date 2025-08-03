@@ -61,9 +61,8 @@ final class CatImagePrefetcherTests: XCTestCase {
         try await prefetcher.startPrefetchingIfNeeded()
 
         // 十分な時間を確保して待機
-        // 計算式: 0.05秒/枚 × 150枚 = 7.5秒 + 余裕時間 = 15.5秒
-        let totalWaitTime = 7.5 + Self.bufferTimeInSeconds
-        try await Task.sleep(nanoseconds: UInt64(totalWaitTime * 1_000_000_000))
+        // 計算式: 0.05秒/枚 × 150枚 = 7.5秒 + 余裕時間 = 20秒
+        try await Task.sleep(nanoseconds: UInt64(20 * 1_000_000_000))
 
         let count = try await prefetcher.getPrefetchedCount()
         XCTAssertGreaterThanOrEqual(count, 50) // 50枚以上プリフェッチされていれば成功
