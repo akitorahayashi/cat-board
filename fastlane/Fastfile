@@ -64,7 +64,7 @@ platform :ios do
       build_for_testing: true,
       clean: true,
       xcargs: "SKIP_MACRO_VALIDATION=YES",
-      team_id: ENV['TEAM_ID']
+      export_team_id: ENV['TEAM_ID']
     )
   end
 
@@ -152,7 +152,7 @@ platform :ios do
       xcargs: "SKIP_MACRO_VALIDATION=YES",
       derived_data_path: paths[:derived_data_path],
       archive_path: paths[:archive_path],
-      team_id: ENV['TEAM_ID']
+      export_team_id: ENV['TEAM_ID']
     )
   end
 
@@ -175,7 +175,7 @@ platform :ios do
       export_method: export_method,
       skip_build_archive: true,
       output_directory: "#{export_base}/#{export_method}",
-      team_id: ENV['TEAM_ID']
+      export_team_id: ENV['TEAM_ID']
     )
   end
 
@@ -195,7 +195,7 @@ platform :ios do
       xcargs: "SKIP_MACRO_VALIDATION=YES",
       output_types: "xcresult",
       clean: options.fetch(:clean, true),
-      team_id: ENV['TEAM_ID']
+      export_team_id: ENV['TEAM_ID']
     }
     scan_args[:test_without_building] = options[:test_without_building] if options[:test_without_building]
     scan(**scan_args)
