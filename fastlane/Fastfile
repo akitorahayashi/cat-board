@@ -29,12 +29,10 @@ ARCHIVE_BUILD_PATH = "#{BUILD_DIR}/archives/CatBoardApp.xcarchive"
 
 # Export method enum-like config
 EXPORT_METHODS = {
-  none: "none",
   app_store: "app-store",
   ad_hoc: "ad-hoc",
   enterprise: "enterprise",
-  development: "development",
-  developer_id: "developer-id"
+  development: "development"
 }.freeze
 
 # Swift package directories
@@ -105,7 +103,7 @@ platform :ios do
     build_app_with_config(
       configuration: CONFIGURATIONS[:debug],
       archive_path: DEBUG_BUILD_PATH,
-      export_method: EXPORT_METHODS[:none]
+      export_method: EXPORT_METHODS[:development]
     )
   end
 
@@ -114,7 +112,7 @@ platform :ios do
     build_app_with_config(
       configuration: CONFIGURATIONS[:release],
       archive_path: RELEASE_BUILD_PATH,
-      export_method: EXPORT_METHODS[:none]
+      export_method: EXPORT_METHODS[:development]
     )
   end
 
@@ -123,7 +121,7 @@ platform :ios do
     build_app_with_config(
       configuration: CONFIGURATIONS[:release],
       archive_path: ARCHIVE_BUILD_PATH,
-      export_method: EXPORT_METHODS[:none]
+      export_method: EXPORT_METHODS[:development]
     )
   end
 
@@ -148,7 +146,7 @@ platform :ios do
 
   desc "Build with specified configuration"
   private_lane :build_app_with_config do |options|
-    export_method = options[:export_method] || EXPORT_METHODS[:none]
+    export_method = options[:export_method] || EXPORT_METHODS[:development]
     unless EXPORT_METHODS.values.include?(export_method)
       UI.user_error!("Invalid export_method: #{export_method}. Must be one of #{EXPORT_METHODS.values.join(', ')}")
     end
