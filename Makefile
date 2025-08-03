@@ -1,4 +1,5 @@
 # --- Xcode操作 ---
+#   make gen-proj                  - Xcodeプロジェクトを生成
 #   make boot                      - ローカルシミュレータ（iPhone 16 Pro）を起動
 #   make run-debug                 - デバッグビルドを作成し、ローカルシミュレータにインストール、起動（Fastlane経由）
 #   make run-release               - リリースビルドを作成し、ローカルシミュレータにインストール、起動（Fastlane経由）
@@ -35,6 +36,13 @@ OUTPUT_DIR := build
 PROJECT_FILE := CatBoardApp.xcodeproj
 APP_SCHEME := CatBoardApp
 APP_BUNDLE_ID := com.akitorahayashi.CatBoardApp
+
+# === Generate Xcode project ===
+.PHONY: gen-proj
+gen-proj:
+	@echo "🔧 Generating Xcode project with TEAM_ID: $(TEAM_ID)"
+	@TEAM_ID=$(TEAM_ID) envsubst < project.envsubst.yml > project.yml
+	mint run xcodegen generate
 
 # === Boot simulator ===
 .PHONY: boot

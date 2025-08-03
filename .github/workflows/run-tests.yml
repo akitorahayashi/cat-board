@@ -29,7 +29,7 @@ jobs:
         run: brew install mint
 
       - name: Generate Xcode Project
-        run: mint run xcodegen generate
+        run: make gen-proj
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -76,7 +76,7 @@ jobs:
         run: brew install mint
 
       - name: Generate Xcode Project
-        run: mint run xcodegen generate
+        run: make gen-proj
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -130,10 +130,10 @@ jobs:
           xcode-version: '16.2'
 
       - name: Generate Xcode Project
-        run: mint run xcodegen generate
+        run: make gen-proj
 
       - name: Generate Xcode Project
-        run: mint run xcodegen generate
+        run: make gen-proj
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

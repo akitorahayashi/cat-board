@@ -83,7 +83,6 @@ platform :ios do
       configuration: CONFIGURATIONS[:debug],
       build_for_testing: true,
       clean: true,
-      skip_macro_validation: true,
       codesigning_identity: "",
       code_signing_style: "Manual"
     )
@@ -134,9 +133,8 @@ platform :ios do
       configuration: options[:configuration],
       archive_path: options[:archive_path],
       clean: true,
-      skip_macro_validation: true,
-      codesigning_identity: "",
-      code_signing_style: "Manual"
+      skip_codesigning: true,
+      xcargs: "SKIP_MACRO_VALIDATION=YES"
     )
   end
 
@@ -152,9 +150,8 @@ platform :ios do
       result_bundle_path: options[:result_path],
       code_coverage: false,
       clean: true,
-      skip_macro_validation: true,
-      codesigning_identity: "",
-      code_signing_style: "Manual"
+      skip_codesigning: true,
+      xcargs: "SKIP_MACRO_VALIDATION=YES"
     )
   end
 
@@ -170,9 +167,8 @@ platform :ios do
       result_bundle_path: options[:result_path],
       code_coverage: false,
       test_without_building: true,
-      skip_macro_validation: true,
-      codesigning_identity: "",
-      code_signing_style: "Manual"
+      skip_codesigning: true,
+      xcargs: "SKIP_MACRO_VALIDATION=YES"
     )
   end
 end

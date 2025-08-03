@@ -43,7 +43,7 @@ Since the screening process involves machine learning, verification on a real de
 ├── CatBoardTests/
 ├── CatBoardUITests/
 ├── fastlane/
-├── project.yml
+├── project.envsubst.yml
 ├── Makefile
 ├── Mintfile
 ├── .swiftlint.yml
@@ -88,12 +88,10 @@ cp .env.example .env
 Edit `.env` with your local simulator settings:
 
 ```bash
-# ローカルシミュレータ設定（必須）
-LOCAL_SIMULATOR_NAME="iPhone 16 Pro"  # Your preferred simulator
-LOCAL_SIMULATOR_OS="26.0"            # iOS version
-LOCAL_SIMULATOR_UDID="YOUR_UDID"     # Your simulator's UDID
+# ローカルシミュレータの設定
+LOCAL_SIMULATOR_UDID="YOUR_UDID"     
 
-# Apple Developer設定（fastlane用）
+# Apple Developer
 APPLE_ID="your_apple_id@example.com"
 TEAM_ID="YOUR_TEAM_ID"
 ```
@@ -105,7 +103,7 @@ xcrun simctl list devices
 # xcsiml list
 ```
 
-### 2. Dependencies
+### 2. Dependencies & Project Generation
 
 Install dependencies:
 ```bash
@@ -113,15 +111,9 @@ bundle install  # Ruby dependencies (fastlane)
 mint bootstrap  # Swift dependencies (swiftformat, swiftlint)
 ```
 
-### 3. Available Commands
-
-See the Makefile for available commands:
+Generate Xcode project (with env values):
 ```bash
-make run-debug   # Build and run debug version
-make run-release # Build and run release version
-make test-all    # Run all tests
-make format      # Format code
-make lint        # Run linter
+make gen-proj   # Generates project.yml from project.envsubst.yml and runs xcodegen
 ```
 
 ## Unit Tests

@@ -38,3 +38,6 @@ Package.resolved
 # Fastlane files
 fastlane/README.md
 fastlane/report.xml
+
+# Generated files
+project.yml
