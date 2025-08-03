@@ -39,7 +39,6 @@ Since the screening process involves machine learning, verification on a real de
 ├── CatImagePrefetcher/
 ├── CatImageScreener/
 ├── CatImageURLRepository/
-├── CatURLImageModel/
 ├── CatBoardTests/
 ├── CatBoardUITests/
 ├── fastlane/

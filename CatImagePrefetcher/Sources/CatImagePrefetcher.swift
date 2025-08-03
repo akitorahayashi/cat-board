@@ -1,3 +1,5 @@
+import Foundation
+import Foundation
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
