@@ -22,9 +22,9 @@ public actor MockCatImageScreener: CatImageScreenerProtocol {
             return imageDataWithModels.map(\.model)
         }
 
-        // 完全にランダムで50%の確率で画像を返す
-        return imageDataWithModels.compactMap { model in
-            Bool.random() ? model.model : nil
+        // 決定論的なスクリーニング：インデックスが偶数の画像を返す
+        return imageDataWithModels.enumerated().compactMap { index, element in
+            index % 2 == 0 ? element.model : nil
         }
     }
 }
