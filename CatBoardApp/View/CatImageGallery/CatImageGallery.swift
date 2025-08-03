@@ -11,9 +11,13 @@ struct CatImageGallery: View {
     @StateObject private var viewModel: GalleryViewModel
     @State private var isShowingSettings = false
     @State private var gearRotationAngle: Double = 0
-    @State private var refreshRotationAngle: Double = 0 // Moved from RefreshButton
+    @State private var refreshRotationAngle: Double = 0
+    @State private var retryRotationAngle: Double = 0
 
     private let prefetcher: CatImagePrefetcherProtocol
+
+    private let animationDuration: Double = 0.3
+    private let actionDelay: Double = 0.35
 
     private var isErrorContentVisible: Bool {
         viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty)
@@ -49,8 +53,8 @@ struct CatImageGallery: View {
                     scrollContent
                 }
             }
-            .animation(.easeOut(duration: 0.3), value: isErrorContentVisible)
-            .animation(.easeOut(duration: 0.3), value: isInitialLoadingIndicatorVisible)
+            .animation(.easeOut(duration: animationDuration), value: isErrorContentVisible)
+            .animation(.easeOut(duration: animationDuration), value: isInitialLoadingIndicatorVisible)
             .navigationTitle("Cat Board")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -82,120 +86,8 @@ private extension CatImageGallery {
         }
     }
 
+    @ViewBuilder
     var errorContent: some View {
-        ErrorView(viewModel: viewModel)
-    }
-
-    var scrollContent: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            galleryGrid
-            if viewModel.isAdditionalFetching {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .padding(.bottom, 16)
-            }
-        }
-        .rotationEffect(.degrees(180))
-    }
-
-    var galleryGrid: some View {
-        LazyVStack(spacing: 0) {
-            let chunks = Array(viewModel.imageURLsToShow.chunked(into: 10).enumerated())
-            ForEach(chunks, id: \.offset) { chunkIndex, chunk in
-                ImageChunkView(
-                    viewModel: viewModel,
-                    chunk: chunk,
-                    chunkIndex: chunkIndex
-                )
-            }
-        }
-        .padding(2)
-    }
-}
-
-// MARK: - Toolbar Items
-
-private extension CatImageGallery {
-    var refreshToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching || isErrorContentVisible
-            Button(
-                action: {
-                    withAnimation(.easeOut(duration: 0.3)) {
-                        refreshRotationAngle += 180
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        viewModel.clearDisplayedImages()
-                        viewModel.loadInitialImages()
-                    }
-                },
-                label: {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundColor(.primary)
-                        .opacity(isDisabled ? 0.3 : 1)
-                        .animation(.easeOut(duration: 0.3), value: isDisabled)
-                }
-            )
-            .rotationEffect(.degrees(refreshRotationAngle))
-            .disabled(isDisabled)
-            .padding(.leading, 1.2)
-            .accessibilityIdentifier(CBAccessibilityID.Gallery.refreshButton)
-        }
-    }
-
-    var settingsToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarTrailing) {
-            Button(action: {
-                withAnimation(.easeOut(duration: 0.5)) {
-                    gearRotationAngle += 360
-                }
-                isShowingSettings = true
-            }) {
-                Image(systemName: "gear")
-                    .foregroundColor(.primary)
-                    .rotationEffect(.degrees(gearRotationAngle))
-            }
-            .padding(.leading, 1.2)
-            .accessibilityIdentifier(CBAccessibilityID.Gallery.settingsButton)
-        }
-    }
-}
-
-// MARK: - Helper Views
-
-private struct ImageChunkView: View {
-    @ObservedObject var viewModel: GalleryViewModel
-    let chunk: [CatImageURLModel]
-    let chunkIndex: Int
-
-    var body: some View {
-        TieredGridLayout {
-            ForEach(Array(chunk.enumerated()), id: \.element.id) { index, image in
-                let globalIndex = chunkIndex * 10 + index
-                SquareGalleryImageAsync(url: image.imageURL)
-                    .padding(2)
-                    .transition(.scale(scale: 0.8).combined(with: .opacity))
-                    .rotationEffect(.degrees(180))
-                    .accessibilityIdentifier("galleryImage_\(globalIndex)")
-                    .onAppear {
-                        if image.id == viewModel.imageURLsToShow.last?.id {
-                            Task {
-                                await viewModel.fetchAdditionalImages()
-                            }
-                        }
-                    }
-            }
-        }
-    }
-}
-
-private struct ErrorView: View {
-    @ObservedObject var viewModel: GalleryViewModel
-    @State private var retryRotationAngle: Double = 0
-    private let rotationAnimationDuration = 0.3
-    private let actionDelay = 0.35
-
-    var body: some View {
         VStack(spacing: 16) {
             Text("エラーが発生しました")
                 .font(.headline)
@@ -207,7 +99,7 @@ private struct ErrorView: View {
                 .padding(.horizontal)
 
             Button(action: {
-                withAnimation(.easeOut(duration: rotationAnimationDuration)) {
+                withAnimation(.easeOut(duration: animationDuration)) {
                     retryRotationAngle += 360
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + actionDelay) {
@@ -224,6 +116,93 @@ private struct ErrorView: View {
             .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    var scrollContent: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            galleryGrid
+            if viewModel.isAdditionalFetching {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .padding(.bottom, 16)
+            }
+        }
+        .rotationEffect(.degrees(180))
+    }
+
+    @ViewBuilder
+    var galleryGrid: some View {
+        LazyVStack(spacing: 0) {
+            let chunks = Array(viewModel.imageURLsToShow.chunked(into: 10).enumerated())
+            ForEach(chunks, id: \.offset) { chunkIndex, chunk in
+                TieredGridLayout {
+                    ForEach(Array(chunk.enumerated()), id: \.element.id) { index, image in
+                        let globalIndex = chunkIndex * 10 + index
+                        SquareGalleryImageAsync(url: image.imageURL)
+                            .padding(2)
+                            .transition(.scale(scale: 0.8).combined(with: .opacity))
+                            .rotationEffect(.degrees(180))
+                            .accessibilityIdentifier("galleryImage_\(globalIndex)")
+                            .onAppear {
+                                if image.id == viewModel.imageURLsToShow.last?.id {
+                                    Task {
+                                        await viewModel.fetchAdditionalImages()
+                                    }
+                                }
+                            }
+                    }
+                }
+            }
+        }
+        .padding(2)
+    }
+}
+
+// MARK: - Toolbar Items
+
+private extension CatImageGallery {
+    var refreshToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching || isErrorContentVisible
+            Button(
+                action: {
+                    withAnimation(.easeOut(duration: animationDuration)) {
+                        refreshRotationAngle += 180
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + actionDelay) {
+                        viewModel.clearDisplayedImages()
+                        viewModel.loadInitialImages()
+                    }
+                },
+                label: {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundColor(.primary)
+                        .opacity(isDisabled ? 0.3 : 1)
+                        .animation(.easeOut(duration: animationDuration), value: isDisabled)
+                }
+            )
+            .rotationEffect(.degrees(refreshRotationAngle))
+            .disabled(isDisabled)
+            .padding(.leading, 1.2)
+            .accessibilityIdentifier(CBAccessibilityID.Gallery.refreshButton)
+        }
+    }
+
+    var settingsToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: {
+                withAnimation(.easeOut(duration: animationDuration)) {
+                    gearRotationAngle += 360
+                }
+                isShowingSettings = true
+            }) {
+                Image(systemName: "gear")
+                    .foregroundColor(.primary)
+                    .rotationEffect(.degrees(gearRotationAngle))
+            }
+            .padding(.leading, 1.2)
+            .accessibilityIdentifier(CBAccessibilityID.Gallery.settingsButton)
+        }
     }
 }
 
