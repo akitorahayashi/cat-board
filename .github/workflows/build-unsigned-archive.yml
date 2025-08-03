@@ -50,23 +50,6 @@ jobs:
       - name: Install Ruby dependencies
         run: bundle install
 
-
-      - name: Verify Environment Variables
-        run: |
-          if [ -z "$TEAM_ID" ]; then
-            echo "Error: TEAM_ID is not set."
-            exit 1
-          else
-            echo "TEAM_ID is set."
-          fi
-
-          if [ -z "$APPLE_ID" ]; then
-            echo "Error: APPLE_ID is not set."
-            exit 1
-          else
-            echo "APPLE_ID is set."
-          fi
-
       - name: Build Release Version (Unsigned) via Makefile
         run: make build-release
           

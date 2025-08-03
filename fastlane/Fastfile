@@ -147,6 +147,7 @@ platform :ios do
       scheme: SCHEMES[:app],
       configuration: configuration,
       clean: true,
+      skip_codesigning: true,
       skip_package_ipa: true,
       xcargs: "SKIP_MACRO_VALIDATION=YES",
       derived_data_path: paths[:derived_data_path],
