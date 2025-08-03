@@ -7,6 +7,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+
+env:
+  TEAM_ID: ${{ secrets.TEAM_ID }}
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+
 jobs:
   # パッケージのテスト
   test-package:
@@ -26,4 +31,7 @@ jobs:
   # アーカイブビルド検証
   build-archive:
     name: Build Unsigned Archive
-    uses: ./.github/workflows/build-unsigned-archive.yml 
+    uses: ./.github/workflows/build-unsigned-archive.yml
+    secrets:
+      TEAM_ID: ${{ secrets.TEAM_ID }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}

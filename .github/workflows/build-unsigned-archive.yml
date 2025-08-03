@@ -2,6 +2,11 @@ name: Build Unsigned Archive
 
 on:
   workflow_call:
+    secrets:
+      TEAM_ID:
+        required: true
+      APPLE_ID:
+        required: true
 
 jobs:
   archive:
