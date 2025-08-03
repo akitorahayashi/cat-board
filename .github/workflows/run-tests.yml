@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-for-testing:
-    runs-on: macos-15
+    runs-on: macos-latest
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
     steps:
@@ -48,7 +48,7 @@ jobs:
           retention-days: 1
 
   unit-test:
-    runs-on: macos-15
+    runs-on: macos-latest
     needs: build-for-testing
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
@@ -99,7 +99,7 @@ jobs:
           retention-days: 3
 
   ui-test:
-    runs-on: macos-15
+    runs-on: macos-latest
     needs: build-for-testing
     env:
       MINT_PATH: ${{ github.workspace }}/.mint

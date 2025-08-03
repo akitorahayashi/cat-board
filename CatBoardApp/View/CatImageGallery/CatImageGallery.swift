@@ -15,6 +15,14 @@ struct CatImageGallery: View {
 
     private let prefetcher: CatImagePrefetcherProtocol
 
+    private var isErrorContentVisible: Bool {
+        viewModel.errorMessage != nil || (!viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty)
+    }
+
+    private var isInitialLoadingIndicatorVisible: Bool {
+        viewModel.isInitializing && viewModel.imageURLsToShow.isEmpty
+    }
+
     init(
         repository: CatImageURLRepositoryProtocol,
         imageLoader: CatImageLoaderProtocol,
@@ -33,16 +41,16 @@ struct CatImageGallery: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                if viewModel.isErrorContentVisible {
+                if isErrorContentVisible {
                     errorContent
-                } else if viewModel.isInitialLoadingIndicatorVisible {
+                } else if isInitialLoadingIndicatorVisible {
                     initialLoadingIndicator
                 } else {
                     scrollContent
                 }
             }
-            .animation(.easeOut(duration: 0.3), value: viewModel.isErrorContentVisible)
-            .animation(.easeOut(duration: 0.3), value: viewModel.isInitialLoadingIndicatorVisible)
+            .animation(.easeOut(duration: 0.3), value: isErrorContentVisible)
+            .animation(.easeOut(duration: 0.3), value: isInitialLoadingIndicatorVisible)
             .navigationTitle("Cat Board")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -110,7 +118,7 @@ private extension CatImageGallery {
 private extension CatImageGallery {
     var refreshToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching || viewModel.isErrorContentVisible
+            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching || isErrorContentVisible
             Button(
                 action: {
                     withAnimation(.easeOut(duration: 0.3)) {
