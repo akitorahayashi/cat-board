@@ -20,10 +20,22 @@ CONFIGURATIONS = {
   release: "Release",
 }.freeze
 
-# Build and test paths
+
 BUILD_DIR = "build"
 TEST_RESULTS_PATH = "#{BUILD_DIR}/test-results"
-ARCHIVE_PATH = "#{BUILD_DIR}/archives/CatBoardApp.xcarchive"
+DEBUG_BUILD_PATH = "#{BUILD_DIR}/debug/CatBoardApp.xcarchive"
+RELEASE_BUILD_PATH = "#{BUILD_DIR}/release/CatBoardApp.xcarchive"
+ARCHIVE_BUILD_PATH = "#{BUILD_DIR}/archives/CatBoardApp.xcarchive"
+
+# Export method enum-like config
+EXPORT_METHODS = {
+  none: "none",
+  app_store: "app-store",
+  ad_hoc: "ad-hoc",
+  enterprise: "enterprise",
+  development: "development",
+  developer_id: "developer-id"
+}.freeze
 
 # Swift package directories
 SWIFT_PACKAGES = [
@@ -90,19 +102,28 @@ platform :ios do
 
   desc "Build debug configuration"
   lane :build_debug do
-    build_app_with_config(configuration: CONFIGURATIONS[:debug])
+    build_app_with_config(
+      configuration: CONFIGURATIONS[:debug],
+      archive_path: DEBUG_BUILD_PATH,
+      export_method: EXPORT_METHODS[:none]
+    )
   end
 
   desc "Build release configuration"
   lane :build_release do
-    build_app_with_config(configuration: CONFIGURATIONS[:release])
+    build_app_with_config(
+      configuration: CONFIGURATIONS[:release],
+      archive_path: RELEASE_BUILD_PATH,
+      export_method: EXPORT_METHODS[:none]
+    )
   end
 
   desc "Archive release build"
   lane :archive do
     build_app_with_config(
       configuration: CONFIGURATIONS[:release],
-      archive_path: ARCHIVE_PATH
+      archive_path: ARCHIVE_BUILD_PATH,
+      export_method: EXPORT_METHODS[:none]
     )
   end
 
@@ -127,6 +148,10 @@ platform :ios do
 
   desc "Build with specified configuration"
   private_lane :build_app_with_config do |options|
+    export_method = options[:export_method] || EXPORT_METHODS[:none]
+    unless EXPORT_METHODS.values.include?(export_method)
+      UI.user_error!("Invalid export_method: #{export_method}. Must be one of #{EXPORT_METHODS.values.join(', ')}")
+    end
     build_app(
       project: PROJECT_PATH,
       scheme: MAIN_SCHEME,
@@ -134,6 +159,7 @@ platform :ios do
       archive_path: options[:archive_path],
       clean: true,
       skip_codesigning: true,
+      export_method: export_method,
       xcargs: "SKIP_MACRO_VALIDATION=YES"
     )
   end
