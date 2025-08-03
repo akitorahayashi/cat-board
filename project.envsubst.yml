@@ -68,6 +68,10 @@ targets:
         DEVELOPMENT_LANGUAGE: ja
         GENERATE_INFOPLIST_FILE: "YES"
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardApp
+      configs:
+        Debug:
+          ENABLE_TESTABILITY: "YES"
+        Release: {}
     info:
       path: CatBoardApp/Info.plist
       properties:
@@ -112,8 +116,7 @@ targets:
     platform: iOS
     sources:
       - path: CatBoardUITests
-    dependencies:
-      - target: CatBoardApp
+      - path: CatBoardApp/Accessibility/CBAccessibilityID.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.akitorahayashi.CatBoardUITests

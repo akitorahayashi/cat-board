@@ -25,7 +25,7 @@ final class CatImageGalleryUITests: XCTestCase {
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.waitForExistence(timeout: defaultTimeout))
 
-        let firstImage = app.images["galleryImage_0"]
+        let firstImage = app.images[CBAccessibilityID.Gallery.image(id: 0)]
         XCTAssertTrue(firstImage.waitForExistence(timeout: defaultTimeout))
     }
 
@@ -34,16 +34,16 @@ final class CatImageGalleryUITests: XCTestCase {
     func testRefreshButton() throws {
         app.launch()
 
-        let refreshButton = app.buttons["refreshButton"]
+        let refreshButton = app.buttons[CBAccessibilityID.Gallery.refreshButton]
         XCTAssertTrue(refreshButton.waitForExistence(timeout: defaultTimeout))
 
-        let firstImage = app.images["galleryImage_0"]
+        let firstImage = app.images[CBAccessibilityID.Gallery.image(id: 0)]
         XCTAssertTrue(firstImage.waitForExistence(timeout: defaultTimeout))
 
         refreshButton.tap()
 
         // リフレッシュ後、最初の画像が再表示されるのを待つ
-        let refreshedFirstImage = app.images["galleryImage_0"]
+        let refreshedFirstImage = app.images[CBAccessibilityID.Gallery.image(id: 0)]
         XCTAssertTrue(refreshedFirstImage.waitForExistence(timeout: defaultTimeout))
     }
 
@@ -53,10 +53,10 @@ final class CatImageGalleryUITests: XCTestCase {
         app.launchArguments.append("--simulate-error")
         app.launch()
 
-        let errorTitle = app.staticTexts["errorTitle"]
+        let errorTitle = app.staticTexts[CBAccessibilityID.ErrorView.title]
         XCTAssertTrue(errorTitle.waitForExistence(timeout: defaultTimeout))
 
-        let retryButton = app.buttons["retryButton"]
+        let retryButton = app.buttons[CBAccessibilityID.ErrorView.retryButton]
         XCTAssertTrue(retryButton.exists)
 
         retryButton.tap()
@@ -64,7 +64,7 @@ final class CatImageGalleryUITests: XCTestCase {
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.waitForExistence(timeout: defaultTimeout))
 
-        let firstImage = app.images["galleryImage_0"]
+        let firstImage = app.images[CBAccessibilityID.Gallery.image(id: 0)]
         XCTAssertTrue(firstImage.waitForExistence(timeout: defaultTimeout))
     }
 
@@ -76,15 +76,15 @@ final class CatImageGalleryUITests: XCTestCase {
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.waitForExistence(timeout: defaultTimeout))
 
-        let firstImage = app.images["galleryImage_0"]
+        let firstImage = app.images[CBAccessibilityID.Gallery.image(id: 0)]
         XCTAssertTrue(firstImage.waitForExistence(timeout: defaultTimeout))
 
         // 30枚目の画像（インデックス29）が表示されるまで下にスワイプする
-        let targetImage = app.images["galleryImage_29"]
+        let targetImage = app.images[CBAccessibilityID.Gallery.image(id: 29)]
 
         var attempts = 0
         // isHittableがtrueになるまで、または最大試行回数に達するまでスワイプを繰り返す
-        while !targetImage.isHittable && attempts < 15 {
+        while !targetImage.isHittable, attempts < 15 {
             scrollView.swipeDown(velocity: .fast)
             attempts += 1
         }
