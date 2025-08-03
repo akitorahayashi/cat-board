@@ -30,6 +30,14 @@ public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable, Se
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = UUID()
-        imageURL = try container.decode(URL.self, forKey: .imageURL)
+        let urlString = try container.decode(String.self, forKey: .imageURL)
+        guard let url = URL(string: urlString) else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .imageURL,
+                in: container,
+                debugDescription: "Invalid URL string: \(urlString)"
+            )
+        }
+        imageURL = url
     }
 }

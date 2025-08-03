@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "CatImageScreener", targets: ["CatImageScreener"]),
     ],
     dependencies: [
+        .package(path: "../CatImageLoader"),
         .package(url: "https://github.com/akitorahayashi/scary-cat-screening-kit", exact: "3.3.6"),
     ],
     targets: [
@@ -25,7 +26,6 @@ let package = Package(
             name: "CatImageScreenerTests",
             dependencies: [
                 "CatImageScreener",
-                .product(name: "CatAPIClient", package: "CatAPIClient"),
                 .product(name: "CatImageLoader", package: "CatImageLoader"),
             ],
             path: "Tests"

@@ -1,4 +1,3 @@
-import CatAPIClient
 import CatImageLoader
 import CatImagePrefetcher
 import CatImageScreener
@@ -21,7 +20,7 @@ final class CatImagePrefetcherTests: XCTestCase {
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
 
-        mockRepository = MockCatImageURLRepository(apiClient: MockCatAPIClient())
+        mockRepository = MockCatImageURLRepository()
         mockLoader = MockCatImageLoader()
         testScreeningSettings = ScreeningSettings(isScreeningEnabled: false, scaryMode: false)
         mockScreener = MockCatImageScreener(screeningSettings: testScreeningSettings)
