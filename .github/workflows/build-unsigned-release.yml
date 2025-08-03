@@ -47,7 +47,7 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Build Release Version (Unsigned) via Makefile
+      - name: Build Unsigned Release Version
         run: make build-release
           
       - name: Verify Archive Contents

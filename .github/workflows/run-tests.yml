@@ -36,7 +36,7 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Build for Testing via Makefile
+      - name: Build for Testing
         run: make build-for-testing
 
       - name: Upload build artifacts
@@ -86,7 +86,7 @@ jobs:
           name: built-products
           path: ${{ github.workspace }}/fastlane/build/test-results/DerivedData/Build/Products/
 
-      - name: Run Unit Tests via Makefile
+      - name: Run Unit Tests
         id: unit_tests
         run: make unit-test-without-building
 
@@ -140,7 +140,7 @@ jobs:
           name: built-products
           path: ${{ github.workspace }}/fastlane/build/test-results/DerivedData/Build/Products/
 
-      - name: Run UI Tests via Makefile
+      - name: Run UI Tests
         id: ui_tests
         run: make ui-test-without-building
 
