@@ -55,18 +55,13 @@ jobs:
           
       - name: Verify Archive Contents
         run: |
-          set -euo pipefail
-          echo "Checking archive contents..."
-          # Check if the specific .app directory exists within the archive's Products/Applications path
-          ARCHIVE_APP_PATH="fastlane/build/archives/CatBoardApp.xcarchive/Products/Applications/CatBoardApp.app"
-          if [ ! -d "$ARCHIVE_APP_PATH" ]; then
-            echo "Error: 'CatBoardApp.app' not found in expected archive location ($ARCHIVE_APP_PATH)."
-            # Optionally list contents again on error
-            echo "--- Archive Contents (on error) ---"
-            ls -lR fastlane/build/archives/CatBoardApp.xcarchive || echo "Archive directory not found or empty."
+          ARCHIVE_APP_PATH="fastlane/build/release/archive/CatBoardApp.xcarchive/Products/Applications/CatBoardApp.app"
+          if [ -d "$ARCHIVE_APP_PATH" ]; then
+            echo "✅ Archive content verified."
+          else
+            echo "❌ 'CatBoardApp.app' not found."
             exit 1
           fi
-          echo "✅ Archive content verified."
             
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
