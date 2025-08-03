@@ -95,8 +95,8 @@ platform :ios do
       configuration: CONFIGURATIONS[:debug],
       build_for_testing: true,
       clean: true,
-      codesigning_identity: "",
-      code_signing_style: "Manual"
+      skip_codesigning: true,
+      xcargs: "SKIP_MACRO_VALIDATION=YES"
     )
   end
 
