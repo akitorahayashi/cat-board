@@ -1,8 +1,7 @@
-import Foundation
-import Foundation
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
+import Foundation
 import Kingfisher
 import SwiftData
 

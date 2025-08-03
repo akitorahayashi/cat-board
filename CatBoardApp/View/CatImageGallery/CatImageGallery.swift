@@ -169,21 +169,23 @@ private struct ImageChunkView: View {
     let chunkIndex: Int
 
     var body: some View {
-        TieredGridLayout(items: Array(chunk.enumerated()), id: \.element.id) { item in
-            let globalIndex = chunkIndex * 10 + item.offset
-            SquareGalleryImageAsync(url: item.element.imageURL)
-                .padding(2)
-                .transition(.scale(scale: 0.8).combined(with: .opacity))
-                .accessibilityIdentifier(CBAccessibilityID.Gallery.image(id: globalIndex))
-                .onAppear {
-                    if item.element.id == viewModel.imageURLsToShow.last?.id {
-                        Task {
-                            await viewModel.fetchAdditionalImages()
+        TieredGridLayout {
+            ForEach(Array(chunk.enumerated()), id: \.element.id) { index, image in
+                let globalIndex = chunkIndex * 10 + index
+                SquareGalleryImageAsync(url: image.imageURL)
+                    .padding(2)
+                    .transition(.scale(scale: 0.8).combined(with: .opacity))
+                    .rotationEffect(.degrees(180))
+                    .accessibilityIdentifier("galleryImage_\(globalIndex)")
+                    .onAppear {
+                        if image.id == viewModel.imageURLsToShow.last?.id {
+                            Task {
+                                await viewModel.fetchAdditionalImages()
+                            }
                         }
                     }
-                }
+            }
         }
-        .rotationEffect(.degrees(180))
     }
 }
 

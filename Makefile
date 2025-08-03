@@ -1,8 +1,4 @@
-# ==============================================================================
-# HELP
-# ==============================================================================
-# This will output a list of all available commands and their descriptions.
-#
+# --- HELP ---
 .PHONY: help
 help:
 	@echo "Usage: make [target]"
@@ -10,22 +6,12 @@ help:
 	@echo "Available targets:"
 	@awk 'BEGIN {FS = ":.*?## "; OFS=" "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-
-# ==============================================================================
-# VARIABLES
-# ==============================================================================
 # Load environment variables from .env file if it exists
-ifneq (,$(wildcard ./.env))
-	include .env
-endif
+-include .env
 
 PROJECT_FILE   := CatBoardApp.xcodeproj
 APP_BUNDLE_ID  := com.akitorahayashi.CatBoardApp
 
-
-# ==============================================================================
-# PROJECT SETUP
-# ==============================================================================
 .PHONY: setup
 setup: ## Run all setup tasks
 	bundle install
@@ -52,10 +38,7 @@ resolve-pkg: ## Reset SwiftPM cache, dependencies, and build
 open: ## Open project in Xcode
 	@xed $(PROJECT_FILE)
 
-
-# ==============================================================================
-# LOCAL SIMULATOR
-# ==============================================================================
+# --- LOCAL SIMULATOR ---
 .PHONY: boot
 boot: ## Boot local simulator
 ifndef LOCAL_SIMULATOR_UDID
@@ -73,21 +56,18 @@ endif
 .PHONY: run-debug
 run-debug: ## Build debug, install and launch on local simulator
 	$(MAKE) boot
-	@bundle exec fastlane build_debug
-	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/debug/DerivedData/Build/Products/Debug-iphonesimulator/CatBoardApp.app
+	@bundle exec fastlane build_for_testing
+	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/test-results/DerivedData/Debug/Build/Products/Debug-iphonesimulator/CatBoardApp.app
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 
 .PHONY: run-release
 run-release: ## Build release, install and launch on local simulator
 	$(MAKE) boot
-	@bundle exec fastlane build_release
-	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/release/DerivedData/Build/Products/Release-iphonesimulator/CatBoardApp.app
+	@bundle exec fastlane build_for_testing configuration:Release
+	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/test-results/DerivedData/Release/Build/Products/Release-iphonesimulator/CatBoardApp.app
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 
-
-# ==============================================================================
-# BUILD & SIGN
-# ==============================================================================
+# --- BUILD & SIGN ---
 .PHONY: build-debug
 build-debug: ## Build Debug archive (unsigned)
 	bundle exec fastlane build_debug
@@ -116,10 +96,7 @@ sign-release-ad-hoc: ## Sign release archive for ad_hoc
 sign-release-enterprise: ## Sign release archive for enterprise
 	bundle exec fastlane sign_release export_method:enterprise
 
-
-# ==============================================================================
-# TESTING
-# ==============================================================================
+# --- TESTING ---
 .PHONY: build-for-testing
 build-for-testing: ## Build for testing
 	bundle exec fastlane build_for_testing
@@ -149,9 +126,7 @@ test-all: ## Run all tests (unit, UI, package)
 	bundle exec fastlane test_all
 
 
-# ==============================================================================
-# CODE STYLE
-# ==============================================================================
+# --- BUILD & SIGN ---
 .PHONY: format
 format: ## Format code
 	mint run swiftformat .

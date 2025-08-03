@@ -17,6 +17,8 @@ settings:
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
     DEVELOPMENT_TEAM: $TEAM_ID
   configs:
+    Debug:
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
     Release:
       SWIFT_OPTIMIZATION_LEVEL: "-O" 
 

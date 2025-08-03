@@ -197,7 +197,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         descriptor.fetchLimit = neededCount
 
         let entities = try modelContext.fetch(descriptor)
-        let imageURLs = entities.map { $0.imageURL }
+        let imageURLs = entities.map(\.imageURL)
 
         for entity in entities {
             modelContext.delete(entity)
