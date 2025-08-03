@@ -88,12 +88,15 @@ final class GalleryViewModelTests: XCTestCase {
         viewModel.loadInitialImages()
         await waitFor({ self.viewModel.imageURLsToShow.count >= GalleryViewModel.targetInitialDisplayCount })
 
-        // isInitializingがtrueになるまで、またはタイムアウトするまで追加取得を繰り返す
-        // これにより、maxImageCountに達してリセットがかかる状況をシミュレートする
+        // isInitializing が true になるまで追加取得を試みる（最大30回試行）
+        for _ in 0 ..< 30 {
+            if viewModel.isInitializing { break }
+            await viewModel.fetchAdditionalImages()
+        }
+
+        // isInitializingが最終的にtrueになるのを待つ
         await waitFor({
-            // 毎回追加取得を試みる
-            Task { @MainActor in await self.viewModel.fetchAdditionalImages() }
-            return self.viewModel.isInitializing
+            self.viewModel.isInitializing
         }, description: "MaxImageCountに達した後にisInitializingがtrueになるべき")
 
         // 画像がクリアされ、再読み込みが開始されていることを確認

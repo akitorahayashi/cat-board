@@ -154,7 +154,7 @@ final class CatImagePrefetcherTests: XCTestCase {
 
     /// スクリーニングが有効に動作していることを確認
     func testScreeningIsWorking() async throws {
-        // スクリーニングを有効にして、依存関係を再生成する
+        // スクリーニングを有効にし、それを使用するように依存関係を再設定する
         testScreeningSettings.isScreeningEnabled = true
         mockScreener = MockCatImageScreener(screeningSettings: testScreeningSettings)
         prefetcher = CatImagePrefetcher(
