@@ -28,7 +28,7 @@ jobs:
     name: Run Tests
     uses: ./.github/workflows/run-tests.yml
     
-  # アーカイブビルド検証
+  # リリースビルド
   build-archive:
     name: Build Unsigned Archive
     uses: ./.github/workflows/build-unsigned-archive.yml
