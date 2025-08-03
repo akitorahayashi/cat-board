@@ -63,8 +63,7 @@ platform :ios do
       configuration: CONFIGURATIONS[:debug],
       build_for_testing: true,
       clean: true,
-      xcargs: "SKIP_MACRO_VALIDATION=YES",
-      export_team_id: ENV['TEAM_ID']
+      xcargs: "SKIP_MACRO_VALIDATION=YES"
     )
   end
 
@@ -194,8 +193,7 @@ platform :ios do
       code_coverage: false,
       xcargs: "SKIP_MACRO_VALIDATION=YES",
       output_types: "xcresult",
-      clean: options.fetch(:clean, true),
-      export_team_id: ENV['TEAM_ID']
+      clean: options.fetch(:clean, true)
     }
     scan_args[:test_without_building] = options[:test_without_building] if options[:test_without_building]
     scan(**scan_args)
