@@ -225,5 +225,8 @@ PLATFORMS
 DEPENDENCIES
   fastlane (~> 2.228)
 
+RUBY VERSION
+   ruby 3.3.0p0
+
 BUNDLED WITH
    2.6.9
