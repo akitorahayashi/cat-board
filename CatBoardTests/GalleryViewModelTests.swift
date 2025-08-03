@@ -134,3 +134,21 @@ final class GalleryViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isAdditionalFetching)
     }
 }
+
+private extension GalleryViewModelTests {
+    func waitFor(
+        _ condition: @escaping () -> Bool,
+        timeout: TimeInterval = 20.0,
+        pollInterval: TimeInterval = 0.1,
+        description: String = "Condition was not met within the timeout period."
+    ) async {
+        let start = Date()
+        while Date().timeIntervalSince(start) < timeout {
+            if condition() {
+                return
+            }
+            try? await Task.sleep(nanoseconds: UInt64(pollInterval * 1_000_000_000))
+        }
+        XCTFail(description)
+    }
+}
