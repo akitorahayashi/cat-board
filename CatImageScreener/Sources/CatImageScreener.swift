@@ -39,7 +39,7 @@ public actor CatImageScreener: CatImageScreenerProtocol {
         let allURLs = imageDataWithURLs.map(\.imageURL)
 
         // スクリーニングが無効な場合
-        if !await screeningSettings.isScreeningEnabled {
+        if !(await screeningSettings.isScreeningEnabled) {
             return allURLs
         }
 

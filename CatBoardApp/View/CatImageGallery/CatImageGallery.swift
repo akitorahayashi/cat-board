@@ -7,12 +7,11 @@ import SwiftData
 import SwiftUI
 import TieredGridLayout
 
-// MARK: - Main View
-
 struct CatImageGallery: View {
     @StateObject private var viewModel: GalleryViewModel
     @State private var isShowingSettings = false
     @State private var gearRotationAngle: Double = 0
+    @State private var refreshRotationAngle: Double = 0 // Moved from RefreshButton
 
     private let prefetcher: CatImagePrefetcherProtocol
 
@@ -111,7 +110,28 @@ private extension CatImageGallery {
 private extension CatImageGallery {
     var refreshToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            RefreshButton(viewModel: viewModel)
+            let isDisabled = viewModel.isInitializing || viewModel.isAdditionalFetching || viewModel.isErrorContentVisible
+            Button(
+                action: {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        refreshRotationAngle += 180
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        viewModel.clearDisplayedImages()
+                        viewModel.loadInitialImages()
+                    }
+                },
+                label: {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundColor(.primary)
+                        .opacity(isDisabled ? 0.3 : 1)
+                        .animation(.easeOut(duration: 0.3), value: isDisabled)
+                }
+            )
+            .rotationEffect(.degrees(refreshRotationAngle))
+            .disabled(isDisabled)
+            .padding(.leading, 1.2)
+            .accessibilityIdentifier(CBAccessibilityID.Gallery.refreshButton)
         }
     }
 
@@ -194,41 +214,6 @@ private struct ErrorView: View {
             .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-private struct RefreshButton: View {
-    @ObservedObject var viewModel: GalleryViewModel
-    @State private var rotationAngle: Double = 0
-    private let rotationAnimationDuration = 0.3
-    private let actionDelay = 0.35
-
-    private var isDisabled: Bool {
-        viewModel.isInitializing || viewModel.isAdditionalFetching || viewModel.isErrorContentVisible
-    }
-
-    var body: some View {
-        Button(
-            action: {
-                withAnimation(.easeOut(duration: rotationAnimationDuration)) {
-                    rotationAngle += 180
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + actionDelay) {
-                    viewModel.clearDisplayedImages()
-                    viewModel.loadInitialImages()
-                }
-            },
-            label: {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .foregroundColor(.primary)
-                    .opacity(isDisabled ? 0.3 : 1)
-                    .animation(.easeOut(duration: 0.3), value: isDisabled)
-            }
-        )
-        .rotationEffect(.degrees(rotationAngle))
-        .disabled(isDisabled)
-        .padding(.leading, 1.2)
-        .accessibilityIdentifier(CBAccessibilityID.Gallery.refreshButton)
     }
 }
 
