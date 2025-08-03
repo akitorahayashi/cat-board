@@ -3,7 +3,6 @@ import CatURLImageModel
 import Foundation
 
 public actor MockCatImageLoader: CatImageLoaderProtocol {
-    public var loadingTimePerOneImageInSeconds: Double = 0.01
     private var errorToThrow: Error?
 
     public var testImageURL: URL {
@@ -19,15 +18,6 @@ public actor MockCatImageLoader: CatImageLoaderProtocol {
     /// エラーを設定する
     public func setError(_ error: Error?) {
         errorToThrow = error
-    }
-
-    public func setLoadingTimeInSeconds(_ time: Double) {
-        loadingTimePerOneImageInSeconds = time
-    }
-
-    /// 指定した画像数の総ロード時間を計算する
-    public func calculateTotalLoadingTime(for imageCount: Int) -> Double {
-        Double(imageCount) * loadingTimePerOneImageInSeconds
     }
 
     public func loadImageData(from models: [CatImageURLModel]) async throws -> [(
@@ -49,11 +39,6 @@ public actor MockCatImageLoader: CatImageLoaderProtocol {
         loadedImages.reserveCapacity(models.count)
 
         for (index, model) in models.enumerated() {
-            // 各画像に対してローディング時間をシミュレーション
-            if loadingTimePerOneImageInSeconds > 0 {
-                try await Task.sleep(nanoseconds: UInt64(loadingTimePerOneImageInSeconds * 1_000_000_000))
-            }
-
             do {
                 guard let imageData = try? Data(contentsOf: testImageURL) else {
                     throw NSError(
