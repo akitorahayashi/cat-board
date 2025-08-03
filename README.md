@@ -1,4 +1,4 @@
-## Project Overview
+## Overview
 
 Cat Board is an iOS app designed to efficiently process and display a large number of cat images.
 

@@ -7,63 +7,82 @@
 # For a list of all available plugins, check out
 #     https://docs.fastlane.tools/plugins/available-plugins
 #
+
 default_platform(:ios)
 
-# Constants for common configurations
-PROJECT_PATH = "CatBoardApp.xcodeproj"
-MAIN_SCHEME = "CatBoardApp"
-UNIT_TEST_SCHEME = "CatBoardTests"
-UI_TEST_SCHEME = "CatBoardUITests"
-
-CONFIGURATIONS = {
-  debug: "Debug",
-  release: "Release",
-}.freeze
-
-
-BUILD_DIR = "build"
-TEST_RESULTS_PATH = "#{BUILD_DIR}/test-results"
-DEBUG_BUILD_PATH = "#{BUILD_DIR}/debug/CatBoardApp.xcarchive"
-RELEASE_BUILD_PATH = "#{BUILD_DIR}/release/CatBoardApp.xcarchive"
-ARCHIVE_BUILD_PATH = "#{BUILD_DIR}/archives/CatBoardApp.xcarchive"
-
-# Export method enum-like config
-EXPORT_METHODS = {
-  app_store: "app-store",
-  ad_hoc: "ad-hoc",
-  enterprise: "enterprise",
-  development: "development"
-}.freeze
-
-# Swift package directories
-SWIFT_PACKAGES = [
-  "CatImageURLRepository",
-  "CatImageScreener",
-  "CatImagePrefetcher",
-]
+require_relative 'Config'
 
 platform :ios do
+# === Build-only Lanes ===
+  desc "Build Debug archive (unsigned)"
+  lane :build_debug do
+    build_app_with_config(
+      configuration: CONFIGURATIONS[:debug]
+    )
+  end
 
-# === Public Lanes ===
+  desc "Build Release archive (unsigned)"
+  lane :build_release do
+    build_app_with_config(
+      configuration: CONFIGURATIONS[:release]
+    )
+  end
+
+  # === Signing-only Lanes ===
+  desc "Sign debug archive for development"
+  lane :sign_debug_development do
+    sign_archive(
+      archive_path: DEBUG_ARCHIVE_PATH,
+      export_method: EXPORT_METHODS[:development],
+      configuration: CONFIGURATIONS[:debug]
+    )
+  end
+
+  desc "Sign release archive with specified export method (development, app_store, ad_hoc, enterprise)"
+  lane :sign_release do |options|
+    export_method = options[:export_method]
+    sign_archive(
+      archive_path: RELEASE_ARCHIVE_PATH,
+      export_method: export_method,
+      configuration: CONFIGURATIONS[:release]
+    )
+  end
+
+  # === Test Lanes ===
+  desc "Build for testing"
+  lane :build_for_testing do
+    get_simulator_info
+    udid = Actions.lane_context[:SIMULATOR_UDID]
+    scan(
+      project: PROJECT_PATH,
+      scheme: SCHEMES[:app],
+      destination: "platform=iOS Simulator,id=#{udid}",
+      derived_data_path: TEST_DERIVED_DATA_PATH,
+      configuration: CONFIGURATIONS[:debug],
+      build_for_testing: true,
+      clean: true,
+      xcargs: "SKIP_MACRO_VALIDATION=YES"
+    )
+  end
 
   desc "Run unit tests"
   lane :unit_test do
-    test_with_scheme(scheme: UNIT_TEST_SCHEME, result_path: "#{TEST_RESULTS_PATH}/unit/TestResults.xcresult")
+    test_with_scheme(scheme: SCHEMES[:unit_test], result_path: UNIT_TEST_RESULT_PATH)
   end
 
   desc "Run unit tests without building"
   lane :unit_test_without_building do
-    test_without_building_with_scheme(scheme: UNIT_TEST_SCHEME, result_path: "#{TEST_RESULTS_PATH}/unit/TestResults.xcresult")
+    test_with_scheme(scheme: SCHEMES[:unit_test], result_path: UNIT_TEST_RESULT_PATH, test_without_building: true)
   end
 
   desc "Run UI tests"
   lane :ui_test do
-    test_with_scheme(scheme: UI_TEST_SCHEME, result_path: "#{TEST_RESULTS_PATH}/ui/TestResults.xcresult")
+    test_with_scheme(scheme: SCHEMES[:ui_test], result_path: UI_TEST_RESULT_PATH)
   end
 
   desc "Run UI tests without building (xcodebuild test-without-building)"
   lane :ui_test_without_building do
-    test_without_building_with_scheme(scheme: UI_TEST_SCHEME, result_path: "#{TEST_RESULTS_PATH}/ui/TestResults.xcresult")
+    test_with_scheme(scheme: SCHEMES[:ui_test], result_path: UI_TEST_RESULT_PATH, test_without_building: true)
   end
 
   desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
@@ -81,57 +100,13 @@ platform :ios do
     package_test
   end
 
-  desc "Build for testing"
-  lane :build_for_testing do
-    get_simulator_info
-    udid = Actions.lane_context[:SIMULATOR_UDID]
-    scan(
-      project: PROJECT_PATH,
-      scheme: MAIN_SCHEME,
-      destination: "platform=iOS Simulator,id=#{udid}",
-      derived_data_path: "#{TEST_RESULTS_PATH}/DerivedData",
-      configuration: CONFIGURATIONS[:debug],
-      build_for_testing: true,
-      clean: true,
-      skip_codesigning: true,
-      xcargs: "SKIP_MACRO_VALIDATION=YES"
-    )
-  end
-
-  desc "Build debug configuration"
-  lane :build_debug do
-    build_app_with_config(
-      configuration: CONFIGURATIONS[:debug],
-      archive_path: DEBUG_BUILD_PATH,
-      export_method: EXPORT_METHODS[:development]
-    )
-  end
-
-  desc "Build release configuration"
-  lane :build_release do
-    build_app_with_config(
-      configuration: CONFIGURATIONS[:release],
-      archive_path: RELEASE_BUILD_PATH,
-      export_method: EXPORT_METHODS[:development]
-    )
-  end
-
-  desc "Archive release build"
-  lane :archive do
-    build_app_with_config(
-      configuration: CONFIGURATIONS[:release],
-      archive_path: ARCHIVE_BUILD_PATH,
-      export_method: EXPORT_METHODS[:development]
-    )
-  end
-
 # === Private ===
 
   desc "Get simulator information based on environment"
   private_lane :get_simulator_info do
     udid = nil
-    if ENV['CI'] == 'true'
-      udid = sh("xcrun simctl list devices available | grep -A1 'iPhone' | grep -Eo '[A-F0-9-]{36}' | head -n 1").strip
+    if is_ci?
+      udid = sh("xcrun simctl list devices available 'iPhone' | grep -Eo '[A-F0-9-]{36}' | head -n 1").strip
       if udid.nil? || udid.empty?
         UI.user_error!("CI環境で利用可能なiPhoneシミュレータのUDIDが取得できませんでした")
       end
@@ -145,54 +120,78 @@ platform :ios do
   end
 
   desc "Build with specified configuration"
-  private_lane :build_app_with_config do |options|
-    export_method = options[:export_method] || EXPORT_METHODS[:development]
-    unless EXPORT_METHODS.values.include?(export_method)
-      UI.user_error!("Invalid export_method: #{export_method}. Must be one of #{EXPORT_METHODS.values.join(', ')}")
+  def config_paths(configuration)
+    case configuration
+    when CONFIGURATIONS[:release]
+      {
+        archive_path: RELEASE_ARCHIVE_PATH,
+        derived_data_path: RELEASE_BUILD_DERIVED_DATA_PATH
+      }
+    when CONFIGURATIONS[:debug]
+      {
+        archive_path: DEBUG_ARCHIVE_PATH,
+        derived_data_path: DEBUG_BUILD_DERIVED_DATA_PATH
+      }
+    else
+      UI.user_error!("Unknown configuration: #{configuration}. Must be one of #{CONFIGURATIONS.values.join(', ')}")
     end
+  end
+
+  private_lane :build_app_with_config do |options|
+    configuration = options[:configuration]
+    paths = config_paths(configuration)
     build_app(
       project: PROJECT_PATH,
-      scheme: MAIN_SCHEME,
-      configuration: options[:configuration],
-      archive_path: options[:archive_path],
+      scheme: SCHEMES[:app],
+      configuration: configuration,
       clean: true,
-      skip_codesigning: true,
+      skip_package_ipa: true,
+      xcargs: "SKIP_MACRO_VALIDATION=YES",
+      derived_data_path: paths[:derived_data_path],
+      archive_path: paths[:archive_path]
+    )
+  end
+
+  desc "Sign and export archive with specified export method"
+  private_lane :sign_archive do |options|
+    export_method = options[:export_method]
+    archive_path = options[:archive_path]
+    configuration = options[:configuration]
+    
+    export_base = case configuration
+                  when CONFIGURATIONS[:release] then RELEASE_EXPORT_BASE
+                  when CONFIGURATIONS[:debug] then DEBUG_EXPORT_BASE
+                  else UI.user_error!("Unknown configuration: #{configuration}")
+                  end
+
+    build_app(
+      project: PROJECT_PATH,
+      scheme: SCHEMES[:app],
+      archive_path: archive_path,
       export_method: export_method,
-      xcargs: "SKIP_MACRO_VALIDATION=YES"
+      skip_build_archive: true,
+      output_directory: "#{export_base}/#{export_method}"
     )
   end
 
-  desc "Run test for a given scheme"
+  desc "Run test for a given scheme (optionally without building)"
   private_lane :test_with_scheme do |options|
+    result_path = File.expand_path(options[:result_path], Dir.pwd)
+    sh("rm -rf \"#{result_path}\"")
     get_simulator_info
     udid = Actions.lane_context[:SIMULATOR_UDID]
-    scan(
+    scan_args = {
       project: PROJECT_PATH,
       scheme: options[:scheme],
       destination: "platform=iOS Simulator,id=#{udid}",
-      derived_data_path: "#{TEST_RESULTS_PATH}/DerivedData",
-      result_bundle_path: options[:result_path],
+      derived_data_path: TEST_DERIVED_DATA_PATH,
+      result_bundle_path: result_path,
       code_coverage: false,
-      clean: true,
-      skip_codesigning: true,
-      xcargs: "SKIP_MACRO_VALIDATION=YES"
-    )
-  end
-
-  desc "Run test-without-building for a given scheme"
-  private_lane :test_without_building_with_scheme do |options|
-    get_simulator_info
-    udid = Actions.lane_context[:SIMULATOR_UDID]
-    scan(
-      project: PROJECT_PATH,
-      scheme: options[:scheme],
-      destination: "platform=iOS Simulator,id=#{udid}",
-      derived_data_path: "#{TEST_RESULTS_PATH}/DerivedData",
-      result_bundle_path: options[:result_path],
-      code_coverage: false,
-      test_without_building: true,
-      skip_codesigning: true,
-      xcargs: "SKIP_MACRO_VALIDATION=YES"
-    )
+      xcargs: "SKIP_MACRO_VALIDATION=YES",
+      output_types: "xcresult",
+      clean: options.fetch(:clean, true)
+    }
+    scan_args[:test_without_building] = options[:test_without_building] if options[:test_without_building]
+    scan(**scan_args)
   end
 end

@@ -3,18 +3,21 @@
 #   make boot                      - ローカルシミュレータ（iPhone 16 Pro）を起動
 #   make run-debug                 - デバッグビルドを作成し、ローカルシミュレータにインストール、起動（Fastlane経由）
 #   make run-release               - リリースビルドを作成し、ローカルシミュレータにインストール、起動（Fastlane経由）
-#   make clean                - Xcodeプロジェクトのビルドフォルダをクリーン
 #   make resolve-pkg               - SwiftPMキャッシュ・依存関係・ビルドをリセット
-#   make open                 - Xcodeでプロジェクトを開く
+#   make open                      - Xcodeでプロジェクトを開く
 #
 # --- ビルド ---
 #   make build-test                - テスト用のビルドを実行
-#   make archive                   - リリース用のアーカイブを作成
+#   make build-debug-development   - Debug+development用のipa/dSYMを出力
+#   make build-release-development - Release+development用のipa/dSYMを出力
+#   make build-release-app-store   - Release+app_store用のipa/dSYMを出力
+#   make build-release-ad-hoc      - Release+ad_hoc用のipa/dSYMを出力
+#   make build-release-enterprise  - Release+enterprise用のipa/dSYMを出力
 #
 # --- テスト ---
 #   make unit-test                 - ユニットテストを実行
 #   make ui-test                   - UIテストを実行
-#   make testp-package             - 全パッケージのテストを実行
+#   make package-test              - 全パッケージのテストを実行
 #   make test-all                  - 全テストを実行
 #   make unit-test-without-building - ユニットテストを実行（ビルド済みアーティファクトを利用）
 #   make ui-test-without-building  - UIテストを実行（ビルド済みアーティファクトを利用）
@@ -75,14 +78,6 @@ run-release:
 	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/release/DerivedData/Build/Products/Release-iphonesimulator/CatBoardApp.app
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 
-# === Clean project ===
-.PHONY: clean
-clean:
-	@echo "🧹 Cleaning Xcode project build folder..."
-	xcodebuild clean \
-		-project $(PROJECT_FILE) \
-		-scheme $(APP_SCHEME)
-	@echo "✅ Project build folder cleaned."
 
 # === Resolve & Reset SwiftPM/Xcode Packages ===
 .PHONY: resolve-pkg
@@ -105,10 +100,26 @@ open:
 build-test:
 	bundle exec fastlane build_for_testing
 
-# === Archive ===
-.PHONY: archive
-archive:
-	bundle exec fastlane archive
+# === Common iOS Build/Export Patterns ===
+.PHONY: build-debug-development
+build-debug-development:
+	bundle exec fastlane build_debug_development
+
+.PHONY: build-release-development
+build-release-development:
+	bundle exec fastlane build_release_development
+
+.PHONY: build-release-app-store
+build-release-app-store:
+	bundle exec fastlane build_release_app_store
+
+.PHONY: build-release-ad-hoc
+build-release-ad-hoc:
+	bundle exec fastlane build_release_ad_hoc
+
+.PHONY: build-release-enterprise
+build-release-enterprise:
+	bundle exec fastlane build_release_enterprise
 
 # === Unit tests ===
 .PHONY: unit-test
