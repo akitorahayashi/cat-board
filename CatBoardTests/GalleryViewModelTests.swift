@@ -63,11 +63,11 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testFetchAdditionalImages() async {
         viewModel.loadInitialImages()
-        await waitFor({ self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount })
+        await waitFor { self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount }
         let initialCount = viewModel.imageURLsToShow.count
 
         await viewModel.fetchAdditionalImages()
-        await waitFor({ self.viewModel.imageURLsToShow.count == initialCount + GalleryViewModel.batchDisplayCount })
+        await waitFor { self.viewModel.imageURLsToShow.count == initialCount + GalleryViewModel.batchDisplayCount }
 
         XCTAssertEqual(viewModel.imageURLsToShow.count, initialCount + GalleryViewModel.batchDisplayCount)
         XCTAssertFalse(viewModel.isAdditionalFetching)
@@ -75,7 +75,7 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testClearDisplayedImages() async {
         viewModel.loadInitialImages()
-        await waitFor({ self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount })
+        await waitFor { self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount }
         XCTAssertFalse(viewModel.imageURLsToShow.isEmpty)
 
         viewModel.clearDisplayedImages()
@@ -86,7 +86,7 @@ final class GalleryViewModelTests: XCTestCase {
 
     func testMaxImageCountReached() async {
         viewModel.loadInitialImages()
-        await waitFor({ self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount })
+        await waitFor { self.viewModel.imageURLsToShow.count == GalleryViewModel.targetInitialDisplayCount }
 
         // isInitializing が true になるまで追加取得を試みる（最大30回試行）
         for _ in 0 ..< 30 {
@@ -108,7 +108,7 @@ final class GalleryViewModelTests: XCTestCase {
         testScreeningSettings.isScreeningEnabled = true
 
         viewModel.loadInitialImages()
-        await waitFor({ !self.viewModel.isInitializing && self.viewModel.imageURLsToShow.count > 0 })
+        await waitFor { !self.viewModel.isInitializing && self.viewModel.imageURLsToShow.count > 0 }
 
         let finalCount = viewModel.imageURLsToShow.count
 
@@ -121,11 +121,11 @@ final class GalleryViewModelTests: XCTestCase {
         testScreeningSettings.isScreeningEnabled = true
 
         viewModel.loadInitialImages()
-        await waitFor({ !self.viewModel.isInitializing && self.viewModel.imageURLsToShow.count > 0 })
+        await waitFor { !self.viewModel.isInitializing && self.viewModel.imageURLsToShow.count > 0 }
         let initialCount = viewModel.imageURLsToShow.count
 
         await viewModel.fetchAdditionalImages()
-        await waitFor({ !self.viewModel.isAdditionalFetching })
+        await waitFor { !self.viewModel.isAdditionalFetching }
 
         let addedCount = viewModel.imageURLsToShow.count - initialCount
 

@@ -15,7 +15,7 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
 
     // プリフェッチ関連の定数
     public static let prefetchBatchCount = 10 // 一回のプリフェッチでロードして screener に通す枚数
-    public static let targetPrefetchCount = 150 // プリフェッチの目標枚数
+    public static let targetPrefetchCount = 180 // プリフェッチの目標枚数
     public static let maxFetchAttempts = 30 // 最大取得試行回数
 
     public init(
