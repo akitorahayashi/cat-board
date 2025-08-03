@@ -8,6 +8,9 @@ jobs:
     runs-on: macos-latest
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
+      TEAM_ID: ${{ secrets.TEAM_ID }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
