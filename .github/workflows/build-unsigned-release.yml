@@ -47,9 +47,6 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Install Ruby dependencies
-        run: bundle install
-
       - name: Build Release Version (Unsigned) via Makefile
         run: make build-release
           
