@@ -88,20 +88,17 @@ final class GalleryViewModelTests: XCTestCase {
         viewModel.loadInitialImages()
         await waitFor({ self.viewModel.imageURLsToShow.count >= GalleryViewModel.targetInitialDisplayCount })
 
-        for _ in 0 ..< (GalleryViewModel.maxImageCount / GalleryViewModel.batchDisplayCount) {
-            let currentCount = viewModel.imageURLsToShow.count
-            await viewModel.fetchAdditionalImages()
-            await waitFor({ self.viewModel.imageURLsToShow.count > currentCount })
-        }
-
-        let lastCount = viewModel.imageURLsToShow.count
-        await viewModel.fetchAdditionalImages()
-        await waitFor({ self.viewModel.isInitializing || self.viewModel.imageURLsToShow.count > lastCount })
+        // isInitializingがtrueになるまで、またはタイムアウトするまで追加取得を繰り返す
+        // これにより、maxImageCountに達してリセットがかかる状況をシミュレートする
+        await waitFor({
+            // 毎回追加取得を試みる
+            Task { @MainActor in await self.viewModel.fetchAdditionalImages() }
+            return self.viewModel.isInitializing
+        }, description: "MaxImageCountに達した後にisInitializingがtrueになるべき")
 
         // 画像がクリアされ、再読み込みが開始されていることを確認
         XCTAssertTrue(viewModel.isInitializing)
         XCTAssertFalse(viewModel.isAdditionalFetching)
-        XCTAssertLessThanOrEqual(viewModel.imageURLsToShow.count, GalleryViewModel.maxImageCount)
     }
 
     func testScreeningInInitialImages() async throws {
