@@ -52,18 +52,27 @@ platform :ios do
 
   # === Test Lanes ===
   desc "Build for testing"
-  lane :build_for_testing do
+  lane :build_for_testing do |options|
+    configuration = options[:configuration] || CONFIGURATIONS[:debug]
+    derived_data_path = "#{TEST_DERIVED_DATA_PATH}/#{configuration}"
+    
+    # Add ENABLE_TESTABILITY for Release builds to allow @testable import
+    xcargs = "SKIP_MACRO_VALIDATION=YES"
+    if configuration == CONFIGURATIONS[:release]
+      xcargs += " ENABLE_TESTABILITY=YES"
+    end
+    
     get_simulator_info
     udid = Actions.lane_context[:SIMULATOR_UDID]
     scan(
       project: PROJECT_PATH,
       scheme: SCHEMES[:app],
       destination: "platform=iOS Simulator,id=#{udid}",
-      derived_data_path: TEST_DERIVED_DATA_PATH,
-      configuration: CONFIGURATIONS[:debug],
+      derived_data_path: derived_data_path,
+      configuration: configuration,
       build_for_testing: true,
       clean: true,
-      xcargs: "SKIP_MACRO_VALIDATION=YES"
+      xcargs: xcargs
     )
   end
 
@@ -189,7 +198,7 @@ platform :ios do
       project: PROJECT_PATH,
       scheme: options[:scheme],
       destination: "platform=iOS Simulator,id=#{udid}",
-      derived_data_path: TEST_DERIVED_DATA_PATH,
+      derived_data_path: "#{TEST_DERIVED_DATA_PATH}/#{CONFIGURATIONS[:debug]}",
       result_bundle_path: result_path,
       code_coverage: false,
       xcargs: "SKIP_MACRO_VALIDATION=YES",

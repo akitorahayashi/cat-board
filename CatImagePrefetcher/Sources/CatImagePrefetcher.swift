@@ -1,7 +1,7 @@
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
-import CatURLImageModel
+import Foundation
 import Kingfisher
 import SwiftData
 
@@ -47,7 +47,7 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
     }
 
     /// プリフェッチされた画像を指定された枚数分取得し、データベースから削除する
-    public func getPrefetchedImages(imageCount: Int) async throws -> [CatImageURLModel] {
+    public func getPrefetchedImages(imageCount: Int) async throws -> [URL] {
         try await loadAndRemovePrefetchedImages(limit: imageCount)
     }
 
@@ -120,30 +120,30 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
             }
 
             // 1. 画像URLの取得
-            let models = try await repository.getNextImageURLs(count: Self.prefetchBatchCount)
+            let urls = try await repository.getNextImageURLs(count: Self.prefetchBatchCount)
 
             // 2. 画像のダウンロード
-            let loadedImages = try await imageLoader.loadImageData(from: models)
+            let loadedImages = try await imageLoader.loadImageData(from: urls)
 
             // 3. スクリーニングの実行
-            let screenedModels = try await screener.screenImages(imageDataWithModels: loadedImages)
+            let screenedURLs = try await screener.screenImages(imageDataWithURLs: loadedImages)
 
             // 4. スクリーニングを通過した画像をSwiftDataに保存
-            try await storePrefetchedImages(screenedModels)
+            try await storePrefetchedImages(screenedURLs)
 
             // 5. ログ情報を集計
             attempts += 1
 
             // 6. ログ出力
             try await print(
-                "プリフェッチ進捗: \(loadedImages.count)枚中\(screenedModels.count)枚通過 "
+                "プリフェッチ進捗: \(loadedImages.count)枚中\(screenedURLs.count)枚通過 "
                     + "(現在\(getPrefetchedCount())枚)"
             )
         }
     }
 
     /// プリフェッチされた画像を指定された枚数分取得し、データベースから削除する
-    private func loadAndRemovePrefetchedImages(limit: Int) async throws -> [CatImageURLModel] {
+    private func loadAndRemovePrefetchedImages(limit: Int) async throws -> [URL] {
         try await MainActor.run {
             let modelContext = modelContainer.mainContext
             var descriptor = FetchDescriptor<PrefetchedCatImageURL>(
@@ -152,23 +152,23 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
             descriptor.fetchLimit = limit
 
             let entities = try modelContext.fetch(descriptor)
-            let models = entities.map { CatImageURLModel(prefetched: $0) }
+            let urls = entities.map(\.imageURL)
 
             for entity in entities {
                 modelContext.delete(entity)
             }
             try modelContext.save()
 
-            return models
+            return urls
         }
     }
 
     /// プリフェッチされた画像をSwiftDataに保存する
-    private func storePrefetchedImages(_ models: [CatImageURLModel]) async throws {
+    private func storePrefetchedImages(_ urls: [URL]) async throws {
         try await MainActor.run {
             let modelContext = modelContainer.mainContext
-            for model in models {
-                let entity = PrefetchedCatImageURL(model: model)
+            for url in urls {
+                let entity = PrefetchedCatImageURL(imageURL: url)
                 modelContext.insert(entity)
             }
             try modelContext.save()

@@ -1,8 +1,8 @@
 import CatImageLoader
 import CatImageScreener
 import CatImageURLRepository
-import CatURLImageModel
 import Foundation
+import SwiftData
 
 // プリフェッチを無効化
 public actor NoopCatImagePrefetcher: CatImagePrefetcherProtocol {
@@ -24,7 +24,7 @@ public actor NoopCatImagePrefetcher: CatImagePrefetcherProtocol {
         0
     }
 
-    public func getPrefetchedImages(imageCount _: Int) async throws -> [CatImageURLModel] {
+    public func getPrefetchedImages(imageCount _: Int) async throws -> [URL] {
         []
     }
 

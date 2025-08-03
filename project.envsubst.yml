@@ -17,12 +17,12 @@ settings:
     ENABLE_USER_SCRIPT_SANDBOXING: "NO"
     DEVELOPMENT_TEAM: $TEAM_ID
   configs:
+    Debug:
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
     Release:
       SWIFT_OPTIMIZATION_LEVEL: "-O" 
 
 packages:
-  CatURLImageModel:
-    path: CatURLImageModel
   CatAPIClient:
     path: CatAPIClient
   CatImageURLRepository:
@@ -47,8 +47,6 @@ targets:
     sources:
       - path: CatBoardApp
     dependencies:
-      - package: CatURLImageModel
-        product: CatURLImageModel
       - package: CatAPIClient
         product: CatAPIClient
       - package: CatImageURLRepository

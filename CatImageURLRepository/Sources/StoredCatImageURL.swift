@@ -2,14 +2,14 @@ import Foundation
 import SwiftData
 
 @Model
-public final class PrefetchedCatImageURL: @unchecked Sendable {
+public final class StoredCatImageURL: @unchecked Sendable {
     @Attribute(.unique) public var id: UUID
-    public var imageURL: String
+    public var imageURL: URL
     public var createdAt: Date
 
-    public init(model: CatImageURLModel) {
+    init(imageURL: URL) {
         id = UUID()
-        imageURL = model.imageURL
+        self.imageURL = imageURL
         createdAt = Date()
     }
 }

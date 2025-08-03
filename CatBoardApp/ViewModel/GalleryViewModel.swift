@@ -1,8 +1,8 @@
+import CatAPIClient
 import CatImageLoader
 import CatImagePrefetcher
 import CatImageScreener
 import CatImageURLRepository
-import CatURLImageModel
 import Kingfisher
 import SwiftUI
 
@@ -162,14 +162,14 @@ final class GalleryViewModel: ObservableObject {
         // 1. プリフェッチで足りるかチェック
         let prefetchedCount = try await prefetcher.getPrefetchedCount()
         if prefetchedCount >= requiredImageCount {
-            let images = try await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
+            let urls = try await prefetcher.getPrefetchedImages(imageCount: requiredImageCount)
+            let models = urls.map { CatImageURLModel(imageURL: $0) }
             await MainActor.run {
                 print(
-                    "画像表示完了: プリフェッチから\(images.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - images.count)枚)"
+                    "画像表示完了: プリフェッチから\(models.count)枚追加 → 現在\(self.imageURLsToShow.count)枚表示中(残り\(prefetchedCount - models.count)枚)"
                 )
             }
-
-            return images
+            return models
         }
 
         // 2. プリフェッチ不足時は直接取得を開始
@@ -182,8 +182,8 @@ final class GalleryViewModel: ObservableObject {
 
         for _ in 0 ..< maxRetry where result.count < requiredImageCount {
             // 2.1 画像URLの取得
-            let models = try await self.repository.getNextImageURLs(count: Self.batchDisplayCount)
-            if models.isEmpty {
+            let urls = try await self.repository.getNextImageURLs(count: Self.batchDisplayCount)
+            if urls.isEmpty {
                 throw NSError(
                     domain: "GalleryViewModel",
                     code: -2,
@@ -192,17 +192,17 @@ final class GalleryViewModel: ObservableObject {
             }
 
             // 2.2 1枚ずつ処理
-            for model in models {
+            for url in urls {
                 if result.count >= requiredImageCount { break }
 
                 // 2.2.1 画像のダウンロード
-                let loadedImages = try await self.imageLoader.loadImageData(from: [model])
+                let loadedImages = try await self.imageLoader.loadImageData(from: [url])
 
                 // 2.2.2 スクリーニングの実行
-                let screenedModels = try await self.screener.screenImages(imageDataWithModels: loadedImages)
+                let screenedURLs = try await self.screener.screenImages(imageDataWithURLs: loadedImages)
 
-                if let screenedModel = screenedModels.first {
-                    result.append(screenedModel)
+                if let screenedURL = screenedURLs.first {
+                    result.append(CatImageURLModel(imageURL: screenedURL))
                 }
             }
         }

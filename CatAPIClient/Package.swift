@@ -10,15 +10,11 @@ let package = Package(
     products: [
         .library(name: "CatAPIClient", targets: ["CatAPIClient"]),
     ],
-    dependencies: [
-        .package(path: "../CatURLImageModel"),
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "CatAPIClient",
-            dependencies: [
-                .product(name: "CatURLImageModel", package: "CatURLImageModel"),
-            ],
+            dependencies: [],
             path: "Sources"
         ),
     ]

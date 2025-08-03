@@ -11,14 +11,12 @@ let package = Package(
         .library(name: "CatImageURLRepository", targets: ["CatImageURLRepository"]),
     ],
     dependencies: [
-        .package(path: "../CatURLImageModel"),
         .package(path: "../CatAPIClient"),
     ],
     targets: [
         .target(
             name: "CatImageURLRepository",
             dependencies: [
-                .product(name: "CatURLImageModel", package: "CatURLImageModel"),
                 .product(name: "CatAPIClient", package: "CatAPIClient"),
             ],
             path: "Sources"

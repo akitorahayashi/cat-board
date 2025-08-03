@@ -1,10 +1,10 @@
 import CatAPIClient
-import CatURLImageModel
 import Foundation
+import SwiftData
 
 public actor MockCatImageURLRepository: CatImageURLRepositoryProtocol {
     private let apiClient: CatAPIClientProtocol
-    private var loadedImageURLs: [CatImageURLModel] = []
+    private var loadedImageURLs: [URL] = []
     private var refillTask: Task<Void, Never>?
 
     private let maxLoadedURLCount = 300
@@ -22,7 +22,7 @@ public actor MockCatImageURLRepository: CatImageURLRepositoryProtocol {
         refillTask?.cancel()
     }
 
-    public func getNextImageURLs(count: Int) async throws -> [CatImageURLModel] {
+    public func getNextImageURLs(count: Int) async throws -> [URL] {
         // キャッシュが十分にある場合
         if loadedImageURLs.count >= count {
             let provided = try await getImageURLsFromLoadedURLs(count: count)
@@ -56,7 +56,7 @@ public actor MockCatImageURLRepository: CatImageURLRepositoryProtocol {
         return available + remaining
     }
 
-    private func getImageURLsFromLoadedURLs(count: Int) async throws -> [CatImageURLModel] {
+    private func getImageURLsFromLoadedURLs(count: Int) async throws -> [URL] {
         let actualCount = min(count, loadedImageURLs.count)
         let provided = Array(loadedImageURLs.prefix(actualCount))
         loadedImageURLs = Array(loadedImageURLs.dropFirst(actualCount))

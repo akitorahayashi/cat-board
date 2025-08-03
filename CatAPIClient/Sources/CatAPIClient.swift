@@ -1,11 +1,14 @@
-import CatURLImageModel
 import Foundation
 
 public struct CatAPIClient: CatAPIClientProtocol {
     public init() {}
 
-    public func fetchImageURLs(totalCount: Int, batchSize: Int = 10) async throws -> [CatImageURLModel] {
-        var result: [CatImageURLModel] = []
+    private struct CatAPIResponse: Decodable {
+        let url: String
+    }
+
+    public func fetchImageURLs(totalCount: Int, batchSize: Int = 10) async throws -> [URL] {
+        var result: [URL] = []
         var pagesRetrieved = 0
 
         for page in 0 ..< Int(ceil(Double(totalCount) / Double(batchSize))) {
@@ -23,8 +26,8 @@ public struct CatAPIClient: CatAPIClientProtocol {
             }
 
             let decoder = JSONDecoder()
-            let catImages = try decoder.decode([CatImageURLModel].self, from: data)
-            result += catImages
+            let catImages = try decoder.decode([CatAPIResponse].self, from: data)
+            result += catImages.compactMap { URL(string: $0.url) }
             pagesRetrieved += 1
 
             if result.count >= totalCount { break }

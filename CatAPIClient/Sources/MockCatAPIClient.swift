@@ -1,4 +1,3 @@
-import CatURLImageModel
 import Foundation
 
 public struct MockCatAPIClient: CatAPIClientProtocol {
@@ -8,13 +7,13 @@ public struct MockCatAPIClient: CatAPIClientProtocol {
         self.error = error
     }
 
-    public func fetchImageURLs(totalCount: Int, batchSize _: Int = 10) async throws -> [CatImageURLModel] {
+    public func fetchImageURLs(totalCount: Int, batchSize _: Int = 10) async throws -> [URL] {
         if let error {
             throw error
         }
 
-        return (0 ..< totalCount).map { index in
-            CatImageURLModel(imageURL: "https://example.com/cat\(index).jpg")
+        return (0 ..< totalCount).compactMap { index in
+            URL(string: "https://example.com/cat\(index).jpg")
         }
     }
 }

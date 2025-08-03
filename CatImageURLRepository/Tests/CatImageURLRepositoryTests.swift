@@ -1,6 +1,5 @@
 import CatAPIClient
 import CatImageURLRepository
-import CatURLImageModel
 import SwiftData
 import XCTest
 
@@ -30,8 +29,8 @@ final class CatImageURLRepositoryTests: XCTestCase {
         let result = try await repository.getNextImageURLs(count: 2)
 
         XCTAssertEqual(result.count, 2)
-        XCTAssertNotNil(result[0].imageURL)
-        XCTAssertNotNil(result[1].imageURL)
+        XCTAssertNotNil(result[0])
+        XCTAssertNotNil(result[1])
     }
 
     /// キャッシュから画像URLを取得する機能を確認する
@@ -40,7 +39,7 @@ final class CatImageURLRepositoryTests: XCTestCase {
         let secondResult = try await repository.getNextImageURLs(count: 1)
 
         XCTAssertEqual(secondResult.count, 1)
-        XCTAssertEqual(secondResult[0].imageURL, firstResult[0].imageURL)
+        XCTAssertEqual(secondResult[0], firstResult[0])
     }
 
     /// キャッシュが空になった時の自動補充を確認する
@@ -54,7 +53,7 @@ final class CatImageURLRepositoryTests: XCTestCase {
         let secondResult = try await repository.getNextImageURLs(count: 1)
 
         XCTAssertEqual(secondResult.count, 1)
-        XCTAssertNotNil(secondResult[0].imageURL)
+        XCTAssertNotNil(secondResult[0])
     }
 
     /// キャッシュの残数が少なくなった時の自動補充を確認する
@@ -68,11 +67,11 @@ final class CatImageURLRepositoryTests: XCTestCase {
         let secondResult = try await repository.getNextImageURLs(count: 1)
 
         XCTAssertEqual(secondResult.count, 1)
-        XCTAssertEqual(secondResult[0].imageURL, firstResult[0].imageURL)
+        XCTAssertEqual(secondResult[0], firstResult[0])
 
         let thirdResult = try await repository.getNextImageURLs(count: 1)
         XCTAssertEqual(thirdResult.count, 1)
-        XCTAssertNotNil(thirdResult[0].imageURL)
+        XCTAssertNotNil(thirdResult[0])
     }
 
     /// 自動補充時のAPIエラーを確認する
