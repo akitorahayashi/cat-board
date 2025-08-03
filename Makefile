@@ -1,55 +1,63 @@
-# --- Xcode操作 ---
-#   make gen-proj                  - Xcodeプロジェクトを生成
-#   make boot                      - ローカルシミュレータ（iPhone 16 Pro）を起動
-#   make run-debug                 - デバッグビルドを作成し、ローカルシミュレータにインストール、起動（Fastlane経由）
-#   make run-release               - リリースビルドを作成し、ローカルシミュレータにインストール、起動（Fastlane経由）
-#   make resolve-pkg               - SwiftPMキャッシュ・依存関係・ビルドをリセット
-#   make open                      - Xcodeでプロジェクトを開く
+# ==============================================================================
+# HELP
+# ==============================================================================
+# This will output a list of all available commands and their descriptions.
 #
-# --- ビルド ---
-#   make build-test                - テスト用のビルドを実行
-#   make build-debug-development   - Debug+development用のipa/dSYMを出力
-#   make build-release-development - Release+development用のipa/dSYMを出力
-#   make build-release-app-store   - Release+app_store用のipa/dSYMを出力
-#   make build-release-ad-hoc      - Release+ad_hoc用のipa/dSYMを出力
-#   make build-release-enterprise  - Release+enterprise用のipa/dSYMを出力
-#
-# --- テスト ---
-#   make unit-test                 - ユニットテストを実行
-#   make ui-test                   - UIテストを実行
-#   make package-test              - 全パッケージのテストを実行
-#   make test-all                  - 全テストを実行
-#   make unit-test-without-building - ユニットテストを実行（ビルド済みアーティファクトを利用）
-#   make ui-test-without-building  - UIテストを実行（ビルド済みアーティファクトを利用）
-# 
-# --- Code Style ---
-#   make format                - コードをフォーマット
-#   make format-check          - コードのフォーマットをチェック
-#   make lint                  - lintを実行
-#
+.PHONY: help
+help:
+	@echo "Usage: make [target]"
+	@echo ""
+	@echo "Available targets:"
+	@awk 'BEGIN {FS = ":.*?## "; OFS=" "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-# === Local Simulator ===
-# .envファイルが存在すれば読み込む
+
+# ==============================================================================
+# VARIABLES
+# ==============================================================================
+# Load environment variables from .env file if it exists
 ifneq (,$(wildcard ./.env))
 	include .env
 endif
 
-# === Configuration ===
-OUTPUT_DIR := build
-PROJECT_FILE := CatBoardApp.xcodeproj
-APP_SCHEME := CatBoardApp
-APP_BUNDLE_ID := com.akitorahayashi.CatBoardApp
+PROJECT_FILE   := CatBoardApp.xcodeproj
+APP_BUNDLE_ID  := com.akitorahayashi.CatBoardApp
 
-# === Generate Xcode project ===
+
+# ==============================================================================
+# PROJECT SETUP
+# ==============================================================================
+.PHONY: setup
+setup: ## Run all setup tasks
+	bundle install
+	mint bootstrap
+	$(MAKE) gen-proj
+
 .PHONY: gen-proj
-gen-proj:
+gen-proj: ## Generate Xcode project
 	@echo "🔧 Generating Xcode project with TEAM_ID: $(TEAM_ID)"
 	@TEAM_ID=$(TEAM_ID) envsubst < project.envsubst.yml > project.yml
 	mint run xcodegen generate
 
-# === Boot simulator ===
+.PHONY: resolve-pkg
+resolve-pkg: ## Reset SwiftPM cache, dependencies, and build
+	@echo "🧹 Removing SwiftPM build and cache..."
+	rm -rf .build
+	rm -rf ~/Library/Caches/org.swift.swiftpm
+	@echo "✅ SwiftPM build and cache removed."
+	@echo "🔄 Resolving Swift package dependencies..."
+	xcodebuild -resolvePackageDependencies -project $(PROJECT_FILE)
+	@echo "✅ Package dependencies resolved."
+
+.PHONY: open
+open: ## Open project in Xcode
+	@xed $(PROJECT_FILE)
+
+
+# ==============================================================================
+# LOCAL SIMULATOR
+# ==============================================================================
 .PHONY: boot
-boot:
+boot: ## Boot local simulator
 ifndef LOCAL_SIMULATOR_UDID
 	$(error LOCAL_SIMULATOR_UDID is not set. Please set it in your .env)
 endif
@@ -62,101 +70,94 @@ endif
 	fi
 	open -a Simulator
 
-# === Run debug build ===
 .PHONY: run-debug
-run-debug:
+run-debug: ## Build debug, install and launch on local simulator
 	$(MAKE) boot
 	@bundle exec fastlane build_debug
 	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/debug/DerivedData/Build/Products/Debug-iphonesimulator/CatBoardApp.app
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 
-# === Run release build ===
 .PHONY: run-release
-run-release:
+run-release: ## Build release, install and launch on local simulator
 	$(MAKE) boot
 	@bundle exec fastlane build_release
 	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/release/DerivedData/Build/Products/Release-iphonesimulator/CatBoardApp.app
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 
 
-# === Resolve & Reset SwiftPM/Xcode Packages ===
-.PHONY: resolve-pkg
-resolve-pkg:
-	@echo "🧹 Removing SwiftPM build and cache..."
-	rm -rf .build
-	rm -rf ~/Library/Caches/org.swift.swiftpm
-	@echo "✅ SwiftPM build and cache removed."
-	@echo "🔄 Resolving Swift package dependencies..."
-	xcodebuild -resolvePackageDependencies -project $(PROJECT_FILE)
-	@echo "✅ Package dependencies resolved."
+# ==============================================================================
+# BUILD & SIGN
+# ==============================================================================
+.PHONY: build-debug
+build-debug: ## Build Debug archive (unsigned)
+	bundle exec fastlane build_debug
 
-# === Open project in Xcode ===
-.PHONY: open
-open:
-	@open $(PROJECT_FILE)
+.PHONY: build-release
+build-release: ## Build Release archive (unsigned)
+	bundle exec fastlane build_release
 
-# === Build for testing ===
-.PHONY: build-test
-build-test:
+.PHONY: sign-debug-development
+sign-debug-development: ## Sign debug archive for development
+	bundle exec fastlane sign_debug_development
+
+.PHONY: sign-release-development
+sign-release-development: ## Sign release archive for development
+	bundle exec fastlane sign_release export_method:development
+
+.PHONY: sign-release-app-store
+sign-release-app-store: ## Sign release archive for app_store
+	bundle exec fastlane sign_release export_method:app_store
+
+.PHONY: sign-release-ad-hoc
+sign-release-ad-hoc: ## Sign release archive for ad_hoc
+	bundle exec fastlane sign_release export_method:ad_hoc
+
+.PHONY: sign-release-enterprise
+sign-release-enterprise: ## Sign release archive for enterprise
+	bundle exec fastlane sign_release export_method:enterprise
+
+
+# ==============================================================================
+# TESTING
+# ==============================================================================
+.PHONY: build-for-testing
+build-for-testing: ## Build for testing
 	bundle exec fastlane build_for_testing
 
-# === Common iOS Build/Export Patterns ===
-.PHONY: build-debug-development
-build-debug-development:
-	bundle exec fastlane build_debug_development
-
-.PHONY: build-release-development
-build-release-development:
-	bundle exec fastlane build_release_development
-
-.PHONY: build-release-app-store
-build-release-app-store:
-	bundle exec fastlane build_release_app_store
-
-.PHONY: build-release-ad-hoc
-build-release-ad-hoc:
-	bundle exec fastlane build_release_ad_hoc
-
-.PHONY: build-release-enterprise
-build-release-enterprise:
-	bundle exec fastlane build_release_enterprise
-
-# === Unit tests ===
 .PHONY: unit-test
-unit-test:
+unit-test: ## Run unit tests
 	bundle exec fastlane unit_test
 
-# === UI tests ===
-.PHONY: ui-test
-ui-test:
-	bundle exec fastlane ui_test
-# === Package tests ===
-.PHONY: package-test
-package-test:
-	bundle exec fastlane package_test
-
-# === Unit tests without building ===
 .PHONY: unit-test-without-building
-unit-test-without-building:
+unit-test-without-building: ## Run unit tests without building
 	bundle exec fastlane unit_test_without_building
 
-# === UI tests without building ===
+.PHONY: ui-test
+ui-test: ## Run UI tests
+	bundle exec fastlane ui_test
+
 .PHONY: ui-test-without-building
-ui-test-without-building:
+ui-test-without-building: ## Run UI tests without building
 	bundle exec fastlane ui_test_without_building
 
-# === All tests ===
+.PHONY: package-test
+package-test: ## Run Swift package tests
+	bundle exec fastlane package_test
+
 .PHONY: test-all
-test-all:
+test-all: ## Run all tests (unit, UI, package)
 	bundle exec fastlane test_all
 
-# === Code Style ===
+
+# ==============================================================================
+# CODE STYLE
+# ==============================================================================
 .PHONY: format
-format:
+format: ## Format code
 	mint run swiftformat .
 
 .PHONY: format-check
-format-check:
+format-check: ## Check code format
 	mint run swiftformat --lint .
 
 .PHONY: lint

@@ -7,6 +7,8 @@
 # For a list of all available plugins, check out
 #     https://docs.fastlane.tools/plugins/available-plugins
 #
+# To see a list of all available lanes, run `bundle exec fastlane lanes`
+#
 
 default_platform(:ios)
 
@@ -14,14 +16,14 @@ require_relative 'Config'
 
 platform :ios do
 # === Build-only Lanes ===
-  desc "Build Debug archive (unsigned)"
+  desc "Build unsigned debug archive"
   lane :build_debug do
     build_app_with_config(
       configuration: CONFIGURATIONS[:debug]
     )
   end
 
-  desc "Build Release archive (unsigned)"
+  desc "Build unsigned release archive"
   lane :build_release do
     build_app_with_config(
       configuration: CONFIGURATIONS[:release]

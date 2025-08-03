@@ -43,7 +43,7 @@ jobs:
         run: bundle install
 
       - name: Build Release Version (Unsigned) via Makefile
-        run: make archive
+        run: make build-release
           
       - name: Verify Archive Contents
         run: |
