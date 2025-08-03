@@ -193,7 +193,7 @@ platform :ios do
       code_coverage: false,
       xcargs: "SKIP_MACRO_VALIDATION=YES",
       output_types: "xcresult",
-      clean: options.fetch(:clean, true)
+      clean: false
     }
     scan_args[:test_without_building] = options[:test_without_building] if options[:test_without_building]
     scan(**scan_args)
