@@ -3,9 +3,9 @@ import SwiftData
 
 @Model
 public final class PrefetchedCatImageURL: @unchecked Sendable {
-    @Attribute(.unique) public let id: UUID
-    public let imageURL: URL
-    public let createdAt: Date
+    @Attribute(.unique) public var id: UUID
+    public var imageURL: URL
+    public var createdAt: Date
 
     init(imageURL: URL) {
         id = UUID()

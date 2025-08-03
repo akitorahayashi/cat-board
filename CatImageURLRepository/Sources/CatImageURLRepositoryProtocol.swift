@@ -1,4 +1,5 @@
 import CatAPIClient
+import Foundation
 import SwiftData
 
 public protocol CatImageURLRepositoryProtocol: Sendable {

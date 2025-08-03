@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 
 public protocol CatImagePrefetcherProtocol {
