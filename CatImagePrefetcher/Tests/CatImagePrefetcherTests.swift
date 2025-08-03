@@ -160,10 +160,8 @@ final class CatImagePrefetcherTests: XCTestCase {
 
         try await waitFor({
             let screenedCount = try await self.prefetcher.getPrefetchedCount()
-            // スクリーニングによって全ての画像が除外される可能性は低いが、
-            // 確実にテストをパスさせるため、0枚以上であればOKとする
-            return screenedCount >= 0
-        }, description: "スクリーニング処理が完了するのを待つ")
+            return screenedCount > 0
+        }, description: "スクリーニング後、最低1枚の画像が取得されるべき")
 
         let screenedCount = try await prefetcher.getPrefetchedCount()
         let targetCount = CatImagePrefetcher.targetPrefetchCount
