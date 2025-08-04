@@ -99,7 +99,7 @@ platform :ios do
   desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
   lane :package_test do
     SWIFT_PACKAGES.each do |package|
-      sh "cd ../#{package} && swift test"
+      sh "cd ../Packages/#{package} && swift test"
     end
   end
 
