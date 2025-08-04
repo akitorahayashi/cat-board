@@ -10,7 +10,7 @@ on:
 
 jobs:
   archive:
-    runs-on: macos-latest
+    runs-on: macos-14
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
       TEAM_ID: ${{ secrets.TEAM_ID }}
@@ -64,5 +64,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-archive
-          path: fastlane/build/archives/CatBoardApp.xcarchive
+          path: fastlane/build/release/archive/CatBoardApp.xcarchive
           retention-days: 3
