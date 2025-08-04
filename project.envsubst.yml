@@ -24,15 +24,15 @@ settings:
 
 packages:
   CatAPIClient:
-    path: CatAPIClient
+    path: Packages/CatAPIClient
   CatImageURLRepository:
-    path: CatImageURLRepository
+    path: Packages/CatImageURLRepository
   CatImageScreener:
-    path: CatImageScreener
+    path: Packages/CatImageScreener
   CatImageLoader:
-    path: CatImageLoader
+    path: Packages/CatImageLoader
   CatImagePrefetcher:
-    path: CatImagePrefetcher
+    path: Packages/CatImagePrefetcher
   TieredGridLayout:
     url: https://github.com/akitorahayashi/tiered-grid-layout
     from: "1.2.0"
