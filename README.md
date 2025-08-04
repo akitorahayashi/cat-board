@@ -34,11 +34,12 @@ Since the screening process involves machine learning, verification on a real de
 .
 ├── .github/
 ├── CatBoardApp/
-├── CatAPIClient/
-├── CatImageLoader/
-├── CatImagePrefetcher/
-├── CatImageScreener/
-├── CatImageURLRepository/
+├── Packages/
+│   ├── CatAPIClient/
+│   ├── CatImageLoader/
+│   ├── CatImagePrefetcher/
+│   ├── CatImageScreener/
+│   └── CatImageURLRepository/
 ├── CatBoardTests/
 ├── CatBoardUITests/
 ├── fastlane/
