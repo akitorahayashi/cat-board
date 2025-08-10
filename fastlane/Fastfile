@@ -12,7 +12,7 @@
 
 default_platform(:ios)
 
-require_relative 'Config'
+require_relative 'config'
 
 platform :ios do
 # === Build-only Lanes ===
@@ -103,7 +103,7 @@ platform :ios do
     end
   end
 
-  desc "Run all tests (unit, UI, package)"
+  desc "Run all tests (Unit, UI, package)"
   lane :test_all do
     build_for_testing
     unit_test_without_building

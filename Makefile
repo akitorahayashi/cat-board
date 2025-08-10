@@ -11,6 +11,11 @@ help:
 
 PROJECT_FILE   := CatBoardApp.xcodeproj
 APP_BUNDLE_ID  := com.akitorahayashi.CatBoardApp
+# --- PROJECT SPECIFIC PATHS ---
+TEST_DERIVED_DATA_PATH := fastlane/build/test-results/DerivedData
+DEBUG_APP_PATH    := $(TEST_DERIVED_DATA_PATH)/Debug/Build/Products/Debug-iphonesimulator/CatBoardApp.app
+RELEASE_APP_PATH  := $(TEST_DERIVED_DATA_PATH)/Release/Build/Products/Release-iphonesimulator/CatBoardApp.app
+SWIFTPM_CACHE_PATH := ~/Library/Caches/org.swift.swiftpm
 
 .PHONY: setup
 setup: ## Run all setup tasks
@@ -28,7 +33,7 @@ gen-proj: ## Generate Xcode project
 resolve-pkg: ## Reset SwiftPM cache, dependencies, and build
 	@echo "🧹 Removing SwiftPM build and cache..."
 	rm -rf .build
-	rm -rf ~/Library/Caches/org.swift.swiftpm
+	rm -rf $(SWIFTPM_CACHE_PATH)
 	@echo "✅ SwiftPM build and cache removed."
 	@echo "🔄 Resolving Swift package dependencies..."
 	xcodebuild -resolvePackageDependencies -project $(PROJECT_FILE)
@@ -57,14 +62,14 @@ endif
 run-debug: ## Build debug, install and launch on local simulator
 	$(MAKE) boot
 	@bundle exec fastlane build_for_testing
-	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/test-results/DerivedData/Debug/Build/Products/Debug-iphonesimulator/CatBoardApp.app
+	xcrun simctl install $(LOCAL_SIMULATOR_UDID) $(DEBUG_APP_PATH)
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 
 .PHONY: run-release
 run-release: ## Build release, install and launch on local simulator
 	$(MAKE) boot
 	@bundle exec fastlane build_for_testing configuration:Release
-	xcrun simctl install $(LOCAL_SIMULATOR_UDID) fastlane/build/test-results/DerivedData/Release/Build/Products/Release-iphonesimulator/CatBoardApp.app
+	xcrun simctl install $(LOCAL_SIMULATOR_UDID) $(RELEASE_APP_PATH)
 	xcrun simctl launch $(LOCAL_SIMULATOR_UDID) $(APP_BUNDLE_ID)
 
 # --- BUILD & SIGN ---

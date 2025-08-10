@@ -13,7 +13,6 @@ SCHEMES = {
 }.freeze
 
 # === Test Paths ===
-
 BUILD_PATH = "fastlane/build"
 TEST_RESULTS_PATH = "build/test-results"
 TEST_DERIVED_DATA_PATH = "#{BUILD_PATH}/test-results/DerivedData"

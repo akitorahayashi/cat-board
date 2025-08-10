@@ -88,7 +88,7 @@ cp .env.example .env
 Edit `.env` with your local simulator settings:
 
 ```bash
-# ローカルシミュレータの設定
+# Local Simulator
 LOCAL_SIMULATOR_UDID="YOUR_UDID"     
 
 # Apple Developer
