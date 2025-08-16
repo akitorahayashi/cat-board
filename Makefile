@@ -122,13 +122,17 @@ ui-test: ## Run UI tests
 ui-test-without-building: ## Run UI tests without building
 	bundle exec fastlane ui_test_without_building
 
-.PHONY: package-test
-package-test: ## Run Swift package tests
-	bundle exec fastlane package_test
+.PHONY: test-%
+test-%: ## Run a specific Swift package test (e.g., make test-CatImageScreener)
+	@echo "🧪 Testing package $*..."
+	@bundle exec fastlane test_package package:$*
 
 .PHONY: test-all
-test-all: ## Run all tests (unit, UI, package)
+test-all: ## Run all tests (unit, UI, all packages)
 	bundle exec fastlane test_all
+	$(MAKE) test-CatImageURLRepository
+	$(MAKE) test-CatImageScreener
+	$(MAKE) test-CatImagePrefetcher
 
 
 # --- BUILD & SIGN ---

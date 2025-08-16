@@ -96,19 +96,20 @@ platform :ios do
     test_with_scheme(scheme: SCHEMES[:ui_test], result_path: UI_TEST_RESULT_PATH, test_without_building: true)
   end
 
-  desc "Run Swift package tests (CatImageURLRepository, CatImageScreener, CatImagePrefetcher)"
-  lane :package_test do
-    SWIFT_PACKAGES.each do |package|
-      sh "cd ../Packages/#{package} && swift test"
-    end
+  desc "Run a single Swift package test"
+  lane :test_package do |options|
+    package = options[:package]
+    UI.user_error!("A package name must be provided via the `package` option.") unless package
+    package_path = File.expand_path("../Packages/#{package}", __dir__)
+    UI.user_error!("Package not found: #{package_path}") unless File.directory?(package_path)
+    sh "cd #{package_path} && swift test"
   end
 
-  desc "Run all tests (Unit, UI, package)"
+  desc "Run all tests (Unit, UI)"
   lane :test_all do
     build_for_testing
     unit_test_without_building
     ui_test_without_building
-    package_test
   end
 
 # === Private ===
