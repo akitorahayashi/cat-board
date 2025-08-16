@@ -128,8 +128,11 @@ test-%: ## Run a specific Swift package test (e.g., make test-CatImageScreener)
 	@bundle exec fastlane test_package package:$*
 
 .PHONY: test-all
-test-all: ## Run all tests (unit, UI)
+test-all: ## Run all tests (unit, UI, all packages)
 	bundle exec fastlane test_all
+	$(MAKE) test-CatImageURLRepository
+	$(MAKE) test-CatImageScreener
+	$(MAKE) test-CatImagePrefetcher
 
 
 # --- BUILD & SIGN ---
