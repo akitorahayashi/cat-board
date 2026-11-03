@@ -19,7 +19,7 @@ final class CatImageGalleryUITests: XCTestCase {
 
     // MARK: - 初期表示テスト
 
-    func testInitialDisplay() throws {
+    func testInitialDisplay() {
         app.launch()
 
         let scrollView = app.scrollViews.firstMatch
@@ -31,7 +31,7 @@ final class CatImageGalleryUITests: XCTestCase {
 
     // MARK: - リフレッシュ機能テスト
 
-    func testRefreshButton() throws {
+    func testRefreshButton() {
         app.launch()
 
         let refreshButton = app.buttons[CBAccessibilityID.Gallery.refreshButton]
@@ -49,7 +49,7 @@ final class CatImageGalleryUITests: XCTestCase {
 
     // MARK: - エラー状態テスト
 
-    func testErrorStateDisplayAndRetry() throws {
+    func testErrorStateDisplayAndRetry() {
         app.launchArguments.append("--simulate-error")
         app.launch()
 
@@ -70,7 +70,7 @@ final class CatImageGalleryUITests: XCTestCase {
 
     // MARK: - 追加取得機能テスト
 
-    func testAdditionalFetch() throws {
+    func testAdditionalFetch() {
         app.launch()
 
         let scrollView = app.scrollViews.firstMatch

@@ -34,9 +34,9 @@ final class CatImageScreenerTests: XCTestCase {
     /// MockCatImageLoaderを使用して画像処理が正常に実行できることを確認
     func testProcessImageWithMockLoader() async throws {
         // テスト用のモックURLを作成
-        let testURLs = [
-            URL(string: "https://example.com/cat1.jpg")!,
-            URL(string: "https://example.com/cat2.jpg")!,
+        let testURLs = try [
+            XCTUnwrap(URL(string: "https://example.com/cat1.jpg")),
+            XCTUnwrap(URL(string: "https://example.com/cat2.jpg")),
         ]
 
         // MockCatImageLoaderを使用して画像データをロード

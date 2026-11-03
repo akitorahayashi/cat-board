@@ -86,7 +86,6 @@ private extension CatImageGallery {
         }
     }
 
-    @ViewBuilder
     var errorContent: some View {
         VStack(spacing: 16) {
             Text("エラーが発生しました")
@@ -130,7 +129,6 @@ private extension CatImageGallery {
         .rotationEffect(.degrees(180))
     }
 
-    @ViewBuilder
     var galleryGrid: some View {
         LazyVStack(spacing: 0) {
             let chunks = Array(viewModel.imageURLsToShow.chunked(into: 10).enumerated())

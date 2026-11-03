@@ -1,12 +1,11 @@
 import CatAPIClient
+@testable import CatBoardApp
 import CatImageLoader
 import CatImagePrefetcher
 import CatImageScreener
 import CatImageURLRepository
 import SwiftData
 import XCTest
-
-@testable import CatBoardApp
 
 @MainActor
 final class GalleryViewModelTests: XCTestCase {
@@ -89,7 +88,9 @@ final class GalleryViewModelTests: XCTestCase {
 
         // isInitializing が true になるまで追加取得を試みる（最大30回試行）
         for _ in 0 ..< 30 {
-            if viewModel.isInitializing { break }
+            if viewModel.isInitializing {
+                break
+            }
             await viewModel.fetchAdditionalImages()
         }
 
@@ -103,7 +104,7 @@ final class GalleryViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isAdditionalFetching)
     }
 
-    func testScreeningInInitialImages() async throws {
+    func testScreeningInInitialImages() async {
         testScreeningSettings.isScreeningEnabled = true
 
         viewModel.loadInitialImages()
@@ -116,7 +117,7 @@ final class GalleryViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isInitializing)
     }
 
-    func testScreeningInAdditionalImages() async throws {
+    func testScreeningInAdditionalImages() async {
         testScreeningSettings.isScreeningEnabled = true
 
         viewModel.loadInitialImages()

@@ -97,8 +97,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
     }
 
     public func startBackgroundURLRefillLoadedURLs() async throws {
-        guard !isRefilling else { return }
-        guard loadedImageURLs.count < maxLoadedURLCount else { return }
+        guard !isRefilling, loadedImageURLs.count < maxLoadedURLCount else { return }
 
         // 前回のタスクをキャンセル
         refillTask?.cancel()
@@ -124,7 +123,9 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
 
     private func refillLoadedURLs() async throws {
         do {
-            if loadedImageURLs.count > loadedURLThreshold { return }
+            if loadedImageURLs.count > loadedURLThreshold {
+                return
+            }
 
             let neededToLoad = maxLoadedURLCount - loadedImageURLs.count
             print(
@@ -160,7 +161,9 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
                         imageCountPerFetch: apiFetchBatchSize,
                         timesOfFetch: times
                     )
-                    if newlyStored == 0 { break }
+                    if newlyStored == 0 {
+                        break
+                    }
                     currentStored += newlyStored
                 }
                 print("SwiftData URL補充完了: \(currentStored)件")
@@ -235,7 +238,7 @@ public actor CatImageURLRepository: CatImageURLRepositoryProtocol {
         return urls.count
     }
 
-    // SwiftDataに保存されているURLの総数を取得する
+    /// SwiftDataに保存されているURLの総数を取得する
     @MainActor
     private func fetchStoredURLCount() async throws -> Int {
         let modelContext = modelContainer.mainContext

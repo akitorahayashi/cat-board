@@ -30,7 +30,9 @@ public struct CatAPIClient: CatAPIClientProtocol {
             result += catImages.compactMap { URL(string: $0.url) }
             pagesRetrieved += 1
 
-            if result.count >= totalCount { break }
+            if result.count >= totalCount {
+                break
+            }
         }
 
         return Array(result.prefix(totalCount))

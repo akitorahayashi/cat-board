@@ -14,19 +14,19 @@ public struct CatImageURLModel: Identifiable, Decodable, Equatable, Hashable, Se
         self.imageURL = imageURL
     }
 
-    // StoredCatImageURL からの変換用
+    /// StoredCatImageURL からの変換用
     public init(entity: StoredCatImageURL) {
         id = entity.id
         imageURL = entity.imageURL
     }
 
-    // PrefetchedCatImageURL からの変換用
+    /// PrefetchedCatImageURL からの変換用
     public init(prefetched: PrefetchedCatImageURL) {
         id = prefetched.id
         imageURL = prefetched.imageURL
     }
 
-    // Decodable の実装
+    /// Decodable の実装
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = UUID()

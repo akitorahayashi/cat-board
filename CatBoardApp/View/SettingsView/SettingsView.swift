@@ -14,9 +14,9 @@ struct SettingsView: View {
 
     private var isSimulator: Bool {
         #if targetEnvironment(simulator)
-            return true
+            true
         #else
-            return false
+            false
         #endif
     }
 

@@ -4,7 +4,7 @@ import CatImageURLRepository
 import Foundation
 import SwiftData
 
-// プリフェッチを無効化
+/// プリフェッチを無効化
 public actor NoopCatImagePrefetcher: CatImagePrefetcherProtocol {
     private let repository: CatImageURLRepositoryProtocol
     private let imageLoader: CatImageLoaderProtocol

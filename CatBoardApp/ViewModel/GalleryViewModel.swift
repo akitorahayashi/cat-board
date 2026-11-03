@@ -34,7 +34,7 @@ final class GalleryViewModel: ObservableObject {
         self.prefetcher = prefetcher
     }
 
-    // 初期表示、またはViewを初期化した後に呼ぶ
+    /// 初期表示、またはViewを初期化した後に呼ぶ
     func loadInitialImages() {
         if imageURLsToShow.isEmpty {
             let startTime = Date()
@@ -82,7 +82,7 @@ final class GalleryViewModel: ObservableObject {
         }
     }
 
-    // 追加取得
+    /// 追加取得
     func fetchAdditionalImages() async {
         guard !isAdditionalFetching, !isInitializing else {
             print("既にローディング中のため、スキップします")
@@ -142,7 +142,7 @@ final class GalleryViewModel: ObservableObject {
 
     // MARK: - Private Methods
 
-    // private func fetchImages を batch に分けて実行する
+    /// private func fetchImages を batch に分けて実行する
     private func fetchImagesInBatches(
         totalImageCount: Int,
         numberOfBatches: Int,
@@ -193,7 +193,9 @@ final class GalleryViewModel: ObservableObject {
 
             // 2.2 1枚ずつ処理
             for url in urls {
-                if result.count >= requiredImageCount { break }
+                if result.count >= requiredImageCount {
+                    break
+                }
 
                 // 2.2.1 画像のダウンロード
                 let loadedImages = try await self.imageLoader.loadImageData(from: [url])

@@ -41,8 +41,7 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
     public func getPrefetchedCount() async throws -> Int {
         try await MainActor.run {
             let modelContext = modelContainer.mainContext
-            let count = try modelContext.fetchCount(FetchDescriptor<PrefetchedCatImageURL>())
-            return count
+            return try modelContext.fetchCount(FetchDescriptor<PrefetchedCatImageURL>())
         }
     }
 
@@ -54,8 +53,7 @@ public actor CatImagePrefetcher: CatImagePrefetcherProtocol {
     /// 現在のプリフェッチ数が目標値未満の場合にプリフェッチを開始する
     public func startPrefetchingIfNeeded() async throws {
         let currentCount = try await getPrefetchedCount()
-        guard !isPrefetching else { return }
-        guard currentCount < Self.targetPrefetchCount else { return }
+        guard !isPrefetching, currentCount < Self.targetPrefetchCount else { return }
 
         // 前回のタスクをキャンセル
         prefetchTask?.cancel()
