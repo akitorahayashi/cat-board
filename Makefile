@@ -26,8 +26,7 @@ setup: ## Run all setup tasks
 .PHONY: gen-proj
 gen-proj: ## Generate Xcode project
 	@echo "🔧 Generating Xcode project with TEAM_ID: $(TEAM_ID)"
-	@TEAM_ID=$(TEAM_ID) envsubst < project.envsubst.yml > project.yml
-	mint run xcodegen generate
+	@TEAM_ID="$(TEAM_ID)" mint run xcodegen generate
 
 .PHONY: resolve-pkg
 resolve-pkg: ## Reset SwiftPM cache, dependencies, and build

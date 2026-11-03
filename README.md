@@ -43,7 +43,7 @@ Since the screening process involves machine learning, verification on a real de
 ├── CatBoardTests/
 ├── CatBoardUITests/
 ├── fastlane/
-├── project.envsubst.yml
+├── project.yml
 ├── Makefile
 ├── Mintfile
 ├── .swiftlint.yml
@@ -113,7 +113,7 @@ mint bootstrap  # Swift dependencies (swiftformat, swiftlint)
 
 Generate Xcode project (with env values):
 ```bash
-make gen-proj   # Generates project.yml from project.envsubst.yml and runs xcodegen
+make gen-proj   # Runs xcodegen with TEAM_ID from .env
 ```
 
 ## Unit Tests
