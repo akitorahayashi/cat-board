@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-for-testing:
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
     steps:
@@ -14,7 +14,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
+          xcode-version: '16.4'
 
       - name: Cache Mint packages
         uses: actions/cache@v4
@@ -48,7 +48,7 @@ jobs:
           retention-days: 1
 
   unit-test:
-    runs-on: macos-14
+    runs-on: macos-15
     needs: build-for-testing
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
@@ -58,7 +58,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
+          xcode-version: '16.4'
 
       - name: Cache Mint packages
         uses: actions/cache@v4
@@ -99,7 +99,7 @@ jobs:
           retention-days: 3
 
   ui-test:
-    runs-on: macos-14
+    runs-on: macos-15
     needs: build-for-testing
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
@@ -121,7 +121,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
+          xcode-version: '16.4'
 
       - name: Generate Xcode Project
         run: make gen-proj

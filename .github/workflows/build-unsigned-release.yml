@@ -10,7 +10,7 @@ on:
 
 jobs:
   archive:
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       MINT_PATH: ${{ github.workspace }}/.mint
       TEAM_ID: ${{ secrets.TEAM_ID }}
@@ -25,7 +25,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
+          xcode-version: '16.4'
 
       - name: Cache Mint packages
         uses: actions/cache@v4
